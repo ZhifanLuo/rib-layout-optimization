@@ -330,12 +330,12 @@ four-case run when validating publication results.
 
 ## Citation and license
 
-Software citation metadata are provided in `CITATION.cff`, and the development
-repository is available at
+Software citation metadata for release `v1.0.0` are provided in `CITATION.cff`,
+and the development repository is available at
 <https://github.com/ZhifanLuo/rib-layout-optimization>. GitHub exposes these
-metadata through its **Cite this repository** interface. A version-specific
-archival DOI, release version, ORCID, and article publication metadata have not
-yet been inserted; they should be added when the release is archived.
+metadata through its **Cite this repository** interface. The version-specific
+archival DOI will be added after Zenodo has completed the release archive;
+ORCID and article publication metadata remain to be inserted when available.
 
 The implementation is distributed under the BSD 3-Clause License; see
 `LICENSE`.

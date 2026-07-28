@@ -4,6 +4,8 @@ message: >-
   paper.
 type: software
 title: Python implementation of A New Paradigm for Stiffening Rib-Layout Optimization
+version: 1.0.0
+date-released: 2026-07-28
 authors:
   - family-names: Luo
     given-names: Zhifan
