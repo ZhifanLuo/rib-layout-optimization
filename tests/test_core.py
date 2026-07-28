@@ -24,11 +24,10 @@ from rib_layout_algorithms.optimization import (
     smooth_member_count,
     smooth_member_count_gradient,
 )
-from rib_layout_algorithms.model import Rib
+from rib_layout_algorithms.model import Rib, StiffenedPlateModel
 from rib_layout_algorithms.model import (
     AnalysisResult,
     endpoint_energy_density_factor,
-    equation_15_deformation_factor,
 )
 from rib_layout_algorithms.plotting import (
     _format_3d_axis,
@@ -1481,22 +1480,6 @@ class CoreTests(unittest.TestCase):
         self.assertEqual([rib.name for rib in selected], ["shorter", "longer"])
         self.assertEqual([rib.name for rib in chosen], ["shorter"])
 
-    def test_equation_15_deformation_factor_uses_endpoint_response(self):
-        rib = Rib((0.0, 0.0), (10.0, 0.0), 2.0, "candidate")
-
-        def response_at(displacement, point):
-            scale = float(displacement[0])
-            x = float(point[0])
-            # Along a=(1,0,0): Delta ux=2. Along b=(0,1,0):
-            # Delta theta_y=3. Eq. (15) is 2/10 + 2*3/10 = 0.8.
-            return np.array([0.2*scale*x, 0.0, 0.0, 0.0, 0.3*scale*x, 0.0])
-
-        result = AnalysisResult(0.0, [np.array([1.0])], [0.0])
-        factor = equation_15_deformation_factor(
-            response_at, [1.0], rib, result
-        )
-        self.assertAlmostEqual(factor, 0.8)
-
     def test_endpoint_energy_density_squares_strain_and_rotation_gradient(self):
         rib = Rib((0.0, 0.0), (10.0, 0.0), 2.0, "candidate")
 
@@ -1590,6 +1573,44 @@ class CoreTests(unittest.TestCase):
         )
         self.assertEqual(factor, 12.5)
 
+    def test_fixed_volume_net_benefit_factor_uses_endpoint_shortlist_score(self):
+        model = object.__new__(ShellStiffenedPlateModel)
+        model.deformation_factor_method = "fixed_volume_net_benefit"
+        model.endpoint_energy_density = lambda rib, result: 7.5
+        factor = model.deformation_factor(
+            Rib((0.0, 0.0), (1.0, 0.0), 1.0), 0.2, SimpleNamespace()
+        )
+        self.assertEqual(factor, 7.5)
+
+    def test_removed_deformation_factor_mode_is_rejected(self):
+        cfg = load_case(1, quick=True)
+        args = (
+            cfg["domain"][0], cfg["domain"][1], 1, 1,
+            cfg["wall_thickness"], cfg["material"]["E"],
+            cfg["material"]["nu"], cfg["load_cases"], cfg["supports"],
+        )
+        for model_class in (StiffenedPlateModel, ShellStiffenedPlateModel):
+            with self.subTest(model=model_class.__name__):
+                with self.assertRaisesRegex(
+                    ValueError,
+                    "stiffness_per_volume or fixed_volume_net_benefit",
+                ):
+                    model_class(
+                        *args, deformation_factor_method="equation" + "_15"
+                    )
+        for model_class in (StiffenedPlateModel, ShellStiffenedPlateModel):
+            with self.subTest(dispatch=model_class.__name__):
+                model = object.__new__(model_class)
+                model.deformation_factor_method = "equation" + "_15"
+                with self.assertRaisesRegex(
+                    ValueError, "unsupported deformation_factor_method"
+                ):
+                    model.deformation_factor(
+                        Rib((0.0, 0.0), (1.0, 0.0), 1.0),
+                        0.2,
+                        SimpleNamespace(),
+                    )
+
     def test_pair_overlap_uses_length_only_for_equal_factor_tie(self):
         cfg = load_case(1, quick=True)
         shorter = Rib((0.0, 0.0), (10.0, 0.0), 2.0, "shorter")
@@ -1624,7 +1645,7 @@ class CoreTests(unittest.TestCase):
             for line in optimizer.log
         ))
 
-    def test_example1_equation15_front_candidates_select_covering_c2(self):
+    def test_example1_front_candidates_select_covering_c2(self):
         cfg = load_case(1, quick=True)
         candidates = [
             Rib((0.0, 0.0), (10.0, 0.0), 2.0, "C1"),
@@ -1647,39 +1668,29 @@ class CoreTests(unittest.TestCase):
         )
         self.assertEqual([rib.name for rib in chosen], ["C2"])
 
-    def test_both_deformation_factor_modes_apply_full_coverage_rule(self):
+    def test_stiffness_per_volume_mode_applies_full_coverage_rule(self):
         cfg = load_case(1, quick=True)
         candidates = [
             Rib((0.0, 0.0), (10.0, 0.0), 2.0, "C1"),
             Rib((0.0, 0.0), (20.0, 0.0), 2.0, "C2"),
             Rib((10.0, 0.0), (20.0, 0.0), 2.0, "C9"),
         ]
-        mode_scores = {
-            "equation_15": {
-                "C1": 0.003310326,
-                "C2": 0.002798377,
-                "C9": 0.002594398,
-            },
-            "stiffness_per_volume": {
-                "C1": 6.134203,
-                "C2": 6.132447,
-                "C9": 4.086556,
-            },
+        scores = {
+            "C1": 6.134203,
+            "C2": 6.132447,
+            "C9": 4.086556,
         }
-        for mode, scores in mode_scores.items():
-            with self.subTest(deformation_factor_method=mode):
-                model = SimpleNamespace(
-                    deformation_factor_method=mode,
-                    deformation_factor=(
-                        lambda rib, thickness, result, values=scores:
-                        values[rib.name]
-                    ),
-                )
-                optimizer = RibLayoutOptimizer(model, cfg)
-                _, chosen = optimizer._select_addition_candidates(
-                    candidates, [], SimpleNamespace(), limit=2
-                )
-                self.assertEqual([rib.name for rib in chosen], ["C2"])
+        model = SimpleNamespace(
+            deformation_factor_method="stiffness_per_volume",
+            deformation_factor=(
+                lambda rib, thickness, result: scores[rib.name]
+            ),
+        )
+        optimizer = RibLayoutOptimizer(model, cfg)
+        _, chosen = optimizer._select_addition_candidates(
+            candidates, [], SimpleNamespace(), limit=2
+        )
+        self.assertEqual([rib.name for rib in chosen], ["C2"])
 
     def test_length_preference_does_not_apply_to_noncollinear_candidates(self):
         cfg = load_case(1, quick=True)

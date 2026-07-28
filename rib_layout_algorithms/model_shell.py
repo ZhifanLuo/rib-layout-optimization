@@ -18,7 +18,6 @@ from .model import (
     AnalysisResult,
     Rib,
     endpoint_energy_density_factor,
-    equation_15_deformation_factor,
 )
 from rib_layout_env import (
     DETERMINISTIC_LINEAR_SOLVER_THREADS,
@@ -84,11 +83,11 @@ class ShellStiffenedPlateModel:
         self.linear_solver_threads = DETERMINISTIC_LINEAR_SOLVER_THREADS
         self.deformation_factor_method = str(deformation_factor_method).lower()
         if self.deformation_factor_method not in {
-            "equation_15", "stiffness_per_volume", "fixed_volume_net_benefit"
+            "stiffness_per_volume", "fixed_volume_net_benefit"
         }:
             raise ValueError(
-                "deformation_factor_method must be equation_15, "
-                "stiffness_per_volume, or fixed_volume_net_benefit"
+                "deformation_factor_method must be stiffness_per_volume "
+                "or fixed_volume_net_benefit"
             )
         if self.linear_solver not in {"auto", "pardiso", "superlu"}:
             raise ValueError("linear_solver must be auto, pardiso, or superlu")
@@ -1067,18 +1066,13 @@ class ShellStiffenedPlateModel:
             )
         if self.deformation_factor_method == "fixed_volume_net_benefit":
             return self.endpoint_energy_density(rib,result)
-        return self.deformation_factor_equation_15(rib,result)
+        raise ValueError(
+            "unsupported deformation_factor_method: "
+            f"{self.deformation_factor_method}"
+        )
 
     def deformation_factor_stiffness_per_volume(
         self,rib:Rib,thickness:float,result:AnalysisResult
     )->float:
-        """Preserved pre-Eq.-(15) frozen-energy/volume ranking measure."""
+        """Return the preserved frozen-energy/volume ranking measure."""
         return self.candidate_efficiency(rib,thickness,result)
-
-    def deformation_factor_equation_15(
-        self,rib:Rib,result:AnalysisResult
-    )->float:
-        """Return the relative-displacement/rotation factor in paper Eq. (15)."""
-        return equation_15_deformation_factor(
-            self.response_at,self.load_weights,rib,result
-        )

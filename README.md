@@ -9,8 +9,8 @@ Optimization*. It implements:
 1. compliance minimization with a rib-volume and thickness bounds;
 2. performance-validated thickness filtering using only the prescribed
    thickness threshold and compliance check;
-3. deformation-factor candidate ranking using relative displacement and
-   rotation (paper Eqs. 13–17);
+3. endpoint strain-energy-density shortlisting followed by fixed-volume net
+   compliance-benefit ranking;
 4. fixed-connectivity endpoint geometry optimization;
 5. smooth-Heaviside rationalization, threshold deletion, and geometry
    optimization of the reduced active set.
@@ -65,8 +65,8 @@ or a gap-free union of active collinear ribs, then retain the 30 remaining
 candidates with the highest endpoint strain-energy-density surrogate. The shortlist is ranked by fixed-volume net
 compliance benefit: candidate stiffness energy minus covered-rib stiffness
 loss and the linearized compliance cost of redistributing existing rib
-material. The former Eq. (15) and `stiffness_per_volume` modes remain
-selectable; the active setting is `fixed_volume_net_benefit`. At most two
+material. The earlier `stiffness_per_volume` mode remains selectable; the
+active setting is `fixed_volume_net_benefit`. At most two
 independently ranked candidate seeds are then checked. Under mirror symmetry,
 if the first seed needs a new reflected partner, that two-rib orbit fills the
 batch immediately. Only when the first seed needs no new partner is the second
@@ -76,7 +76,7 @@ wholly covered by an existing rib, or by the continuous union of several
 existing collinear ribs, is
 skipped. If one collinear candidate completely covers another, the covering
 longer rib is always retained to favor manufacturability, regardless of
-deformation factor difference. Partial overlaps retain the higher-ranked
+ranking-score difference. Partial overlaps retain the higher-ranked
 candidate; equal-length duplicates retain their ranking order. This length
 preference does not apply to non-collinear candidates or to collinear
 candidates that only meet at an endpoint. Every selected candidate must have
@@ -90,8 +90,8 @@ candidate wholly covers an existing shorter rib, the trial active set replaces
 the shorter rib with the longer candidate before sizing. A candidate wholly
 covered by one existing rib or by a gap-free union of existing collinear ribs
 is still skipped. Partial collinear overlap is left unchanged for now.
-These geometric coverage and candidate-selection rules are common to
-`fixed_volume_net_benefit`, `equation_15`, and `stiffness_per_volume` modes.
+These geometric coverage and candidate-selection rules are common to the
+`fixed_volume_net_benefit` and `stiffness_per_volume` modes.
 Geometry optimization treats every active thickness and endpoint coordinate
 simultaneously. Endpoint coordinates are bounded only by the ground-shell
 domain; their local bounds are recomputed around the current coordinates after

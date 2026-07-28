@@ -37,51 +37,6 @@ class AnalysisResult:
     load_compliances: list[float]
 
 
-def equation_15_deformation_factor(
-    response_at: Callable[[np.ndarray, Sequence[float]], np.ndarray],
-    load_weights: Sequence[float],
-    rib: Rib,
-    result: AnalysisResult,
-    omega_displacement: float = 1.0,
-    omega_rotation: float = 1.0,
-) -> float:
-    """Evaluate manuscript Eq. (15) on the planar ground surface.
-
-    The ground normal is ``+Z``. Thus, for the in-plane axial unit vector
-    ``a=(ax,ay,0)``, the transverse vector ``b=n x a`` is
-    ``(-ay,ax,0)``. Translational and rotational endpoint responses use the
-    first and last three shell DOFs, respectively.
-    """
-    length = float(rib.length)
-    if length <= 0.0:
-        return -np.inf
-    wd = float(omega_displacement)
-    wt = float(omega_rotation)
-    if wd < 0.0 or wt < 0.0 or wd+wt <= 0.0:
-        raise ValueError(
-            "Eq. (15) weights must be nonnegative and not both zero"
-        )
-    direction_2d = (np.asarray(rib.p1, float)-np.asarray(rib.p0, float))/length
-    axial = np.array([direction_2d[0], direction_2d[1], 0.0])
-    transverse = np.array([-direction_2d[1], direction_2d[0], 0.0])
-    weights = np.asarray(load_weights, float)
-    if len(weights) != len(result.displacements):
-        raise ValueError("load weights and displacement cases must have equal length")
-    factor = 0.0
-    for weight, displacement in zip(weights, result.displacements):
-        response_0 = np.asarray(response_at(displacement, rib.p0), float)
-        response_1 = np.asarray(response_at(displacement, rib.p1), float)
-        if response_0.size < 6 or response_1.size < 6:
-            raise ValueError("Eq. (15) requires six shell DOFs at each endpoint")
-        relative = response_1[:6]-response_0[:6]
-        axial_measure = abs(float(axial@relative[:3]))/length
-        rotation_measure = (
-            float(rib.height)*abs(float(transverse@relative[3:6]))/length
-        )
-        factor += float(weight)*(wd*axial_measure+wt*rotation_measure)
-    return float(factor)
-
-
 def endpoint_energy_density_factor(
     response_at: Callable[[np.ndarray, Sequence[float]], np.ndarray],
     load_weights: Sequence[float],
@@ -155,11 +110,11 @@ class StiffenedPlateModel:
             raise ValueError("at least one load case is required")
         self.deformation_factor_method = str(deformation_factor_method).lower()
         if self.deformation_factor_method not in {
-            "equation_15", "stiffness_per_volume", "fixed_volume_net_benefit"
+            "stiffness_per_volume", "fixed_volume_net_benefit"
         }:
             raise ValueError(
-                "deformation_factor_method must be equation_15, "
-                "stiffness_per_volume, or fixed_volume_net_benefit"
+                "deformation_factor_method must be stiffness_per_volume "
+                "or fixed_volume_net_benefit"
             )
 
     def node(self, ix: int, iy: int) -> int:
@@ -385,18 +340,13 @@ class StiffenedPlateModel:
             )
         if self.deformation_factor_method == "fixed_volume_net_benefit":
             return self.endpoint_energy_density(rib, result)
-        return self.deformation_factor_equation_15(rib, result)
+        raise ValueError(
+            "unsupported deformation_factor_method: "
+            f"{self.deformation_factor_method}"
+        )
 
     def deformation_factor_stiffness_per_volume(
         self, rib: Rib, thickness: float, result: AnalysisResult
     ) -> float:
-        """Preserved pre-Eq.-(15) frozen-energy/volume ranking measure."""
+        """Return the preserved frozen-energy/volume ranking measure."""
         return self.candidate_efficiency(rib, thickness, result)
-
-    def deformation_factor_equation_15(
-        self, rib: Rib, result: AnalysisResult
-    ) -> float:
-        """Return the relative-displacement/rotation factor in paper Eq. (15)."""
-        return equation_15_deformation_factor(
-            self.response_at, self.load_weights, rib, result
-        )
