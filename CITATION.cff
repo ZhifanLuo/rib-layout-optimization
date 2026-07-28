@@ -1,0 +1,22 @@
+cff-version: 1.2.0
+message: >-
+  If you use this software, please cite the software and the accompanying
+  paper.
+type: software
+title: Python implementation of A New Paradigm for Stiffening Rib-Layout Optimization
+authors:
+  - family-names: Luo
+    given-names: Zhifan
+  - family-names: Pagaldipti
+    given-names: Narayanan
+  - family-names: Zhou
+    given-names: Ming
+abstract: >-
+  Reference Python implementation and four numerical examples for the
+  multi-phase stiffening rib-layout optimization method.
+license: BSD-3-Clause
+keywords:
+  - rib layout optimization
+  - structural optimization
+  - shell finite elements
+  - Python

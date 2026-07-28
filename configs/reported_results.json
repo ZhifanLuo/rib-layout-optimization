@@ -1,0 +1,43 @@
+{
+  "source": "Latex/Rib_Layout_Optimization_R1.tex",
+  "note": "Targets transcribed from the manuscript; they are not injected into the solver.",
+  "examples": {
+    "1": {
+      "domain_mm": [20.0, 20.0],
+      "rib_height_mm": 2.0,
+      "initial": {"ribs": 8, "compliance": 3.453},
+      "filtered": {"ribs": 3, "compliance": 3.462},
+      "adaptive": {"ribs": 3, "compliance": 1.426},
+      "geometry": {"ribs": 3, "compliance": 1.127}
+    },
+    "2": {
+      "domain_mm": [40.0, 20.0],
+      "rib_height_mm": 2.0,
+      "initial": {"ribs": 16, "compliance": 0.780, "analyses": 11},
+      "adaptive": {"ribs": 10, "compliance": 0.636, "analyses": 26},
+      "geometry": {"ribs": 10, "compliance": 0.488, "analyses": 31},
+      "rationalized": {"ribs": 5, "compliance": 0.497, "analyses": 67},
+      "total_analyses": 135
+    },
+    "3": {
+      "domain_mm": [200.0, 100.0],
+      "rib_height_mm": 10.0,
+      "initial": {"ribs": 64, "compliance": 2.262, "analyses": 7},
+      "adaptive": {"ribs": 33, "compliance": 0.715, "analyses": 31},
+      "geometry": {"ribs": 33, "compliance": 0.656, "analyses": 32},
+      "rationalized": {"ribs": 16, "compliance": 0.658, "analyses": 70},
+      "rationalized_10pct": {"ribs": 14, "compliance": 0.695},
+      "total_analyses": 140
+    },
+    "4": {
+      "domain_mm": [200.0, 100.0],
+      "rib_height_mm": 10.0,
+      "initial": {"ribs": 64, "compliance": 17.61, "analyses": 4},
+      "adaptive": {"ribs": 24, "compliance": 12.56, "analyses": 30},
+      "geometry": {"ribs": 24, "compliance": 10.02, "analyses": 38},
+      "rationalized": {"ribs": 12, "compliance": 10.23, "analyses": 69},
+      "rationalized_10pct": {"ribs": 6, "compliance": 11.04},
+      "total_analyses": 141
+    }
+  }
+}

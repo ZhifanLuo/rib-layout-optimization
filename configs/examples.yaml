@@ -1,0 +1,159 @@
+defaults:
+  analysis_model: shell
+  interface_subdivisions_per_cell: 4
+  rib_cache_max_entries: 128
+  candidate_operator_cache_max_entries: 512
+  rib_basis_cache_max_entries: 128
+  linear_solver: auto
+  linear_solver_threads: 1
+  deformation_factor_method: fixed_volume_net_benefit
+  material:
+    E: 1000000.0       # N/mm^2 = 1000 GPa
+    nu: 0.3
+  rib:
+    segments: 10
+    lower: 0.000001
+  algorithm:
+    sensitivity_workers: 1
+    filter_tolerance: 0.01
+    filter_max_decade: 5
+    filter_threshold_ratios: [0.10, 0.01, 0.001, 0.0001, 0.00001]
+    short_rib_shell_cells: 3.0
+    short_rib_cell_fraction: 0.25
+    short_rib_thickness_factor: 5.0
+    sizing_max_iterations: 100
+    sca_objective_tolerance: 0.005
+    sca_constraint_tolerance: 0.001
+    sca_design_tolerance: 0.001
+    sca_design_guard_tolerance: 0.010
+    sca_consecutive_convergence_steps: 2
+    sca_min_iterations: 2
+    move_limit_initial: 0.50
+    move_limit_direction_increase: 1.20
+    move_limit_direction_decrease: 0.70
+    move_limit_direction_zero_tolerance: 1.0e-6
+    move_limit_unsuccessful_decrease: 0.75
+    move_limit_maximum_global: 10.0
+    geometry_sca_proximal: 0.20
+    rationalization_sca_proximal: 0.20
+    rationalization_dual_tolerance: 1.0e-9
+    active_set_max_iterations: 12
+    additions_per_iteration: 2
+    addition_endpoint_shortlist_size: 30
+    addition_factor_min_ratio: 0.70
+    addition_sizing_improvement_min: 0.01
+    active_cycle_improvement_min: 0.01
+    candidate_max_span_cells: 3
+    candidate_directions: [[1, 0], [0, 1], [1, 1], [1, -1], [2, 1], [2, -1], [1, 2], [1, -2]]
+    geometry_max_iterations: 100
+    geometry_fd_fraction: 0.0002
+    rationalization_beta: 10.0
+    rationalization_beta_initial: 1.0
+    rationalization_beta_increment: 1.0
+    rationalization_restoration_fraction: 0.50
+    rationalization_compliance_tolerance: 0.001
+    rationalization_move_limit_initial: 0.50
+    rationalization_min_iterations: 11
+    rationalization_max_iterations: 50
+    rationalization_geometry_iterations: 100
+
+examples:
+  1:
+    name: corner_load
+    domain: [20.0, 20.0]
+    mesh: [20, 20]
+    wall_thickness: 0.01
+    initial_rib_cell_size: 10.0
+    load_cases:
+      - weight: 1.0
+        forces:
+          - point: [20.0, 0.0]
+            value: [0.0, -100.0, 0.0]
+    supports:
+      type: points
+      points: [[0.0, 0.0], [0.0, 20.0]]
+    rib:
+      height: 2.0
+      initial: 0.2
+      upper: 2.0
+    volume_bound: 45.0
+    rationalization_relaxation: 0.05
+    algorithm:
+      active_set_max_iterations: 8
+
+  2:
+    name: lower_midspan_load
+    domain: [40.0, 20.0]
+    mesh: [40, 20]
+    wall_thickness: 0.01
+    initial_rib_cell_size: 10.0
+    load_cases:
+      - weight: 1.0
+        forces:
+          - point: [20.0, 0.0]
+            value: [0.0, -100.0, 0.0]
+    supports:
+      type: points
+      points: [[0.0, 0.0], [40.0, 0.0]]
+    rib:
+      height: 2.0
+      initial: 0.2
+      upper: 2.0
+    volume_bound: 90.0
+    rationalization_relaxation: 0.05
+
+  3:
+    name: edge_load
+    domain: [200.0, 100.0]
+    mesh: [80, 40]
+    quick_mesh: [32, 16]
+    quick_rib_segments: 4
+    wall_thickness: 0.05
+    initial_rib_cell_size: 25.0
+    load_cases:
+      - weight: 1.0
+        forces:
+          - point: [0.0, 50.0]
+            value: [0.0, -100.0, 0.0]
+    supports:
+      type: edge
+      edge: right
+    rib:
+      height: 10.0
+      initial: 0.5
+      upper: 3.0
+    volume_bound: 11310.0
+    rationalization_relaxation: 0.05
+    algorithm:
+      filter_tolerance: 0.01
+      sizing_max_iterations: 60
+      active_set_max_iterations: 6
+
+  4:
+    name: force_couple
+    domain: [200.0, 100.0]
+    mesh: [80, 40]
+    quick_mesh: [32, 16]
+    quick_rib_segments: 4
+    wall_thickness: 1.0
+    initial_rib_cell_size: 25.0
+    load_cases:
+      - weight: 1.0
+        forces:
+          - point: [0.0, 100.0]
+            value: [0.0, 0.0, 100.0]
+          - point: [0.0, 0.0]
+            value: [0.0, 0.0, -100.0]
+    supports:
+      type: edge
+      edge: right
+    rib:
+      height: 10.0
+      initial: 0.5
+      upper: 3.0
+    volume_bound: 11310.0
+    rationalization_relaxation: 0.05
+    algorithm:
+      filter_tolerance: 0.01
+      sizing_max_iterations: 60
+      active_set_max_iterations: 6

@@ -1,0 +1,39 @@
+# Local Python environments
+.venv/
+venv/
+env/
+
+# Python bytecode, test, coverage, and type-checker caches
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Packaging and editor artifacts
+build/
+dist/
+*.egg-info/
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Regenerated optimization and diagnostic outputs. Curated, small reference
+# summaries may be published explicitly below results/reference/.
+results/**
+!results/reference/
+!results/reference/**
+results0/
+results2/
+
+# Temporary files and logs
+*.tmp
+*.bak
+*.log
+
+# Legacy internal evidence that is not part of the public release
+REPRODUCTION_REPORT.md
