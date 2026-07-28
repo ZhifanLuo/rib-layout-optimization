@@ -330,10 +330,12 @@ four-case run when validating publication results.
 
 ## Citation and license
 
-Software citation metadata are provided in `CITATION.cff`. No DOI, repository
-URL, release version, ORCID, or article publication metadata has been inserted
-because those identifiers have not yet been assigned. Add the final archival
-DOI and repository URL only after the public release has been created.
+Software citation metadata are provided in `CITATION.cff`, and the development
+repository is available at
+<https://github.com/ZhifanLuo/rib-layout-optimization>. GitHub exposes these
+metadata through its **Cite this repository** interface. A version-specific
+archival DOI, release version, ORCID, and article publication metadata have not
+yet been inserted; they should be added when the release is archived.
 
 The implementation is distributed under the BSD 3-Clause License; see
 `LICENSE`.

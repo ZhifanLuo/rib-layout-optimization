@@ -15,6 +15,7 @@ abstract: >-
   Reference Python implementation and four numerical examples for the
   multi-phase stiffening rib-layout optimization method.
 license: BSD-3-Clause
+repository-code: https://github.com/ZhifanLuo/rib-layout-optimization
 keywords:
   - rib layout optimization
   - structural optimization
