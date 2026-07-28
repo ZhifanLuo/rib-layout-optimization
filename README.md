@@ -1,5 +1,7 @@
 # Rib layout optimization — reference Python implementation
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21638173.svg)](https://doi.org/10.5281/zenodo.21638173)
+
 This folder contains the executable reference implementation of the
 multi-phase method described in *A New Paradigm for Stiffening Rib-Layout
 Optimization*. It implements:
@@ -333,9 +335,11 @@ four-case run when validating publication results.
 Software citation metadata for release `v1.0.0` are provided in `CITATION.cff`,
 and the development repository is available at
 <https://github.com/ZhifanLuo/rib-layout-optimization>. GitHub exposes these
-metadata through its **Cite this repository** interface. The version-specific
-archival DOI will be added after Zenodo has completed the release archive;
-ORCID and article publication metadata remain to be inserted when available.
+metadata through its **Cite this repository** interface. The immutable `v1.0.0`
+archive is available from Zenodo at
+<https://doi.org/10.5281/zenodo.21638173>. The concept DOI for all versions is
+<https://doi.org/10.5281/zenodo.21638172>. ORCID and article publication
+metadata remain to be inserted when available.
 
 The implementation is distributed under the BSD 3-Clause License; see
 `LICENSE`.
