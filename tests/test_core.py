@@ -24,11 +24,7 @@ from rib_layout_algorithms.optimization import (
     smooth_member_count,
     smooth_member_count_gradient,
 )
-from rib_layout_algorithms.model import Rib, StiffenedPlateModel
-from rib_layout_algorithms.model import (
-    AnalysisResult,
-    endpoint_energy_density_factor,
-)
+from rib_layout_algorithms.model import AnalysisResult, Rib, StiffenedPlateModel
 from rib_layout_algorithms.plotting import (
     _format_3d_axis,
     _load_label_position,
@@ -429,7 +425,7 @@ class CoreTests(unittest.TestCase):
             rib_cache_max_entries=3,
         )
         ribs = initial_ribs(cfg)[:4]
-        first_key = (ribs[0].key, round(0.2, 10))
+        first_key = model._rib_numeric_state_key(ribs[0], 0.2)
         for rib in ribs[:3]:
             model.rib_stiffness(rib, 0.2)
         # A cache hit makes the first item most recently used.
@@ -437,7 +433,51 @@ class CoreTests(unittest.TestCase):
         model.rib_stiffness(ribs[3], 0.2)
         self.assertEqual(len(model._rib_cache), 3)
         self.assertIn(first_key, model._rib_cache)
-        self.assertNotIn((ribs[1].key, round(0.2, 10)), model._rib_cache)
+        self.assertNotIn(
+            model._rib_numeric_state_key(ribs[1], 0.2), model._rib_cache
+        )
+
+    def test_sub_rounding_endpoint_update_uses_fresh_numeric_rib_basis(self):
+        model = ShellStiffenedPlateModel(
+            1.0, 1.0, 2, 2, 0.1, 70000.0, 0.3,
+            [{"forces": [{"point": [1.0, 1.0], "value": [0.0, 0.0, 1.0]}]}],
+            {"type": "edge", "edge": "left"},
+            interface_subdivisions_per_cell=4,
+        )
+        rib = Rib((0.2, 0.2), (0.8, 0.7), 0.2, "interior", 4)
+        moved = Rib(
+            rib.p0,
+            (rib.p1[0] + 4.0e-11, rib.p1[1]),
+            rib.height,
+            rib.name,
+            rib.segments,
+        )
+        thickness = np.array([0.1])
+
+        self.assertEqual(rib.key, moved.key)
+        self.assertNotEqual(
+            model._rib_numeric_geometry_key(rib),
+            model._rib_numeric_geometry_key(moved),
+        )
+        self.assertNotEqual(
+            model._rib_numeric_state_key(rib, thickness[0]),
+            model._rib_numeric_state_key(rib, thickness[0] + 4.0e-11),
+        )
+        result = model.analyze([rib], thickness)
+        original_bottom = model._rib_sparse_basis(rib)[0]
+
+        gradient = model.geometry_gradient(
+            [moved], thickness, result, step=1.0e-6
+        )
+        moved_bottom = model._rib_sparse_basis(moved)[0]
+
+        self.assertTrue(np.all(np.isfinite(gradient)))
+        self.assertGreater(
+            float(np.max(np.abs(moved_bottom-original_bottom))), 1.0e-12
+        )
+        self.assertTrue(np.array_equal(
+            moved_bottom, model.rib_bottom_points(moved)
+        ))
 
     def test_rib_ground_interface_trace_is_refined_and_compatible(self):
         model = ShellStiffenedPlateModel(
@@ -653,7 +693,7 @@ class CoreTests(unittest.TestCase):
         scores = {"left": 10.0, "second": 9.0, "right": 1.0}
         optimizer = RibLayoutOptimizer(
             SimpleNamespace(
-                deformation_factor=lambda rib, thickness, result: scores[rib.name]
+                candidate_efficiency=lambda rib, thickness, result: scores[rib.name]
             ),
             cfg,
         )
@@ -672,7 +712,7 @@ class CoreTests(unittest.TestCase):
         scores = {"self_symmetric": 10.0, "left": 9.0, "right": 8.0}
         optimizer = RibLayoutOptimizer(
             SimpleNamespace(
-                deformation_factor=lambda rib, thickness, result: scores[rib.name]
+                candidate_efficiency=lambda rib, thickness, result: scores[rib.name]
             ),
             cfg,
         )
@@ -1038,10 +1078,6 @@ class CoreTests(unittest.TestCase):
             self.assertEqual(load_case(number)["algorithm"]["additions_per_iteration"], 2)
         for number in (1, 2, 3, 4):
             algorithm = load_case(number)["algorithm"]
-            self.assertEqual(
-                load_case(number)["deformation_factor_method"],
-                "fixed_volume_net_benefit",
-            )
             self.assertEqual(load_case(number)["linear_solver_threads"], 1)
             self.assertEqual(
                 algorithm["filter_threshold_ratios"],
@@ -1057,7 +1093,6 @@ class CoreTests(unittest.TestCase):
             self.assertEqual(algorithm["active_cycle_improvement_min"], 0.01)
             self.assertEqual(algorithm["filter_tolerance"], 0.01)
             self.assertEqual(algorithm["addition_factor_min_ratio"], 0.70)
-            self.assertEqual(algorithm["addition_endpoint_shortlist_size"], 30)
             self.assertNotIn("addition_second_factor_min_ratio", algorithm)
             self.assertNotIn("addition_collinear_factor_tolerance", algorithm)
             self.assertEqual(algorithm["rationalization_beta"], 10.0)
@@ -1065,7 +1100,6 @@ class CoreTests(unittest.TestCase):
             self.assertNotIn(
                 "rationalization_reference_quantile_relaxation_factor", algorithm
             )
-            self.assertNotIn("rationalization_restoration_fraction", algorithm)
             self.assertEqual(
                 algorithm["rationalization_compliance_tolerance"], 0.001
             )
@@ -1115,19 +1149,19 @@ class CoreTests(unittest.TestCase):
     def test_rationalization_tref_quantile_uses_rib_count_and_relaxation(self):
         optimizer = RibLayoutOptimizer(SimpleNamespace(), load_case(3, quick=True))
         self.assertAlmostEqual(
-            optimizer.rationalization_reference_quantile(0.02, 20), 0.09
+            optimizer.rationalization_reference_quantile(0.02, 20), 0.07
         )
         self.assertAlmostEqual(
-            optimizer.rationalization_reference_quantile(0.05, 20), 0.15
+            optimizer.rationalization_reference_quantile(0.05, 20), 0.10
         )
         self.assertAlmostEqual(
-            optimizer.rationalization_reference_quantile(0.10, 20), 0.25
+            optimizer.rationalization_reference_quantile(0.10, 20), 0.15
         )
         self.assertAlmostEqual(
-            optimizer.rationalization_reference_quantile(0.05, 5), 0.30
+            optimizer.rationalization_reference_quantile(0.05, 5), 0.25
         )
         with self.assertRaises(ValueError):
-            optimizer.rationalization_reference_quantile(0.50, 20)
+            optimizer.rationalization_reference_quantile(0.95, 20)
         with self.assertRaises(ValueError):
             optimizer.rationalization_reference_quantile(0.05, 0)
 
@@ -1300,7 +1334,6 @@ class CoreTests(unittest.TestCase):
         cfg = load_case(1, quick=True)
         model = SimpleNamespace(
             candidate_efficiency=lambda *args: 1.0,
-            deformation_factor=lambda *args: 1.0,
         )
         optimizer = RibLayoutOptimizer(model, cfg)
         active = [Rib((0.0, 0.0), (10.0, 10.0), 2.0, "active")]
@@ -1330,7 +1363,7 @@ class CoreTests(unittest.TestCase):
         scores = {"candidate_1": 2.0, "candidate_2": 1.0}
         optimizer = RibLayoutOptimizer(
             SimpleNamespace(
-                deformation_factor=lambda rib, thickness, result: scores[rib.name]
+                candidate_efficiency=lambda rib, thickness, result: scores[rib.name]
             ),
             cfg,
         )
@@ -1372,7 +1405,7 @@ class CoreTests(unittest.TestCase):
         scores = {"candidate_1": 2.0, "candidate_2": 1.0}
         optimizer = RibLayoutOptimizer(
             SimpleNamespace(
-                deformation_factor=lambda rib, thickness, result: scores[rib.name]
+                candidate_efficiency=lambda rib, thickness, result: scores[rib.name]
             ),
             cfg,
         )
@@ -1422,7 +1455,7 @@ class CoreTests(unittest.TestCase):
         full = Rib((0.0, 0.0), (20.0, 0.0), 2.0, "full")
         third = Rib((0.0, 5.0), (20.0, 5.0), 2.0, "third")
         model = SimpleNamespace(
-            deformation_factor=lambda rib, thickness, result: {
+            candidate_efficiency=lambda rib, thickness, result: {
                 "half": 3.0, "full": 2.4, "third": 1.0,
             }[rib.name],
         )
@@ -1454,7 +1487,7 @@ class CoreTests(unittest.TestCase):
         unused = Rib((0.0, 10.0), (20.0, 10.0), 2.0, "unused")
         scores = {"covered": 3.0, "valid": 2.4, "unused": 1.0}
         optimizer = RibLayoutOptimizer(
-            SimpleNamespace(deformation_factor=lambda rib, thickness, result: scores[rib.name]),
+            SimpleNamespace(candidate_efficiency=lambda rib, thickness, result: scores[rib.name]),
             cfg,
         )
         inspected, chosen = optimizer._select_addition_candidates(
@@ -1471,7 +1504,7 @@ class CoreTests(unittest.TestCase):
         longer = Rib((0.0, 0.0), (20.0, 0.0), 2.0, "longer")
         scores = {"shorter": 3.0, "longer": 2.4}
         optimizer = RibLayoutOptimizer(
-            SimpleNamespace(deformation_factor=lambda rib, thickness, result: scores[rib.name]),
+            SimpleNamespace(candidate_efficiency=lambda rib, thickness, result: scores[rib.name]),
             cfg,
         )
         selected, chosen = optimizer._select_addition_candidates(
@@ -1480,143 +1513,50 @@ class CoreTests(unittest.TestCase):
         self.assertEqual([rib.name for rib in selected], ["shorter", "longer"])
         self.assertEqual([rib.name for rib in chosen], ["shorter"])
 
-    def test_endpoint_energy_density_squares_strain_and_rotation_gradient(self):
+    def test_candidate_efficiency_is_frozen_energy_per_added_volume(self):
         rib = Rib((0.0, 0.0), (10.0, 0.0), 2.0, "candidate")
+        for model_class in (StiffenedPlateModel, ShellStiffenedPlateModel):
+            with self.subTest(model=model_class.__name__):
+                model = object.__new__(model_class)
+                model.candidate_stiffness_energy = (
+                    lambda candidate, thickness, result: 24.0
+                )
+                factor = model.candidate_efficiency(
+                    rib, 0.3, SimpleNamespace()
+                )
+                self.assertEqual(factor, 4.0)
 
-        def response_at(displacement, point):
-            x = float(point[0])
-            return np.array([0.2*x, 0.0, 0.0, 0.0, 0.3*x, 0.0])
-
-        result = AnalysisResult(0.0, [np.array([1.0])], [0.0])
-        factor = endpoint_energy_density_factor(
-            response_at, [1.0], 100.0, rib, result
-        )
-        # E*(epsilon^2 + h^2*kappa^2/12)
-        self.assertAlmostEqual(factor, 100.0*(0.2**2 + 2.0**2*0.3**2/12.0))
-
-    def test_fixed_volume_net_benefit_uses_endpoint_shortlist_and_seventy_percent(self):
+    def test_direct_candidate_ranking_scores_every_candidate(self):
         cfg = load_case(1, quick=True)
-        cfg["algorithm"]["addition_endpoint_shortlist_size"] = 2
-        active = [
-            Rib((0.0, 20.0), (10.0, 20.0), 1.0, "A"),
-            Rib((10.0, 20.0), (20.0, 20.0), 1.0, "B"),
-        ]
         candidates = [
             Rib((0.0, 0.0), (10.0, 0.0), 1.0, "C1"),
             Rib((0.0, 5.0), (10.0, 5.0), 1.0, "C2"),
             Rib((0.0, 10.0), (10.0, 10.0), 1.0, "C3"),
         ]
-        endpoint = {"C1": 3.0, "C2": 2.0, "C3": 1.0}
-        energies = {"C1": 10.0, "C2": 8.5, "C3": 100.0}
-        model = SimpleNamespace(
-            deformation_factor_method="fixed_volume_net_benefit",
-            endpoint_energy_density=lambda rib, result: endpoint[rib.name],
-            candidate_stiffness_energy=(
-                lambda rib, thickness, result: energies[rib.name]
-            ),
-            compliance_gradient=lambda ribs, thicknesses, result: np.array([-10.0, -20.0]),
+        scores = {"C1": 10.0, "C2": 8.5, "C3": 100.0}
+        scored_names = []
+
+        def efficiency(rib, thickness, result):
+            scored_names.append(rib.name)
+            return scores[rib.name]
+
+        optimizer = RibLayoutOptimizer(
+            SimpleNamespace(candidate_efficiency=efficiency), cfg
         )
-        optimizer = RibLayoutOptimizer(model, cfg)
         inspected, chosen = optimizer._select_addition_candidates(
-            candidates,
-            active,
-            SimpleNamespace(),
-            limit=2,
-            active_thicknesses=np.array([0.5, 0.5]),
+            candidates, [], SimpleNamespace(), limit=2
         )
-        self.assertEqual([rib.name for rib in inspected], ["C1", "C2"])
-        self.assertEqual([rib.name for rib in chosen], ["C1", "C2"])
-        self.assertTrue(any(
-            "endpoint-energy shortlist: retained=2 of 3 uncovered" in line
-            for line in optimizer.log
-        ))
-        self.assertFalse(any("C3" in line for line in optimizer.log))
-
-    def test_fixed_volume_shortlist_prefilters_covered_candidate_and_backfills(self):
-        cfg = load_case(1, quick=True)
-        cfg["algorithm"]["addition_endpoint_shortlist_size"] = 2
-        active = [Rib((0.0, 0.0), (10.0, 0.0), 1.0, "active")]
-        covered = Rib((2.0, 0.0), (8.0, 0.0), 1.0, "covered")
-        first = Rib((0.0, 5.0), (10.0, 5.0), 1.0, "first")
-        backfill = Rib((0.0, 10.0), (10.0, 10.0), 1.0, "backfill")
-        endpoint = {"covered": 100.0, "first": 3.0, "backfill": 2.0}
-        energies = {"first": 10.0, "backfill": 9.0}
-        model = SimpleNamespace(
-            deformation_factor_method="fixed_volume_net_benefit",
-            endpoint_energy_density=lambda rib, result: endpoint[rib.name],
-            candidate_stiffness_energy=(
-                lambda rib, thickness, result: energies[rib.name]
-            ),
-            compliance_gradient=lambda ribs, thicknesses, result: np.array([-1.0]),
-        )
-        optimizer = RibLayoutOptimizer(model, cfg)
-        inspected, chosen = optimizer._select_addition_candidates(
-            [covered, first, backfill],
-            active,
-            SimpleNamespace(),
-            limit=2,
-            active_thicknesses=np.array([0.5]),
-        )
-        self.assertEqual([rib.name for rib in inspected], ["first", "backfill"])
-        self.assertEqual([rib.name for rib in chosen], ["first", "backfill"])
-        self.assertTrue(any(
-            "total=3, uncovered=2, temporarily_excluded=1" in line
-            for line in optimizer.log
-        ))
-
-    def test_previous_stiffness_per_volume_factor_remains_selectable(self):
-        model = object.__new__(ShellStiffenedPlateModel)
-        model.deformation_factor_method = "stiffness_per_volume"
-        model.candidate_efficiency = lambda rib, thickness, result: 12.5
-        factor = model.deformation_factor(
-            Rib((0.0, 0.0), (1.0, 0.0), 1.0), 0.2, SimpleNamespace()
-        )
-        self.assertEqual(factor, 12.5)
-
-    def test_fixed_volume_net_benefit_factor_uses_endpoint_shortlist_score(self):
-        model = object.__new__(ShellStiffenedPlateModel)
-        model.deformation_factor_method = "fixed_volume_net_benefit"
-        model.endpoint_energy_density = lambda rib, result: 7.5
-        factor = model.deformation_factor(
-            Rib((0.0, 0.0), (1.0, 0.0), 1.0), 0.2, SimpleNamespace()
-        )
-        self.assertEqual(factor, 7.5)
-
-    def test_removed_deformation_factor_mode_is_rejected(self):
-        cfg = load_case(1, quick=True)
-        args = (
-            cfg["domain"][0], cfg["domain"][1], 1, 1,
-            cfg["wall_thickness"], cfg["material"]["E"],
-            cfg["material"]["nu"], cfg["load_cases"], cfg["supports"],
-        )
-        for model_class in (StiffenedPlateModel, ShellStiffenedPlateModel):
-            with self.subTest(model=model_class.__name__):
-                with self.assertRaisesRegex(
-                    ValueError,
-                    "stiffness_per_volume or fixed_volume_net_benefit",
-                ):
-                    model_class(
-                        *args, deformation_factor_method="equation" + "_15"
-                    )
-        for model_class in (StiffenedPlateModel, ShellStiffenedPlateModel):
-            with self.subTest(dispatch=model_class.__name__):
-                model = object.__new__(model_class)
-                model.deformation_factor_method = "equation" + "_15"
-                with self.assertRaisesRegex(
-                    ValueError, "unsupported deformation_factor_method"
-                ):
-                    model.deformation_factor(
-                        Rib((0.0, 0.0), (1.0, 0.0), 1.0),
-                        0.2,
-                        SimpleNamespace(),
-                    )
+        self.assertCountEqual(scored_names, ["C1", "C2", "C3"])
+        self.assertEqual([rib.name for rib in inspected], ["C3", "C1"])
+        self.assertEqual([rib.name for rib in chosen], ["C3"])
+        self.assertFalse(any("shortlist" in line for line in optimizer.log))
 
     def test_pair_overlap_uses_length_only_for_equal_factor_tie(self):
         cfg = load_case(1, quick=True)
         shorter = Rib((0.0, 0.0), (10.0, 0.0), 2.0, "shorter")
         longer = Rib((0.0, 0.0), (20.0, 0.0), 2.0, "longer")
         optimizer = RibLayoutOptimizer(
-            SimpleNamespace(deformation_factor=lambda *args: 2.0), cfg
+            SimpleNamespace(candidate_efficiency=lambda *args: 2.0), cfg
         )
         _, chosen = optimizer._select_addition_candidates(
             [shorter, longer], [], SimpleNamespace(), limit=2
@@ -1630,7 +1570,7 @@ class CoreTests(unittest.TestCase):
         scores = {"shorter": 10.0, "longer": 8.0}
         optimizer = RibLayoutOptimizer(
             SimpleNamespace(
-                deformation_factor=lambda rib, thickness, result: scores[rib.name]
+                candidate_efficiency=lambda rib, thickness, result: scores[rib.name]
             ),
             cfg,
         )
@@ -1641,7 +1581,7 @@ class CoreTests(unittest.TestCase):
         self.assertTrue(any(
             "preferred for length" in line
             and "completely covers shorter rib" in line
-            and "regardless of factor difference=20.000%" in line
+            and "regardless of score difference=20.000%" in line
             for line in optimizer.log
         ))
 
@@ -1659,7 +1599,7 @@ class CoreTests(unittest.TestCase):
         }
         optimizer = RibLayoutOptimizer(
             SimpleNamespace(
-                deformation_factor=lambda rib, thickness, result: scores[rib.name]
+                candidate_efficiency=lambda rib, thickness, result: scores[rib.name]
             ),
             cfg,
         )
@@ -1668,7 +1608,7 @@ class CoreTests(unittest.TestCase):
         )
         self.assertEqual([rib.name for rib in chosen], ["C2"])
 
-    def test_stiffness_per_volume_mode_applies_full_coverage_rule(self):
+    def test_direct_stiffness_per_volume_ranking_applies_full_coverage_rule(self):
         cfg = load_case(1, quick=True)
         candidates = [
             Rib((0.0, 0.0), (10.0, 0.0), 2.0, "C1"),
@@ -1680,12 +1620,9 @@ class CoreTests(unittest.TestCase):
             "C2": 6.132447,
             "C9": 4.086556,
         }
-        model = SimpleNamespace(
-            deformation_factor_method="stiffness_per_volume",
-            deformation_factor=(
-                lambda rib, thickness, result: scores[rib.name]
-            ),
-        )
+        model = SimpleNamespace(candidate_efficiency=(
+            lambda rib, thickness, result: scores[rib.name]
+        ))
         optimizer = RibLayoutOptimizer(model, cfg)
         _, chosen = optimizer._select_addition_candidates(
             candidates, [], SimpleNamespace(), limit=2
@@ -1699,7 +1636,7 @@ class CoreTests(unittest.TestCase):
         scores = {"shorter": 10.0, "longer": 9.6}
         optimizer = RibLayoutOptimizer(
             SimpleNamespace(
-                deformation_factor=lambda rib, thickness, result: scores[rib.name]
+                candidate_efficiency=lambda rib, thickness, result: scores[rib.name]
             ),
             cfg,
         )
@@ -1717,7 +1654,7 @@ class CoreTests(unittest.TestCase):
         scores = {"long": 10.0, "weak": 5.0}
         optimizer = RibLayoutOptimizer(
             SimpleNamespace(
-                deformation_factor=lambda rib, thickness, result: scores[rib.name]
+                candidate_efficiency=lambda rib, thickness, result: scores[rib.name]
             ),
             cfg,
         )
@@ -1755,7 +1692,7 @@ class CoreTests(unittest.TestCase):
         lower_ranked = Rib((0.0, 5.0), (20.0, 5.0), 2.0, "lower_ranked")
         scores = {"covered_a": 3.0, "covered_b": 2.8, "lower_ranked": 2.2}
         optimizer = RibLayoutOptimizer(
-            SimpleNamespace(deformation_factor=lambda rib, thickness, result: scores[rib.name]),
+            SimpleNamespace(candidate_efficiency=lambda rib, thickness, result: scores[rib.name]),
             cfg,
         )
         inspected, chosen = optimizer._select_addition_candidates(
@@ -1776,7 +1713,7 @@ class CoreTests(unittest.TestCase):
         scores = {"covered_max": 10.0, "selected": 8.0, "below": 6.5}
         optimizer = RibLayoutOptimizer(
             SimpleNamespace(
-                deformation_factor=lambda rib, thickness, result: scores[rib.name]
+                candidate_efficiency=lambda rib, thickness, result: scores[rib.name]
             ),
             cfg,
         )
@@ -1804,7 +1741,7 @@ class CoreTests(unittest.TestCase):
         scores = {"C31": 10.0, "C11": 8.0}
         optimizer = RibLayoutOptimizer(
             SimpleNamespace(
-                deformation_factor=lambda rib, thickness, result: scores[rib.name]
+                candidate_efficiency=lambda rib, thickness, result: scores[rib.name]
             ),
             cfg,
         )
@@ -1825,7 +1762,7 @@ class CoreTests(unittest.TestCase):
         right = Rib((11.0, 0.0), (20.0, 0.0), 2.0, "right")
         candidate = Rib((0.0, 0.0), (20.0, 0.0), 2.0, "candidate")
         optimizer = RibLayoutOptimizer(
-            SimpleNamespace(deformation_factor=lambda *args: 1.0), cfg
+            SimpleNamespace(candidate_efficiency=lambda *args: 1.0), cfg
         )
         _, chosen = optimizer._select_addition_candidates(
             [candidate], [left, right], SimpleNamespace(), limit=1
@@ -1840,7 +1777,7 @@ class CoreTests(unittest.TestCase):
         covered_b = Rib((5.0, 10.0), (15.0, 10.0), 2.0, "covered_b")
         scores = {"covered_a": 3.0, "covered_b": 2.0}
         optimizer = RibLayoutOptimizer(
-            SimpleNamespace(deformation_factor=lambda rib, thickness, result: scores[rib.name]),
+            SimpleNamespace(candidate_efficiency=lambda rib, thickness, result: scores[rib.name]),
             cfg,
         )
         optimizer.filter_until_stable = lambda ribs, values, result: (
@@ -1869,7 +1806,7 @@ class CoreTests(unittest.TestCase):
         third = Rib((0.0, 10.0), (10.0, 10.0), 2.0, "third")
         scores = {"first": 10.0, "second": 7.0, "third": 6.0}
         optimizer = RibLayoutOptimizer(
-            SimpleNamespace(deformation_factor=lambda rib, thickness, result: scores[rib.name]),
+            SimpleNamespace(candidate_efficiency=lambda rib, thickness, result: scores[rib.name]),
             cfg,
         )
         inspected, chosen = optimizer._select_addition_candidates(
@@ -1884,7 +1821,7 @@ class CoreTests(unittest.TestCase):
         second = Rib((0.0, 5.0), (10.0, 5.0), 2.0, "second")
         scores = {"first": 10.0, "second": 7.01}
         optimizer = RibLayoutOptimizer(
-            SimpleNamespace(deformation_factor=lambda rib, thickness, result: scores[rib.name]),
+            SimpleNamespace(candidate_efficiency=lambda rib, thickness, result: scores[rib.name]),
             cfg,
         )
         _, chosen = optimizer._select_addition_candidates(
@@ -2203,7 +2140,7 @@ class CoreTests(unittest.TestCase):
         )
         self.assertEqual(set(attempt["removed_names"]), {"left", "right"})
 
-    def test_rationalization_repeats_deleted_max_batches_without_symmetry(self):
+    def test_rationalization_uses_fixed_thickest_seed_batches_without_symmetry(self):
         cfg = load_case(2, quick=True)
         cfg["mirror_symmetry"] = []
         cfg["algorithm"]["rationalization_geometry_iterations"] = 0
@@ -2220,11 +2157,13 @@ class CoreTests(unittest.TestCase):
         optimizer = RibLayoutOptimizer(ThresholdModel(), cfg)
         ribs = [
             Rib((0.0, float(i)), (10.0, float(i)), 2.0, f"R{i}")
-            for i in range(6)
+            for i in range(9)
         ]
-        thicknesses = np.full(6, 0.2)
+        thicknesses = np.full(9, 0.2)
         eq18_calls = []
-        saved_t = np.array([0.125, 0.10, 0.06, 0.04, 0.3, 0.4])
+        saved_t = np.array([
+            0.10, 0.12, 0.12, 0.08, 0.06, 0.04, 0.02, 0.3, 0.4,
+        ])
 
         def eq18(active_ribs, active_t, result, cref, tref, coordinate_bounds=None):
             eq18_calls.append(tref)
@@ -2255,22 +2194,25 @@ class CoreTests(unittest.TestCase):
             ribs, thicknesses, SimpleNamespace(compliance=1.0), relaxation=0.05
         )
         self.assertTrue(np.allclose(eq18_calls, [0.2]))
-        self.assertEqual([len(values) for values in geometry_inputs], [2, 4, 5])
+        self.assertEqual([len(values) for values in geometry_inputs], [2, 5, 8])
         self.assertTrue(np.allclose(geometry_inputs[0], [0.3, 0.4]))
         self.assertTrue(np.allclose(
-            geometry_inputs[1], [0.125, 0.10, 0.3, 0.4]
+            geometry_inputs[1], [0.10, 0.12, 0.12, 0.3, 0.4]
         ))
         self.assertTrue(np.allclose(
-            geometry_inputs[2], [0.125, 0.10, 0.06, 0.3, 0.4]
+            geometry_inputs[2], [
+                0.10, 0.12, 0.12, 0.08, 0.06, 0.04, 0.3, 0.4,
+            ]
         ))
         self.assertEqual(geometry_current_inputs, [None, None, None])
         self.assertTrue(np.allclose(geometry_move_steps, [0.5, 0.5, 0.5]))
         self.assertEqual(
-            [rib.name for rib in final_ribs], ["R0", "R1", "R2", "R4", "R5"]
+            [rib.name for rib in final_ribs],
+            ["R0", "R1", "R2", "R3", "R4", "R5", "R7", "R8"],
         )
         self.assertEqual(final_result.compliance, 1.04)
         self.assertTrue(any(
-            "restored_names=['R0', 'R1']" in line for line in optimizer.log
+            "seed_names=['R1', 'R2', 'R0']" in line for line in optimizer.log
         ))
         restorations = [
             event for event in optimizer.rationalization_history
@@ -2279,19 +2221,26 @@ class CoreTests(unittest.TestCase):
         self.assertEqual(len(restorations), 2)
         first, second = restorations
         self.assertEqual(
-            first["strategy"], "current_deleted_max_threshold_batch"
+            first["strategy"],
+            "fixed_initial_deleted_seed_count_thickest_first",
         )
         self.assertEqual([first["round"], second["round"]], [1, 2])
-        self.assertAlmostEqual(first["tdmax"], 0.125)
-        self.assertAlmostEqual(first["threshold"], 0.10)
+        self.assertEqual([first["n_rrib"], second["n_rrib"]], [7, 7])
+        self.assertEqual([first["seed_target"], second["seed_target"]], [3, 3])
         self.assertFalse(first["mirror_completion"])
-        self.assertEqual(first["eligible_names"], ["R0", "R1"])
-        self.assertEqual(first["restored_names"], ["R0", "R1"])
-        self.assertEqual(saved_t[1], first["threshold"])
-        self.assertIn("R1", first["restored_names"])
-        self.assertAlmostEqual(second["tdmax"], 0.06)
-        self.assertAlmostEqual(second["threshold"], 0.048)
-        self.assertEqual(second["restored_names"], ["R2"])
+        self.assertEqual(
+            first["ranked_currently_deleted_names"],
+            ["R1", "R2", "R0", "R3", "R4", "R5", "R6"],
+        )
+        self.assertEqual(first["seed_names"], ["R1", "R2", "R0"])
+        self.assertEqual(first["seed_thicknesses"], [0.12, 0.12, 0.10])
+        self.assertEqual(first["restored_names"], ["R0", "R1", "R2"])
+        self.assertEqual(
+            second["ranked_currently_deleted_names"],
+            ["R3", "R4", "R5", "R6"],
+        )
+        self.assertEqual(second["seed_names"], ["R3", "R4", "R5"])
+        self.assertEqual(second["restored_names"], ["R3", "R4", "R5"])
         validation_events = [
             event for event in optimizer.rationalization_history
             if event.get("event") == "post_filter_geometry"
@@ -2307,7 +2256,7 @@ class CoreTests(unittest.TestCase):
             event["threshold"] == 0.2 for event in filtering_events
         ))
 
-    def test_rationalization_threshold_batch_completes_configured_mirror_group(self):
+    def test_rationalization_fixed_seeds_complete_configured_mirror_groups(self):
         cfg = load_case(2, quick=True)
         cfg["algorithm"]["rationalization_geometry_iterations"] = 0
 
@@ -2326,11 +2275,15 @@ class CoreTests(unittest.TestCase):
             Rib((40.0, 0.0), (30.0, 10.0), 2.0, "A_right"),
             Rib((0.0, 20.0), (10.0, 10.0), 2.0, "B_left"),
             Rib((40.0, 20.0), (30.0, 10.0), 2.0, "B_right"),
+            Rib((0.0, 5.0), (10.0, 15.0), 2.0, "C_left"),
+            Rib((40.0, 5.0), (30.0, 15.0), 2.0, "C_right"),
             Rib((20.0, 0.0), (20.0, 10.0), 2.0, "center_a"),
             Rib((20.0, 10.0), (20.0, 20.0), 2.0, "center_b"),
         ]
-        thicknesses = np.full(6, 0.2)
-        saved_t = np.array([0.01, 0.011, 0.19, 0.05, 0.3, 0.4])
+        thicknesses = np.full(8, 0.2)
+        saved_t = np.array([
+            0.01, 0.009, 0.19, 0.011, 0.18, 0.012, 0.3, 0.4,
+        ])
 
         def eq18(active_ribs, active_t, result, cref, tref, coordinate_bounds=None):
             bounds = np.array([
@@ -2358,7 +2311,10 @@ class CoreTests(unittest.TestCase):
         self.assertEqual(geometry_names[0], ["center_a", "center_b"])
         self.assertEqual(
             geometry_names[1],
-            ["B_left", "B_right", "center_a", "center_b"],
+            [
+                "B_left", "B_right", "C_left", "C_right",
+                "center_a", "center_b",
+            ],
         )
         self.assertEqual(
             [rib.name for rib in final_ribs], geometry_names[1]
@@ -2370,10 +2326,67 @@ class CoreTests(unittest.TestCase):
         )
         self.assertTrue(restoration["mirror_completion"])
         self.assertEqual(restoration["mirror_axes"], ["x"])
-        self.assertEqual(restoration["eligible_names"], ["B_left"])
+        self.assertEqual(restoration["n_rrib"], 6)
+        self.assertEqual(restoration["seed_target"], 2)
+        self.assertEqual(restoration["seed_names"], ["B_left", "C_left"])
         self.assertEqual(
-            restoration["restored_names"], ["B_left", "B_right"]
+            restoration["restored_names"],
+            ["B_left", "B_right", "C_left", "C_right"],
         )
+        self.assertEqual(restoration["actual_restored_count"], 4)
+
+    def test_rationalization_recovery_seed_target_has_minimum_one(self):
+        cfg = load_case(2, quick=True)
+        cfg["mirror_symmetry"] = []
+        cfg["algorithm"]["rationalization_geometry_iterations"] = 0
+
+        class ThresholdModel:
+            width, height = cfg["domain"]
+            dx = width/cfg["mesh"][0]
+            dy = height/cfg["mesh"][1]
+
+        optimizer = RibLayoutOptimizer(ThresholdModel(), cfg)
+        ribs = [
+            Rib((0.0, float(i)), (10.0, float(i)), 2.0, f"R{i}")
+            for i in range(4)
+        ]
+        thicknesses = np.full(4, 0.2)
+        original_result = SimpleNamespace(compliance=1.0)
+
+        def eq18(active_ribs, active_t, result, cref, tref, coordinate_bounds=None):
+            bounds = np.array([
+                [[0.0, cfg["domain"][0]], [0.0, cfg["domain"][1]],
+                 [0.0, cfg["domain"][0]], [0.0, cfg["domain"][1]]]
+                for _ in active_ribs
+            ])
+            return (
+                list(active_ribs), np.array([0.01, 0.3, 0.3, 0.3]),
+                result, bounds,
+            )
+
+        optimizer._solve_rationalization_eq18 = eq18
+        optimizer.optimize_geometry = (
+            lambda active_ribs, active_t, result, bounds, max_iterations, **kwargs: (
+                list(active_ribs), np.asarray(active_t).copy(),
+                SimpleNamespace(compliance=1.10),
+            )
+        )
+        final_ribs, final_t, final_result = optimizer.rationalize(
+            ribs, thicknesses, original_result, relaxation=0.05
+        )
+
+        self.assertEqual(final_ribs, ribs)
+        self.assertTrue(np.array_equal(final_t, thicknesses))
+        self.assertIs(final_result, original_result)
+        restoration = next(
+            event for event in optimizer.rationalization_history
+            if event.get("event") == "restoration_after_failed_validation"
+        )
+        self.assertEqual(restoration["n_rrib"], 1)
+        self.assertEqual(restoration["seed_target"], 1)
+        self.assertEqual(restoration["seed_names"], ["R0"])
+        self.assertEqual(restoration["actual_restored_count"], 1)
+        self.assertFalse(restoration["mirror_completion"])
 
     def test_rationalization_restores_geometry_design_if_all_deletions_fail(self):
         cfg = load_case(2, quick=True)

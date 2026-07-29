@@ -47,7 +47,6 @@ COMMON_CONFIG: dict[str, Any] = {
     "rib_basis_cache_max_entries": 128,
     "linear_solver": LINEAR_SOLVER,
     "linear_solver_threads": LINEAR_SOLVER_THREADS,
-    "deformation_factor_method": "fixed_volume_net_benefit",
     "rib": {
         "segments": 10,
         "lower": 0.000001,
@@ -78,7 +77,6 @@ COMMON_CONFIG: dict[str, Any] = {
         "rationalization_dual_tolerance": 1.0e-9,
         "active_set_max_iterations": 12,
         "additions_per_iteration": 2,
-        "addition_endpoint_shortlist_size": 30,
         "addition_factor_min_ratio": 0.70,
         "addition_sizing_improvement_min": 0.01,
         "active_cycle_improvement_min": 0.01,
@@ -180,9 +178,6 @@ def build_model(cfg: dict) -> StiffenedPlateModel:
         nu=cfg["material"]["nu"],
         loads=cfg["load_cases"],
         supports=cfg["supports"],
-        deformation_factor_method=cfg.get(
-            "deformation_factor_method", "fixed_volume_net_benefit"
-        ),
     )
     if model_class is StiffenedPlateModel:
         return model_class(**model_arguments)

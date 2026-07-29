@@ -797,14 +797,14 @@ class RibLayoutOptimizer:
     def rationalization_reference_quantile(
         self, relaxation: float, n_rib: int
     ) -> float:
-        """Return ``q = 1/n_rib + 2*rho`` for the ``tref`` quantile."""
+        """Return ``q = 1/n_rib + rho`` for the ``tref`` quantile."""
         rib_count = int(n_rib)
         if rib_count <= 0 or rib_count != n_rib:
             raise ValueError("n_rib must be a positive integer")
-        quantile = 1.0/rib_count+2.0*float(relaxation)
+        quantile = 1.0/rib_count+float(relaxation)
         if not 0.0 < quantile < 1.0:
             raise ValueError(
-                "rationalization reference quantile q=1/n_rib+2*rho must "
+                "rationalization reference quantile q=1/n_rib+rho must "
                 f"lie strictly between zero and one; got q={quantile:.7g} "
                 f"for n_rib={rib_count}, rho={float(relaxation):.7g}"
             )
@@ -1017,224 +1017,30 @@ class RibLayoutOptimizer:
         active: Sequence[Rib],
         current: AnalysisResult,
         limit: int = 2,
-        active_thicknesses: Sequence[float] | None = None,
     ) -> tuple[list[Rib], list[Rib]]:
         """Rank candidates and scan until a strong nonconflicting batch is found.
 
-        The default production path first keeps the thirty strongest endpoint
-        energy-density candidates, then ranks them by predicted fixed-volume
-        net compliance benefit. Legacy direct callers without active
-        thicknesses retain the configured one-factor ranking path. Fully
-        covered or mutually overlapping candidates are skipped without
-        consuming a batch slot. When one collinear candidate completely covers
-        another, the covering longer candidate is preferred for
-        manufacturability regardless of factor gap.
+        Every candidate is ranked directly by its frozen-field stiffness
+        contribution per added rib volume. Fully covered or mutually
+        overlapping candidates are skipped without consuming a batch slot.
+        When one collinear candidate completely covers another, the covering
+        longer candidate is preferred for manufacturability regardless of
+        score gap.
         """
         workers = max(
             1, int(self.cfg["algorithm"].get("sensitivity_workers", 1))
         )
-        method = str(getattr(
-            self.model,
-            "deformation_factor_method",
-            self.cfg.get("deformation_factor_method", "fixed_volume_net_benefit"),
-        ))
-        use_fixed_volume_net = bool(
-            method == "fixed_volume_net_benefit"
-            and active_thicknesses is not None
-            and hasattr(self.model, "endpoint_energy_density")
-            and hasattr(self.model, "candidate_stiffness_energy")
-            and hasattr(self.model, "compliance_gradient")
-        )
-        score_details: dict[tuple, dict[str, object]] = {}
-
-        if use_fixed_volume_net:
-            active_t = np.asarray(active_thicknesses, float)
-            if len(active_t) != len(active):
-                raise ValueError("active rib and thickness counts must match")
-            shortlist_size = max(
-                1,
-                int(self.cfg["algorithm"].get(
-                    "addition_endpoint_shortlist_size", 30
-                )),
+        def score(candidate: Rib) -> tuple[float, Rib]:
+            return (
+                self.model.candidate_efficiency(candidate, self.t0, current),
+                candidate,
             )
 
-            def endpoint_score(candidate: Rib) -> tuple[float, Rib]:
-                return float(self.model.endpoint_energy_density(candidate, current)), candidate
-
-            uncovered_candidates = []
-            prefiltered_coverage: dict[tuple, list[str]] = {}
-            for candidate in candidates:
-                covering_ribs = collinear_union_covering_ribs(candidate, active)
-                if covering_ribs:
-                    prefiltered_coverage[candidate.key] = [
-                        rib.name for rib in covering_ribs
-                    ]
-                else:
-                    uncovered_candidates.append(candidate)
-            self.log.append(
-                "member candidate coverage prefilter: "
-                f"total={len(candidates)}, uncovered={len(uncovered_candidates)}, "
-                f"temporarily_excluded={len(prefiltered_coverage)}"
-            )
-
-            if workers > 1 and len(uncovered_candidates) > 1:
-                with ThreadPoolExecutor(max_workers=workers) as pool:
-                    endpoint_scored = list(pool.map(endpoint_score, uncovered_candidates))
-            else:
-                endpoint_scored = [
-                    endpoint_score(candidate) for candidate in uncovered_candidates
-                ]
-            endpoint_scored.sort(
-                key=lambda item: (
-                    -item[0] if np.isfinite(item[0]) else np.inf,
-                    -item[1].length,
-                    item[1].name,
-                    item[1].key,
-                )
-            )
-            shortlist = endpoint_scored[:shortlist_size]
-            self.log.append(
-                f"member candidate endpoint-energy shortlist: retained={len(shortlist)} "
-                f"of {len(endpoint_scored)} uncovered candidates, "
-                f"configured_limit={shortlist_size}"
-            )
-
-            volume_coefficients = np.asarray(
-                [rib.length*rib.height for rib in active], float
-            )
-            gradients = np.asarray(
-                self.model.compliance_gradient(active, active_t, current), float
-            )
-            marginal_benefits = np.divide(
-                -gradients,
-                volume_coefficients,
-                out=np.zeros_like(gradients),
-                where=volume_coefficients > 0.0,
-            )
-            marginal_benefits = np.maximum(marginal_benefits, 0.0)
-            active_energy_cache: dict[int, float] = {}
-
-            def active_energy(index: int) -> float:
-                if index not in active_energy_cache:
-                    active_energy_cache[index] = float(
-                        self.model.candidate_stiffness_energy(
-                            active[index], float(active_t[index]), current
-                        )
-                    )
-                return active_energy_cache[index]
-
-            def redistribution_benefit(
-                volume_to_add: float,
-                retained_indices: list[int],
-            ) -> tuple[float, float]:
-                """Return linearized benefit and any infeasible volume deficit."""
-                if abs(volume_to_add) <= 1.0e-12:
-                    return 0.0, 0.0
-                benefit = 0.0
-                remaining = abs(float(volume_to_add))
-                if volume_to_add > 0.0:
-                    ordered = sorted(
-                        retained_indices,
-                        key=lambda index: (-marginal_benefits[index], index),
-                    )
-                    for index in ordered:
-                        capacity = volume_coefficients[index]*max(
-                            self.t_upper-float(active_t[index]), 0.0
-                        )
-                        amount = min(remaining, capacity)
-                        benefit += marginal_benefits[index]*amount
-                        remaining -= amount
-                        if remaining <= 1.0e-12:
-                            break
-                    # Unused released volume is permitted by V <= Vmax and has
-                    # zero additional benefit when every retained rib is at its
-                    # upper bound.
-                    return float(benefit), 0.0
-
-                ordered = sorted(
-                    retained_indices,
-                    key=lambda index: (marginal_benefits[index], index),
-                )
-                for index in ordered:
-                    capacity = volume_coefficients[index]*max(
-                        float(active_t[index])-self.t_lower, 0.0
-                    )
-                    amount = min(remaining, capacity)
-                    benefit -= marginal_benefits[index]*amount
-                    remaining -= amount
-                    if remaining <= 1.0e-12:
-                        break
-                return float(benefit), float(max(remaining, 0.0))
-
-            scored = []
-            for endpoint_rank, (endpoint_factor, candidate) in enumerate(
-                shortlist, start=1
-            ):
-                replaced_indices = [
-                    index
-                    for index, active_rib in enumerate(active)
-                    if collinear_covered(active_rib, candidate)
-                ]
-                replaced_set = set(replaced_indices)
-                retained_indices = [
-                    index for index in range(len(active))
-                    if index not in replaced_set
-                ]
-                candidate_volume = (
-                    candidate.length*candidate.height*float(self.t0)
-                )
-                candidate_energy = float(
-                    self.model.candidate_stiffness_energy(
-                        candidate, float(self.t0), current
-                    )
-                )
-                removed_volume = float(sum(
-                    volume_coefficients[index]*float(active_t[index])
-                    for index in replaced_indices
-                ))
-                removed_energy = float(sum(
-                    active_energy(index) for index in replaced_indices
-                ))
-                redistribution, deficit = redistribution_benefit(
-                    removed_volume-candidate_volume,
-                    retained_indices,
-                )
-                net_benefit = (
-                    candidate_energy-removed_energy+redistribution
-                    if deficit <= 1.0e-10
-                    else -np.inf
-                )
-                scored.append((float(net_benefit), candidate))
-                score_details[candidate.key] = {
-                    "endpoint_rank": int(endpoint_rank),
-                    "endpoint_factor": float(endpoint_factor),
-                    "candidate_energy": candidate_energy,
-                    "removed_energy": removed_energy,
-                    "redistribution": float(redistribution),
-                    "deficit": float(deficit),
-                    "replaced_names": [active[index].name for index in replaced_indices],
-                }
-            self.log.append(
-                "member candidate fixed-volume net-benefit ranking completed: "
-                f"active_ribs={len(active)}, shortlist={len(scored)}"
-            )
+        if workers > 1 and len(candidates) > 1:
+            with ThreadPoolExecutor(max_workers=workers) as pool:
+                scored = list(pool.map(score, candidates))
         else:
-            def score(candidate: Rib) -> tuple[float, Rib]:
-                return (
-                    self.model.deformation_factor(candidate, self.t0, current),
-                    candidate,
-                )
-
-            if method == "fixed_volume_net_benefit":
-                self.log.append(
-                    "member candidate fixed-volume ranking unavailable without "
-                    "active thicknesses/model operators; using direct ranking fallback"
-                )
-            if workers > 1 and len(candidates) > 1:
-                with ThreadPoolExecutor(max_workers=workers) as pool:
-                    scored = list(pool.map(score, candidates))
-            else:
-                scored = [score(candidate) for candidate in candidates]
+            scored = [score(candidate) for candidate in candidates]
         scored.sort(
             key=lambda item: (
                 -item[0] if np.isfinite(item[0]) else np.inf,
@@ -1269,48 +1075,36 @@ class RibLayoutOptimizer:
         maximum_factor = max(positive_factors, default=-np.inf)
         if positive_factors:
             self.log.append(
-                f"member candidate eligible factor reference: "
+                f"member candidate eligible stiffness-per-volume score reference: "
                 f"eligible={len(eligible_reference_scores)} of {len(scored)}, "
                 f"maximum={maximum_factor:.7g}, "
                 f"minimum selection ratio={minimum_factor_ratio:.4f}, "
-                f"minimum factor={minimum_factor_ratio*maximum_factor:.7g}"
+                f"minimum score={minimum_factor_ratio*maximum_factor:.7g}"
             )
         else:
             self.log.append(
                 "member candidate scan stopped: no positive uncovered "
-                "candidate is eligible for the factor reference"
+                "candidate is eligible for the stiffness-per-volume score reference"
             )
             return inspected, chosen
         for factor, candidate in scored:
             if len(chosen) >= max(int(limit), 0):
                 break
             inspected.append(candidate)
-            details = score_details.get(candidate.key)
-            if details is None:
-                self.log.append(
-                    f"member candidate ranked: {candidate.name}, L={candidate.length:.7g}, "
-                    f"deformation_factor={factor:.7g}"
-                )
-            else:
-                self.log.append(
-                    f"member candidate ranked by fixed-volume net benefit: "
-                    f"{candidate.name}, L={candidate.length:.7g}, "
-                    f"net_benefit={factor:.9g}, endpoint_rank={details['endpoint_rank']}, "
-                    f"endpoint_energy={details['endpoint_factor']:.9g}, "
-                    f"candidate_energy={details['candidate_energy']:.9g}, "
-                    f"removed_energy={details['removed_energy']:.9g}, "
-                    f"redistribution={details['redistribution']:.9g}, "
-                    f"replaced={details['replaced_names']}"
-                )
+            self.log.append(
+                f"member candidate ranked: {candidate.name}, L={candidate.length:.7g}, "
+                f"stiffness_per_volume_score={factor:.7g}"
+            )
             if not np.isfinite(factor) or factor <= 0.0:
                 self.log.append(
-                    "member candidate scan stopped: no positive deformation factor remains"
+                    "member candidate scan stopped: no positive "
+                    "stiffness-per-volume score remains"
                 )
                 break
             ratio_to_maximum = float(factor)/maximum_factor
             if ratio_to_maximum < minimum_factor_ratio:
                 self.log.append(
-                    f"member candidate scan stopped: {candidate.name} factor ratio="
+                    f"member candidate scan stopped: {candidate.name} score ratio="
                     f"{ratio_to_maximum:.4f} < {minimum_factor_ratio:.4f} relative "
                     f"to eligible maximum {maximum_factor:.7g}; "
                     "no later candidate is eligible"
@@ -1356,12 +1150,12 @@ class RibLayoutOptimizer:
                     chosen_factors[overlap_index] = float(factor)
                     self.log.append(
                         f"member candidate preferred for length: {candidate.name} "
-                        f"(L={candidate.length:.7g}, factor={factor:.7g}) replaces "
+                        f"(L={candidate.length:.7g}, score={factor:.7g}) replaces "
                         f"overlapping collinear {selected.name} "
-                        f"(L={selected.length:.7g}, factor={selected_factor:.7g}); "
+                        f"(L={selected.length:.7g}, score={selected_factor:.7g}); "
                         f"longer rib completely covers shorter rib and is "
                         f"preferred regardless of "
-                        f"factor difference={100*relative_factor_difference:.3f}%"
+                        f"score difference={100*relative_factor_difference:.3f}%"
                     )
                 else:
                     selected_covers_candidate = collinear_covered(
@@ -1375,7 +1169,7 @@ class RibLayoutOptimizer:
                     self.log.append(
                         f"member candidate skipped: {candidate.name} "
                         f"{overlap_reason} preferred rib {selected.name} "
-                        f"(factor difference={100*relative_factor_difference:.3f}%, "
+                        f"(score difference={100*relative_factor_difference:.3f}%, "
                         f"lengths={candidate.length:.7g}/{selected.length:.7g})"
                     )
                 continue
@@ -1384,8 +1178,7 @@ class RibLayoutOptimizer:
             chosen_factors.append(float(factor))
             self.log.append(
                 f"member candidate accepted for batch: {candidate.name}, "
-                f"{'net_benefit' if use_fixed_volume_net else 'deformation_factor'}="
-                f"{factor:.7g}"
+                f"stiffness_per_volume_score={factor:.7g}"
             )
         chosen = self._mirror_complete_addition_batch(
             chosen, candidates, active, limit
@@ -1415,7 +1208,6 @@ class RibLayoutOptimizer:
                 ribs,
                 current,
                 limit=int(settings.get("additions_per_iteration", 2)),
-                active_thicknesses=thicknesses,
             )
             attempted_keys.update(candidate.key for candidate in chosen)
             if not chosen:
@@ -2330,19 +2122,19 @@ class RibLayoutOptimizer:
         )
         recovery_iterations = int(settings["rationalization_geometry_iterations"])
         tref = float(np.quantile(base_t, reference_quantile))
-        recovery_threshold_fraction = 0.8
         phase_start = self.analysis_count
-        self.rationalization_history.append({
+        reference_record = {
             "event": "reference",
             "tref": tref,
             "reference_quantile": reference_quantile,
-            "reference_quantile_formula": "1/n_rib + 2*rho",
+            "reference_quantile_formula": "1/n_rib + rho",
             "n_rib_before_rationalization": n_rib_before_rationalization,
             "relaxation": float(relaxation),
-            "recovery_strategy": "repeated_current_deleted_max_threshold_batch",
-            "recovery_threshold_fraction": recovery_threshold_fraction,
-            "recovery_threshold_basis": (
-                "maximum_saved_eq18_thickness_of_currently_deleted_ribs"
+            "recovery_strategy": "fixed_initial_deleted_seed_count_thickest_first",
+            "recovery_seed_target_formula": "max(1, ceil(n_rrib/3))",
+            "recovery_seed_target_basis": "initial_deleted_rib_count",
+            "recovery_seed_ranking": (
+                "saved_eq18_thickness_descending_then_original_index"
             ),
             "recovery_mirror_completion": bool(self.mirror_axes),
             "recovery_mirror_axes": list(self.mirror_axes),
@@ -2350,13 +2142,14 @@ class RibLayoutOptimizer:
             "final_acceptance_limit": acceptance_limit,
             "eq18_compliance_limit": 1.001*cref,
             "geometry_compliance": float(geometry_result.compliance),
-        })
+        }
+        self.rationalization_history.append(reference_record)
         self.log.append(
             f"rationalization quantile-threshold solve: tref={tref:.7g}, "
             f"{100*reference_quantile:.7g}th percentile of "
             f"{len(base_t)} geometry-stage thicknesses "
             f"(q=1/{n_rib_before_rationalization} + "
-            f"2*{float(relaxation):.7g}), "
+            f"{float(relaxation):.7g}), "
             f"Cref={cref:.7g}, Eq.18 compliance limit={1.001*cref:.7g}"
         )
         continuous_ribs, continuous_t, continuous_result, bounds = (
@@ -2435,13 +2228,29 @@ class RibLayoutOptimizer:
             )
             return base_ribs, base_t, geometry_result
 
+        n_rrib = len(initial_removed_indices)
+        recovery_seed_target = max(1, (n_rrib+2)//3)
+        reference_record.update({
+            "n_rrib": n_rrib,
+            "recovery_seed_target": recovery_seed_target,
+        })
+        self.log.append(
+            "rationalization recovery configuration: "
+            "strategy=fixed_initial_deleted_seed_count_thickest_first, "
+            f"n_rrib={n_rrib}, seed_target={recovery_seed_target}, "
+            "seed_target_formula=max(1,ceil(n_rrib/3)), "
+            "ranking=saved_eq18_thickness_descending_then_original_index, "
+            f"mirror_completion={bool(self.mirror_axes)}, "
+            f"mirror_axes={list(self.mirror_axes)}"
+        )
+
         attempt_costs = []
-        # Keep tref and Cref fixed. After every failed reduced-topology solve,
-        # recompute tdmax from the ribs that remain deleted and restore in one
-        # batch all of them with saved Eq. (18) thickness t >= 0.8*tdmax.
-        # Complete each batch to mirror groups only when symmetry was
-        # explicitly configured, then re-solve while at least one rib remains
-        # deleted.
+        # Keep tref, Cref, n_rrib, and the seed target fixed. After every failed
+        # reduced-topology solve, rank the ribs that remain deleted by saved
+        # Eq. (18) thickness (original index breaks ties), restore up to the
+        # fixed number of seeds, and complete their mirror groups only when
+        # symmetry was explicitly configured. Re-solve while at least one rib
+        # remains deleted.
         removal_indices = set(initial_removed_indices)
         maximum_attempts = len(initial_removed_indices)
         recovery_round = 0
@@ -2590,49 +2399,55 @@ class RibLayoutOptimizer:
                 )
 
             recovery_round += 1
-            tdmax = max(float(saved_t[index]) for index in removal_indices)
-            recovery_threshold = recovery_threshold_fraction*tdmax
-            threshold_eligible_mask = np.array([
-                index in removal_indices
-                and float(saved_t[index]) >= recovery_threshold
-                for index in range(len(saved_ribs))
-            ], dtype=bool)
-            threshold_restore_mask = threshold_eligible_mask.copy()
+            ranked_indices = sorted(
+                removal_indices,
+                key=lambda index: (-float(saved_t[index]), int(index)),
+            )
+            seed_indices = ranked_indices[:recovery_seed_target]
+            seed_mask = np.zeros(len(saved_ribs), dtype=bool)
+            seed_mask[seed_indices] = True
+            restore_mask = seed_mask.copy()
             if self.mirror_axes:
-                threshold_restore_mask = self._mirror_expand_mask(
-                    saved_ribs, threshold_restore_mask
+                restore_mask = self._mirror_expand_mask(
+                    saved_ribs, restore_mask
                 )
             restore_indices = sorted(
                 index for index in removal_indices
-                if threshold_restore_mask[index]
+                if restore_mask[index]
             )
-            threshold_eligible_indices = list(map(
-                int, np.flatnonzero(threshold_eligible_mask)
-            ))
             for restore_index in restore_indices:
                 removal_indices.remove(restore_index)
+            seed_names = [saved_ribs[index].name for index in seed_indices]
             restored_names = [saved_ribs[index].name for index in restore_indices]
             self.rationalization_history.append({
                 "event": "restoration_after_failed_validation",
                 "attempt": attempt,
                 "round": recovery_round,
-                "strategy": "current_deleted_max_threshold_batch",
-                "tdmax": tdmax,
-                "threshold_fraction": recovery_threshold_fraction,
-                "threshold": float(recovery_threshold),
-                "recovery_threshold": float(recovery_threshold),
-                "threshold_comparison": ">=",
+                "strategy": "fixed_initial_deleted_seed_count_thickest_first",
+                "n_rrib": n_rrib,
+                "seed_target": recovery_seed_target,
+                "seed_target_formula": "max(1, ceil(n_rrib/3))",
+                "seed_target_basis": "initial_deleted_rib_count",
+                "ranking": "saved_eq18_thickness_descending_then_original_index",
                 "mirror_completion": bool(self.mirror_axes),
                 "mirror_axes": list(self.mirror_axes),
-                "eligible_indices": [
-                    index+1 for index in threshold_eligible_indices
+                "ranked_currently_deleted_indices": [
+                    index+1 for index in ranked_indices
                 ],
-                "eligible_names": [
-                    saved_ribs[index].name
-                    for index in threshold_eligible_indices
+                "ranked_currently_deleted_names": [
+                    saved_ribs[index].name for index in ranked_indices
+                ],
+                "ranked_currently_deleted_thicknesses": [
+                    float(saved_t[index]) for index in ranked_indices
+                ],
+                "seed_indices": [index+1 for index in seed_indices],
+                "seed_names": seed_names,
+                "seed_thicknesses": [
+                    float(saved_t[index]) for index in seed_indices
                 ],
                 "restored_indices": [index+1 for index in restore_indices],
                 "restored_names": restored_names,
+                "actual_restored_count": len(restore_indices),
                 "remaining_removed_indices": [
                     index+1 for index in sorted(removal_indices)
                 ],
@@ -2643,14 +2458,16 @@ class RibLayoutOptimizer:
             self.log.append(
                 f"rationalization restoration after failed attempt {attempt}: "
                 f"round={recovery_round}, "
-                "strategy=current_deleted_max_threshold_batch, "
-                f"tdmax={tdmax:.9g}, "
-                f"threshold={recovery_threshold:.9g}=0.8*tdmax, "
+                "strategy=fixed_initial_deleted_seed_count_thickest_first, "
+                f"n_rrib={n_rrib}, seed_target={recovery_seed_target}, "
                 f"mirror_completion={bool(self.mirror_axes)}, "
                 f"mirror_axes={list(self.mirror_axes)}, "
-                f"eligible_indices={[index+1 for index in threshold_eligible_indices]}, "
+                f"seed_indices={[index+1 for index in seed_indices]}, "
+                f"seed_names={seed_names}, "
+                f"seed_thicknesses={[float(saved_t[index]) for index in seed_indices]}, "
                 f"restored_indices={[index+1 for index in restore_indices]}, "
-                f"restored_names={restored_names}"
+                f"restored_names={restored_names}, "
+                f"actual_restored_count={len(restore_indices)}"
             )
             if not removal_indices:
                 self.log.append(
@@ -2660,7 +2477,7 @@ class RibLayoutOptimizer:
                 break
             self.log.append(
                 f"rationalization retrying Eq.7 after recovery round "
-                f"{recovery_round} threshold-batch restoration"
+                f"{recovery_round} fixed-seed restoration"
             )
 
         cost_text = ", ".join(

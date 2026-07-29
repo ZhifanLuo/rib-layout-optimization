@@ -14,11 +14,7 @@ from scipy.linalg import LinAlgWarning, solve
 from scipy.sparse import csc_matrix, coo_matrix
 from scipy.sparse.linalg import splu
 
-from .model import (
-    AnalysisResult,
-    Rib,
-    endpoint_energy_density_factor,
-)
+from .model import AnalysisResult, Rib
 from rib_layout_env import (
     DETERMINISTIC_LINEAR_SOLVER_THREADS,
     DETERMINISTIC_SENSITIVITY_WORKERS,
@@ -54,7 +50,6 @@ class ShellStiffenedPlateModel:
         sensitivity_workers: int = 1,
         linear_solver: str = "auto",
         linear_solver_threads: int = 1,
-        deformation_factor_method: str = "fixed_volume_net_benefit",
         **_: object,
     ) -> None:
         self.width, self.height = float(width), float(height)
@@ -81,14 +76,6 @@ class ShellStiffenedPlateModel:
         self.sensitivity_workers = DETERMINISTIC_SENSITIVITY_WORKERS
         self.linear_solver = str(linear_solver).lower()
         self.linear_solver_threads = DETERMINISTIC_LINEAR_SOLVER_THREADS
-        self.deformation_factor_method = str(deformation_factor_method).lower()
-        if self.deformation_factor_method not in {
-            "stiffness_per_volume", "fixed_volume_net_benefit"
-        }:
-            raise ValueError(
-                "deformation_factor_method must be stiffness_per_volume "
-                "or fixed_volume_net_benefit"
-            )
         if self.linear_solver not in {"auto", "pardiso", "superlu"}:
             raise ValueError("linear_solver must be auto, pardiso, or superlu")
         self._pardiso_spsolve = None
@@ -121,6 +108,21 @@ class ShellStiffenedPlateModel:
         self.fixed_dofs = self._build_supports(supports)
         self.free_dofs = np.setdiff1d(np.arange(self.ndof), self.fixed_dofs)
         self.load_vectors, self.load_weights = self._build_loads(loads)
+
+    @staticmethod
+    def _rib_numeric_geometry_key(rib: Rib) -> tuple:
+        """Return an exact, orientation-preserving key for numeric caches."""
+        return (
+            tuple(float(value) for value in rib.p0),
+            tuple(float(value) for value in rib.p1),
+            float(rib.height),
+            int(rib.segments),
+        )
+
+    @classmethod
+    def _rib_numeric_state_key(cls, rib: Rib, thickness: float) -> tuple:
+        """Return the exact geometry-and-thickness numeric cache key."""
+        return cls._rib_numeric_geometry_key(rib), float(thickness)
 
     def node(self, ix: int, iy: int) -> int:
         return iy * (self.nx + 1) + ix
@@ -415,7 +417,7 @@ class ShellStiffenedPlateModel:
         rib: Rib,
     ) -> tuple[np.ndarray, csc_matrix, csc_matrix]:
         """Assemble thickness-linear/cubic sparse matrices for one rib."""
-        key = rib.key
+        key = self._rib_numeric_geometry_key(rib)
         if key in self._rib_basis_cache:
             value = self._rib_basis_cache.pop(key)
             self._rib_basis_cache[key] = value
@@ -518,7 +520,7 @@ class ShellStiffenedPlateModel:
         that scalar is needlessly expensive for long ribs. This routine gives
         the identical scalar by equilibrating the free top-edge DOFs directly.
         """
-        key = (rib.key, round(float(thickness), 10))
+        key = self._rib_numeric_state_key(rib, thickness)
         if cache_operator:
             with self._candidate_operator_cache_lock:
                 cached = self._candidate_operator_cache.get(key)
@@ -681,7 +683,7 @@ class ShellStiffenedPlateModel:
         return matrix, free_dofs
 
     def rib_stiffness(self, rib: Rib, thickness: float) -> csc_matrix:
-        key = (rib.key, round(float(thickness), 10))
+        key = self._rib_numeric_state_key(rib, thickness)
         if key in self._rib_cache:
             matrix = self._rib_cache.pop(key)
             self._rib_cache[key] = matrix
@@ -742,12 +744,6 @@ class ShellStiffenedPlateModel:
         """Return the candidate's weighted frozen-field stiffness energy."""
         return self._rib_energy_direct(
             rib, float(thickness), result, cache_operator=True
-        )
-
-    def endpoint_energy_density(self, rib: Rib, result: AnalysisResult) -> float:
-        """Return the fast endpoint surrogate used before net-benefit ranking."""
-        return endpoint_energy_density_factor(
-            self.response_at, self.load_weights, self.E, rib, result
         )
 
     def compliance_gradient(self, ribs: Sequence[Rib], thicknesses: Sequence[float], result: AnalysisResult) -> np.ndarray:
@@ -1057,22 +1053,3 @@ class ShellStiffenedPlateModel:
     def response_at(self, displacement: np.ndarray, point: Sequence[float]) -> np.ndarray:
         nodes,weights=self.interpolation(point)
         return sum(float(w)*displacement[6*n:6*n+6] for n,w in zip(nodes,weights))
-
-    def deformation_factor(self,rib:Rib,thickness:float,result:AnalysisResult)->float:
-        """Evaluate the configured candidate-ranking measure."""
-        if self.deformation_factor_method == "stiffness_per_volume":
-            return self.deformation_factor_stiffness_per_volume(
-                rib,thickness,result
-            )
-        if self.deformation_factor_method == "fixed_volume_net_benefit":
-            return self.endpoint_energy_density(rib,result)
-        raise ValueError(
-            "unsupported deformation_factor_method: "
-            f"{self.deformation_factor_method}"
-        )
-
-    def deformation_factor_stiffness_per_volume(
-        self,rib:Rib,thickness:float,result:AnalysisResult
-    )->float:
-        """Return the preserved frozen-energy/volume ranking measure."""
-        return self.candidate_efficiency(rib,thickness,result)

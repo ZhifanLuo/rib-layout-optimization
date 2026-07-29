@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Callable, Iterable, Sequence
+from typing import Sequence
 
 import numpy as np
 from scipy.sparse import coo_matrix, csc_matrix, eye
@@ -37,40 +37,6 @@ class AnalysisResult:
     load_compliances: list[float]
 
 
-def endpoint_energy_density_factor(
-    response_at: Callable[[np.ndarray, Sequence[float]], np.ndarray],
-    load_weights: Sequence[float],
-    elastic_modulus: float,
-    rib: Rib,
-    result: AnalysisResult,
-) -> float:
-    """Return a fast endpoint strain-energy-density surrogate.
-
-    The axial endpoint strain and transverse rotation gradient are squared and
-    weighted by their membrane and bending stiffness scales.  The measure is
-    used only to form a small candidate shortlist; final ranking uses the
-    fixed-volume net compliance benefit.
-    """
-    length = float(rib.length)
-    if length <= 0.0:
-        return -np.inf
-    direction_2d = (np.asarray(rib.p1, float)-np.asarray(rib.p0, float))/length
-    axial = np.array([direction_2d[0], direction_2d[1], 0.0])
-    transverse = np.array([-direction_2d[1], direction_2d[0], 0.0])
-    factor = 0.0
-    for weight, displacement in zip(load_weights, result.displacements):
-        response_0 = np.asarray(response_at(displacement, rib.p0), float)
-        response_1 = np.asarray(response_at(displacement, rib.p1), float)
-        relative = response_1[:6]-response_0[:6]
-        axial_strain = float(axial@relative[:3])/length
-        rotation_gradient = float(transverse@relative[3:6])/length
-        density = float(elastic_modulus)*(
-            axial_strain**2 + float(rib.height)**2*rotation_gradient**2/12.0
-        )
-        factor += float(weight)*density
-    return float(factor)
-
-
 class StiffenedPlateModel:
     """Structured wall grid with eccentric 3-D frame rib stiffeners.
 
@@ -92,7 +58,6 @@ class StiffenedPlateModel:
         loads: Sequence[dict],
         supports: dict,
         diagonal_scale: float = 0.12,
-        deformation_factor_method: str = "fixed_volume_net_benefit",
     ) -> None:
         self.width, self.height = float(width), float(height)
         self.nx, self.ny = int(nx), int(ny)
@@ -108,14 +73,6 @@ class StiffenedPlateModel:
         self.load_vectors, self.load_weights = self._build_loads(loads)
         if not self.load_vectors:
             raise ValueError("at least one load case is required")
-        self.deformation_factor_method = str(deformation_factor_method).lower()
-        if self.deformation_factor_method not in {
-            "stiffness_per_volume", "fixed_volume_net_benefit"
-        }:
-            raise ValueError(
-                "deformation_factor_method must be stiffness_per_volume "
-                "or fixed_volume_net_benefit"
-            )
 
     def node(self, ix: int, iy: int) -> int:
         return iy * (self.nx + 1) + ix
@@ -320,33 +277,6 @@ class StiffenedPlateModel:
         )
         return float(energy)
 
-    def endpoint_energy_density(self, rib: Rib, result: AnalysisResult) -> float:
-        """Return the fast endpoint surrogate used before net-benefit ranking."""
-        return endpoint_energy_density_factor(
-            self.response_at, self.load_weights, self.E, rib, result
-        )
-
     def response_at(self, displacement: np.ndarray, point: Sequence[float]) -> np.ndarray:
         nodes, weights = self.interpolation(point)
         return sum(float(w) * displacement[6*n:6*n+6] for n, w in zip(nodes, weights))
-
-    def deformation_factor(
-        self, rib: Rib, thickness: float, result: AnalysisResult
-    ) -> float:
-        """Evaluate the configured candidate-ranking measure."""
-        if self.deformation_factor_method == "stiffness_per_volume":
-            return self.deformation_factor_stiffness_per_volume(
-                rib, thickness, result
-            )
-        if self.deformation_factor_method == "fixed_volume_net_benefit":
-            return self.endpoint_energy_density(rib, result)
-        raise ValueError(
-            "unsupported deformation_factor_method: "
-            f"{self.deformation_factor_method}"
-        )
-
-    def deformation_factor_stiffness_per_volume(
-        self, rib: Rib, thickness: float, result: AnalysisResult
-    ) -> float:
-        """Return the preserved frozen-energy/volume ranking measure."""
-        return self.candidate_efficiency(rib, thickness, result)

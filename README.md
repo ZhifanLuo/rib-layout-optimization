@@ -9,8 +9,8 @@ Optimization*. It implements:
 1. compliance minimization with a rib-volume and thickness bounds;
 2. performance-validated thickness filtering using only the prescribed
    thickness threshold and compliance check;
-3. endpoint strain-energy-density shortlisting followed by fixed-volume net
-   compliance-benefit ranking;
+3. direct candidate ranking by frozen-field stiffness energy per added rib
+   volume;
 4. fixed-connectivity endpoint geometry optimization;
 5. smooth-Heaviside rationalization, threshold deletion, and geometry
    optimization of the reduced active set.
@@ -60,14 +60,10 @@ optimization; otherwise the next member-addition round begins. Tried candidates 
 immediately reinserted if filtering removes them. If a member-addition round
 retains no new rib after filtering, adaptive optimization stops immediately
 and geometry optimization begins; no further candidate is attempted. All
-examples first temporarily exclude candidates fully covered by one active rib
-or a gap-free union of active collinear ribs, then retain the 30 remaining
-candidates with the highest endpoint strain-energy-density surrogate. The shortlist is ranked by fixed-volume net
-compliance benefit: candidate stiffness energy minus covered-rib stiffness
-loss and the linearized compliance cost of redistributing existing rib
-material. The earlier `stiffness_per_volume` mode remains selectable; the
-active setting is `fixed_volume_net_benefit`. At most two
-independently ranked candidate seeds are then checked. Under mirror symmetry,
+examples rank every candidate directly by its frozen-displacement-field
+stiffness energy divided by the volume added at the prescribed initial
+thickness. At most two independently ranked candidate seeds are then checked.
+Under mirror symmetry,
 if the first seed needs a new reflected partner, that two-rib orbit fills the
 batch immediately. Only when the first seed needs no new partner is the second
 seed considered; if the second seed needs a reflected partner, it is also
@@ -80,8 +76,8 @@ ranking-score difference. Partial overlaps retain the higher-ranked
 candidate; equal-length duplicates retain their ranking order. This length
 preference does not apply to non-collinear candidates or to collinear
 candidates that only meet at an endpoint. Every selected candidate must have
-a fixed-volume net benefit at least `70%` of the maximum benefit among eligible
-members of the 30-candidate shortlist. Candidates fully covered by one existing
+a stiffness-per-added-volume factor at least `70%` of the maximum factor among
+eligible candidates. Candidates fully covered by one existing
 rib or a gap-free union of existing collinear ribs are excluded before this
 reference is calculated; exactly `70%` is eligible. Covered or overlapping candidates are skipped while the
 ranked pool is scanned for a replacement. Member addition terminates only
@@ -90,14 +86,14 @@ candidate wholly covers an existing shorter rib, the trial active set replaces
 the shorter rib with the longer candidate before sizing. A candidate wholly
 covered by one existing rib or by a gap-free union of existing collinear ribs
 is still skipped. Partial collinear overlap is left unchanged for now.
-These geometric coverage and candidate-selection rules are common to the
-`fixed_volume_net_benefit` and `stiffness_per_volume` modes.
+These geometric coverage rules are applied to the single direct
+stiffness-per-volume ranking path.
 Geometry optimization treats every active thickness and endpoint coordinate
 simultaneously. Endpoint coordinates are bounded only by the ground-shell
 domain; their local bounds are recomputed around the current coordinates after
 every FEA by the enhanced-MMA move-limit rule. Rationalization uses the same
 dynamic move limits. It solves Eq. (18) once with `tref` equal to the
-`q = 1/n_rib + 2*rho` thickness quantile of the geometry-stage ribs, where
+`q = 1/n_rib + rho` thickness quantile of the geometry-stage ribs, where
 `n_rib` is the number of ribs immediately before rationalization and `rho` is
 the prescribed compliance relaxation. This value is calculated once and kept
 fixed throughout rationalization. Its projection continuation starts at
@@ -108,13 +104,15 @@ True Eq. (18) compliance up to `1.001*Cref` is treated as feasible and enters
 the convergence test. If no thickness falls below `tref`, rationalization
 restores the preceding geometry result and stops. Otherwise it deletes the
 complete thin/short-light filtering batch and solves Eq. (7). The final
-acceptance limit is exactly `Cref`. If the result violates `Cref`, let `tdmax`
-be the maximum saved Eq. (18) thickness among the ribs that remain deleted.
-Every currently deleted rib satisfying `te >= 0.8*tdmax` is restored as one
-batch before Eq. (7) is solved again. The restored batch is completed to its
-available mirror groups only when mirror symmetry is configured; otherwise the
-rib decisions are independent. `tdmax` is recomputed after each failed solve.
-This continues until the limit is met or no deletion can be accepted. Eq. (18)
+acceptance limit is exactly `Cref`. If the result violates `Cref`, let `n_rrib`
+be the number of ribs deleted in the initial discrete deletion attempt. Each
+recovery round restores up to the fixed number
+`max(1, ceil(n_rrib/3))` of ribs that remain deleted, ranked by their saved
+Eq. (18) thickness in descending order with original rib index breaking ties.
+The restored seeds are completed to their available mirror groups only when
+mirror symmetry is configured; otherwise the rib decisions are independent.
+The seed target remains fixed across repeated recovery rounds. This continues
+until the limit is met or no deletion can be accepted. Eq. (18)
 and these post-deletion Eq. (7) solves use `Gstep=0.5`. If none is accepted, the preceding geometry
 result is restored. No standalone deletion-verification FEA is performed; the
 reduced topology enters Eq. (7) directly, and its necessary initialization FEA
@@ -190,8 +188,8 @@ coordinates about `x=width/2`; axis `y` reflects them about `y=height/2`.
 Initial and candidate ground structures must be closed under every configured
 reflection. Member addition completes a strong candidate with its mirror
 orbit. Filtering and rationalization delete an orbit only when every member
-qualifies, while a failed rationalization trial restores the whole orbit when
-any member crosses the restoration threshold. This conservative group rule
+qualifies, while a failed rationalization trial completes each selected
+recovery seed to its mirror orbit. This conservative group rule
 preserves manufacturable symmetry under small load or numerical asymmetries.
 Sizing, geometry optimization, and the rationalization Eq. (18) also assemble
 their design vectors in reduced mirror variables: all ribs in one mirror orbit

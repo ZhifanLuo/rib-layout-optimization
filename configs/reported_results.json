@@ -1,43 +1,54 @@
 {
-  "source": "Latex/Rib_Layout_Optimization_R1.tex",
-  "note": "Targets transcribed from the manuscript; they are not injected into the solver.",
+  "source": "Code/results/example_N/results.json",
+  "note": "Pre-change comparison targets captured from the complete four-case results in agent_work/runs/20260729-095018/source-before.json; they are not injected into the solver.",
+  "provenance": {
+    "snapshot_generated_utc": "2026-07-29T01:50:55.407794+00:00",
+    "source_aggregate_sha256": "921f966383f4c0d76c96b6820189558a23af216a046dbd86b9f5ff9213afbe7a",
+    "result_sha256": {
+      "1": "be0a7b647b20b9ccd02bff7492905565c14d57e4bd468436c0d4f13e1c0a7fd1",
+      "2": "d8b5fa0b22742373ccb566ad53316df7f6ea3a1e1b797f3121212a4a12838beb",
+      "3": "52b396c1eab140560d5091fcd0b129123b69aa619dc6ba9e67c55422dcdd5ba5",
+      "4": "ad1b9676efdca9242c205a97bd4b99f72b04ba7bc7ab39700767887ff93ea59c"
+    }
+  },
   "examples": {
     "1": {
       "domain_mm": [20.0, 20.0],
       "rib_height_mm": 2.0,
-      "initial": {"ribs": 8, "compliance": 3.453},
-      "filtered": {"ribs": 3, "compliance": 3.462},
-      "adaptive": {"ribs": 3, "compliance": 1.426},
-      "geometry": {"ribs": 3, "compliance": 1.127}
+      "initial": {"ribs": 8, "compliance": 89.72510276602938, "volume": 45.0, "analyses": 8},
+      "adaptive": {"ribs": 3, "compliance": 32.570558269218125, "volume": 45.0, "analyses": 22},
+      "geometry": {"ribs": 3, "compliance": 29.739984524362256, "volume": 45.00000000000001, "analyses": 17},
+      "rationalized": {"ribs": 3, "compliance": 29.739984524362256, "volume": 45.00000000000001, "analyses": 0},
+      "total_analyses": 47
     },
     "2": {
       "domain_mm": [40.0, 20.0],
       "rib_height_mm": 2.0,
-      "initial": {"ribs": 16, "compliance": 0.780, "analyses": 11},
-      "adaptive": {"ribs": 10, "compliance": 0.636, "analyses": 26},
-      "geometry": {"ribs": 10, "compliance": 0.488, "analyses": 31},
-      "rationalized": {"ribs": 5, "compliance": 0.497, "analyses": 67},
-      "total_analyses": 135
+      "initial": {"ribs": 16, "compliance": 21.305551331701817, "volume": 90.0, "analyses": 6},
+      "adaptive": {"ribs": 8, "compliance": 13.995699026421185, "volume": 89.99999999999999, "analyses": 49},
+      "geometry": {"ribs": 8, "compliance": 13.323527212572198, "volume": 90.00000000000003, "analyses": 22},
+      "rationalized": {"ribs": 5, "compliance": 12.734283288518963, "volume": 89.99822416818367, "analyses": 25},
+      "total_analyses": 102
     },
     "3": {
       "domain_mm": [200.0, 100.0],
       "rib_height_mm": 10.0,
-      "initial": {"ribs": 64, "compliance": 2.262, "analyses": 7},
-      "adaptive": {"ribs": 33, "compliance": 0.715, "analyses": 31},
-      "geometry": {"ribs": 33, "compliance": 0.656, "analyses": 32},
-      "rationalized": {"ribs": 16, "compliance": 0.658, "analyses": 70},
-      "rationalized_10pct": {"ribs": 14, "compliance": 0.695},
-      "total_analyses": 140
+      "initial": {"ribs": 64, "compliance": 66.02369392120714, "volume": 11310.0, "analyses": 27},
+      "adaptive": {"ribs": 32, "compliance": 46.540051127200684, "volume": 11310.000000000004, "analyses": 30},
+      "geometry": {"ribs": 32, "compliance": 16.563167945280092, "volume": 11310.000000000004, "analyses": 44},
+      "rationalized": {"ribs": 26, "compliance": 16.14523910164803, "volume": 11309.999999999996, "analyses": 36},
+      "further_rationalized": {"ribs": 22, "compliance": 16.438717803625753, "volume": 11309.966809303682, "analyses": 84},
+      "total_analyses": 221
     },
     "4": {
       "domain_mm": [200.0, 100.0],
       "rib_height_mm": 10.0,
-      "initial": {"ribs": 64, "compliance": 17.61, "analyses": 4},
-      "adaptive": {"ribs": 24, "compliance": 12.56, "analyses": 30},
-      "geometry": {"ribs": 24, "compliance": 10.02, "analyses": 38},
-      "rationalized": {"ribs": 12, "compliance": 10.23, "analyses": 69},
-      "rationalized_10pct": {"ribs": 6, "compliance": 11.04},
-      "total_analyses": 141
+      "initial": {"ribs": 64, "compliance": 477.9296923539826, "volume": 11310.0, "analyses": 5},
+      "adaptive": {"ribs": 24, "compliance": 326.90169693863265, "volume": 11309.999999999996, "analyses": 82},
+      "geometry": {"ribs": 24, "compliance": 285.610077456067, "volume": 11310.0, "analyses": 16},
+      "rationalized": {"ribs": 16, "compliance": 273.23644641158285, "volume": 11309.999999999998, "analyses": 29},
+      "further_rationalized": {"ribs": 6, "compliance": 278.060061587921, "volume": 11309.8934675111, "analyses": 36},
+      "total_analyses": 168
     }
   }
 }
