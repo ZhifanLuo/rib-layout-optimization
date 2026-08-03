@@ -1,4 +1,4 @@
-"""Run Eq. (7) geometry optimization from a saved optimization stage."""
+"""Repeat Eq. (7) from a saved stage, with optional deterministic multistarts."""
 
 from __future__ import annotations
 
@@ -6,15 +6,66 @@ import argparse
 import csv
 import json
 from pathlib import Path
+import sys
+import time
 
 import numpy as np
+
+if __package__ in (None, ""):
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from rib_layout_core import build_model, load_case
 from rib_layout_algorithms.model import Rib
 from rib_layout_algorithms.optimization import RibLayoutOptimizer
+from rib_layout_algorithms.symmetry import build_mirror_variable_map, mirror_axes
 
 
-def column_records(ribs: list[Rib], thicknesses: np.ndarray) -> list[dict]:
+def build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--case", type=int, required=True, choices=(1, 2, 3, 4))
+    parser.add_argument("--source", type=Path, required=True)
+    parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument(
+        "--stage", choices=("adaptive", "geometry"), default="geometry",
+        help="Saved stage used as the initial design (default: geometry).",
+    )
+    parser.add_argument(
+        "--restarts", type=int, default=1,
+        help="Number of unperturbed repeat runs (default: 1).",
+    )
+    parser.add_argument(
+        "--multistarts", type=int, default=0,
+        help="Number of symmetry-preserving perturbed-thickness starts.",
+    )
+    parser.add_argument(
+        "--thickness-perturbation", type=float, default=0.10,
+        help="Log-normal standard deviation for multistart thicknesses.",
+    )
+    parser.add_argument("--seed", type=int, default=20260803)
+    parser.add_argument("--max-iterations", type=int, default=None)
+    parser.add_argument(
+        "--initial-move-step", type=float, default=None,
+        help="Optional initial global geometry move step.",
+    )
+    return parser
+
+
+def stage_design(source: dict, stage_name: str, segments: int) -> tuple[list[Rib], np.ndarray, dict]:
+    stage = next(item for item in source["stages"] if item["name"] == stage_name)
+    ribs = [
+        Rib(
+            tuple(item["p0"]), tuple(item["p1"]), float(item["height"]),
+            item["name"], segments,
+        )
+        for item in stage["ribs"]
+    ]
+    thicknesses = np.asarray(
+        [item["thickness"] for item in stage["ribs"]], float
+    )
+    return ribs, thicknesses, stage
+
+
+def rib_records(ribs: list[Rib], thicknesses: np.ndarray) -> list[dict]:
     return [
         {
             "name": rib.name,
@@ -27,140 +78,262 @@ def column_records(ribs: list[Rib], thicknesses: np.ndarray) -> list[dict]:
     ]
 
 
-def main() -> None:
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--case", type=int, required=True, choices=(1, 2, 3, 4))
-    parser.add_argument("--source", type=Path, required=True)
-    parser.add_argument("--output", type=Path, required=True)
-    parser.add_argument(
-        "--stage", choices=("adaptive", "geometry"), default="geometry",
-        help="Saved stage used as the initial design (default: geometry).",
+def perturbed_thicknesses(
+    optimizer: RibLayoutOptimizer,
+    ribs: list[Rib],
+    thicknesses: np.ndarray,
+    rng: np.random.Generator,
+    sigma: float,
+) -> np.ndarray:
+    """Perturb independent thickness variables while preserving symmetry."""
+    variable_map = build_mirror_variable_map(
+        ribs, mirror_axes(optimizer.cfg), *map(float, optimizer.cfg["domain"])
     )
-    args = parser.parse_args()
+    reduced = variable_map.reduce_thicknesses(thicknesses)
+    reduced *= np.exp(float(sigma)*rng.standard_normal(len(reduced)))
+    reduced = np.clip(reduced, optimizer.t_lower, optimizer.t_upper)
+    return optimizer._feasible_start(
+        ribs, variable_map.expand_thicknesses(reduced)
+    )
 
-    source = json.loads(args.source.read_text(encoding="utf-8"))
-    cfg = load_case(args.case, quick=bool(source.get("quick", False)))
-    stage = next(item for item in source["stages"] if item["name"] == args.stage)
-    segments = int(cfg["rib"]["segments"])
-    ribs = [
-        Rib(
-            tuple(item["p0"]), tuple(item["p1"]), float(item["height"]),
-            item["name"], segments,
+
+def write_history(path: Path, history: list[dict]) -> None:
+    scalar_keys = sorted({
+        key for record in history for key, value in record.items()
+        if not isinstance(value, (list, dict))
+    })
+    with path.open("w", newline="", encoding="utf-8") as handle:
+        writer = csv.DictWriter(
+            handle, fieldnames=[*scalar_keys, "response_trials"]
         )
-        for item in stage["ribs"]
-    ]
-    thicknesses = np.asarray([item["thickness"] for item in stage["ribs"]], float)
-    initial_coordinates = np.asarray([[*rib.p0, *rib.p1] for rib in ribs], float)
-    initial_t = thicknesses.copy()
+        writer.writeheader()
+        for record in history:
+            row = {key: record.get(key) for key in scalar_keys}
+            row["response_trials"] = json.dumps(
+                record.get("response_trials", []), separators=(",", ":")
+            )
+            writer.writerow(row)
 
-    optimizer = RibLayoutOptimizer(build_model(cfg), cfg)
-    restart_result = optimizer.analyze(ribs, thicknesses)
-    iteration_history: list[dict] = []
-    start_count = optimizer.analysis_count
-    final_ribs, final_t, final_result = optimizer.optimize_geometry(
-        ribs,
-        thicknesses,
-        restart_result,
-        iteration_history=iteration_history,
-    )
-    final_coordinates = np.asarray(
-        [[*rib.p0, *rib.p1] for rib in final_ribs], float
-    )
 
-    args.output.mkdir(parents=True, exist_ok=True)
-    rib_names = [rib.name for rib in ribs]
-    fixed_headers = [
-        "outer", "objective", "compliance", "volume", "volume_ratio",
-        "constraint_violation", "feasible", "objective_relative_change",
-        "objective_relative_change_signed", "design_change",
-        "thickness_design_change", "coordinate_design_change",
-        "maximum_absolute_thickness_change",
-        "maximum_absolute_coordinate_change",
-        "predicted_objective_change", "true_objective_change",
-        "approximation_ratio", "inner_iterations", "move_global_used",
-        "move_global_next", "frozen_geometry_count", "frozen_geometry_names",
-        "frozen_geometry_reasons", "step_converged", "consecutive_converged",
-    ]
-    history_name = f"geometry_from_{args.stage}_iteration_history.csv"
-    with (args.output / history_name).open(
-        "w", newline="", encoding="utf-8"
-    ) as handle:
+LEGACY_HISTORY_FIELDS = [
+    "outer", "objective", "compliance", "volume", "volume_ratio",
+    "constraint_violation", "feasible", "objective_relative_change",
+    "objective_relative_change_signed", "design_change",
+    "thickness_design_change", "coordinate_design_change",
+    "maximum_absolute_thickness_change",
+    "maximum_absolute_coordinate_change", "predicted_objective_change",
+    "true_objective_change", "approximation_ratio", "inner_iterations",
+    "move_global_used", "move_global_next", "frozen_geometry_count",
+    "frozen_geometry_names", "frozen_geometry_reasons", "step_converged",
+    "consecutive_converged",
+]
+
+
+def write_legacy_history(
+    path: Path,
+    history: list[dict],
+    ribs: list[Rib],
+    initial_t: np.ndarray,
+    initial_compliance: float,
+    initial_volume: float,
+    volume_bound: float,
+    constraint_tolerance: float,
+) -> None:
+    """Write the exact pre-multistart CSV columns, including the initial row."""
+    names = [rib.name for rib in ribs]
+    with path.open("w", newline="", encoding="utf-8") as handle:
         writer = csv.writer(handle)
-        writer.writerow([*fixed_headers, *[f"t_{name}" for name in rib_names]])
-        initial_volume = optimizer.volume(ribs, initial_t)
-        initial_values = {
+        writer.writerow([*LEGACY_HISTORY_FIELDS, *[f"t_{name}" for name in names]])
+        initial = {
             "outer": 0,
-            "objective": float(restart_result.compliance),
-            "compliance": float(restart_result.compliance),
+            "objective": float(initial_compliance),
+            "compliance": float(initial_compliance),
             "volume": float(initial_volume),
-            "volume_ratio": float(initial_volume/optimizer.volume_bound),
-            "constraint_violation": float(
-                max(initial_volume/optimizer.volume_bound-1.0, 0.0)
-            ),
+            "volume_ratio": float(initial_volume/volume_bound),
+            "constraint_violation": float(max(initial_volume/volume_bound-1.0, 0.0)),
             "feasible": bool(
-                initial_volume <= optimizer.volume_bound
-                * (1.0+cfg["algorithm"]["sca_constraint_tolerance"])
+                initial_volume <= volume_bound*(1.0+constraint_tolerance)
             ),
         }
         writer.writerow(
-            [initial_values.get(header) for header in fixed_headers]
+            [initial.get(field) for field in LEGACY_HISTORY_FIELDS]
             + [float(value) for value in initial_t]
         )
-        for record in iteration_history:
+        for record in history:
             thickness_by_name = dict(zip(record["rib_names"], record["thicknesses"]))
-            fixed_values = []
-            for header in fixed_headers:
-                value = record.get(header)
-                fixed_values.append(
+            values = []
+            for field in LEGACY_HISTORY_FIELDS:
+                value = record.get(field)
+                values.append(
                     json.dumps(value, separators=(",", ":"))
                     if isinstance(value, (list, dict)) else value
                 )
-            writer.writerow(
-                fixed_values
-                + [thickness_by_name[name] for name in rib_names]
-            )
+            writer.writerow(values+[thickness_by_name[name] for name in names])
 
+
+def legacy_single_restart_payload(
+    *, case: int, source: Path, stage_name: str, mesh: list[int],
+    rib_count: int, saved_compliance: float, record: dict,
+) -> dict:
+    """Return the legacy top-level JSON schema plus additive new fields."""
+    return {
+        "case": case,
+        "source": str(source.resolve()),
+        "source_stage": stage_name,
+        "mesh": mesh,
+        "rib_count": rib_count,
+        "saved_source_compliance": float(saved_compliance),
+        "restart_compliance": float(record["initial_compliance"]),
+        "restart_initialization_fea": 1,
+        "geometry_outer_fea": int(record["geometry_analysis_count"]),
+        "outer_iterations": int(record["outer_records"]),
+        **record,
+    }
+
+
+def main(argv: list[str] | None = None) -> int:
+    args = build_parser().parse_args(argv)
+    if args.restarts < 0 or args.multistarts < 0:
+        raise ValueError("restart and multistart counts must be nonnegative")
+    if args.restarts+args.multistarts < 1:
+        raise ValueError("at least one restart or multistart is required")
+    if args.thickness_perturbation < 0.0:
+        raise ValueError("thickness perturbation must be nonnegative")
+
+    source = json.loads(args.source.read_text(encoding="utf-8"))
+    cfg = load_case(args.case, quick=bool(source.get("quick", False)))
+    ribs, saved_t, stage = stage_design(
+        source, args.stage, int(cfg["rib"]["segments"])
+    )
+    rng = np.random.default_rng(args.seed)
+    args.output.mkdir(parents=True, exist_ok=True)
+    records: list[dict] = []
+
+    run_kinds = ["restart"]*args.restarts + ["multistart"]*args.multistarts
+    for run_index, kind in enumerate(run_kinds, 1):
+        optimizer = RibLayoutOptimizer(build_model(cfg), cfg)
+        initial_t = saved_t.copy()
+        if kind == "multistart":
+            initial_t = perturbed_thicknesses(
+                optimizer, ribs, initial_t, rng, args.thickness_perturbation
+            )
+        initial_coordinates = np.asarray(
+            [[*rib.p0, *rib.p1] for rib in ribs], float
+        )
+        initial_result = optimizer.analyze(ribs, initial_t)
+        history: list[dict] = []
+        start_count = optimizer.analysis_count
+        started = time.perf_counter()
+        final_ribs, final_t, final_result = optimizer.optimize_geometry(
+            list(ribs), initial_t, initial_result,
+            max_iterations_override=args.max_iterations,
+            initial_move_step=args.initial_move_step,
+            iteration_history=history,
+        )
+        elapsed = time.perf_counter()-started
+        final_coordinates = np.asarray(
+            [[*rib.p0, *rib.p1] for rib in final_ribs], float
+        )
+        record = {
+            "run": run_index,
+            "kind": kind,
+            "initial_compliance": float(initial_result.compliance),
+            "final_compliance": float(final_result.compliance),
+            "relative_compliance_change": float(
+                final_result.compliance/initial_result.compliance-1.0
+            ),
+            "initial_volume": optimizer.volume(ribs, initial_t),
+            "final_volume": optimizer.volume(final_ribs, final_t),
+            "analysis_count": optimizer.analysis_count,
+            "geometry_analysis_count": optimizer.analysis_count-start_count,
+            "outer_records": len(history),
+            "termination_reason": optimizer.geometry_termination_reason,
+            "rejected_trial_count": sum(
+                sum(not trial["accepted"] for trial in event.get("response_trials", []))
+                for event in history
+            ),
+            "elapsed_seconds": elapsed,
+            "maximum_endpoint_coordinate_change": float(
+                np.max(np.abs(final_coordinates-initial_coordinates))
+            ),
+            "maximum_thickness_change": float(np.max(np.abs(final_t-initial_t))),
+            "initial_ribs": rib_records(ribs, initial_t),
+            "final_ribs": rib_records(final_ribs, final_t),
+            "iteration_history": history,
+            "log": optimizer.log,
+        }
+        records.append(record)
+        write_history(
+            args.output/f"geometry_{kind}_{run_index:02d}_history.csv", history
+        )
+
+    best = min(records, key=lambda item: item["final_compliance"])
+    summary_fields = [
+        "run", "kind", "initial_compliance", "final_compliance",
+        "relative_compliance_change", "initial_volume", "final_volume",
+        "analysis_count", "geometry_analysis_count", "outer_records",
+        "termination_reason", "rejected_trial_count", "elapsed_seconds",
+        "maximum_endpoint_coordinate_change", "maximum_thickness_change",
+    ]
+    with (args.output/"geometry_restart_summary.csv").open(
+        "w", newline="", encoding="utf-8"
+    ) as handle:
+        writer = csv.DictWriter(handle, fieldnames=summary_fields)
+        writer.writeheader()
+        writer.writerows(
+            {key: record[key] for key in summary_fields} for record in records
+        )
     payload = {
         "case": args.case,
         "source": str(args.source.resolve()),
         "source_stage": args.stage,
-        "mesh": cfg["mesh"],
-        "rib_count": len(ribs),
         "saved_source_compliance": float(stage["compliance"]),
-        "restart_compliance": float(restart_result.compliance),
-        "restart_initialization_fea": 1,
-        "geometry_outer_fea": optimizer.analysis_count-start_count,
-        "outer_iterations": len(iteration_history),
-        "initial_volume": optimizer.volume(ribs, initial_t),
-        "final_volume": optimizer.volume(final_ribs, final_t),
-        "final_compliance": float(final_result.compliance),
-        "relative_compliance_change": float(
-            final_result.compliance/restart_result.compliance-1.0
-        ),
-        "maximum_endpoint_coordinate_change": float(
-            np.max(np.abs(final_coordinates-initial_coordinates))
-        ),
-        "maximum_thickness_change": float(np.max(np.abs(final_t-initial_t))),
-        "initial_ribs": column_records(ribs, initial_t),
-        "final_ribs": column_records(final_ribs, final_t),
-        "iteration_history": iteration_history,
-        "log": optimizer.log,
+        "mesh": cfg["mesh"],
+        "seed": args.seed,
+        "restart_count": args.restarts,
+        "multistart_count": args.multistarts,
+        "thickness_perturbation": args.thickness_perturbation,
+        "best_run": best["run"],
+        "best_final_compliance": best["final_compliance"],
+        "runs": records,
     }
-    results_name = f"geometry_from_{args.stage}_results.json"
-    (args.output / results_name).write_text(
+    (args.output/"geometry_restart_results.json").write_text(
         json.dumps(payload, indent=2), encoding="utf-8"
     )
-    (args.output / f"geometry_from_{args.stage}_log.txt").write_text(
-        "\n".join(optimizer.log), encoding="utf-8"
-    )
+    # Preserve the original single-restart filenames and top-level result
+    # fields for existing diagnostic scripts.
+    if args.restarts == 1 and args.multistarts == 0:
+        legacy = legacy_single_restart_payload(
+            case=args.case,
+            source=args.source,
+            stage_name=args.stage,
+            mesh=cfg["mesh"],
+            rib_count=len(ribs),
+            saved_compliance=float(stage["compliance"]),
+            record=records[0],
+        )
+        (args.output/f"geometry_from_{args.stage}_results.json").write_text(
+            json.dumps(legacy, indent=2), encoding="utf-8"
+        )
+        write_legacy_history(
+            args.output/f"geometry_from_{args.stage}_iteration_history.csv",
+            records[0]["iteration_history"],
+            ribs,
+            np.asarray([item["thickness"] for item in records[0]["initial_ribs"]]),
+            float(records[0]["initial_compliance"]),
+            float(records[0]["initial_volume"]),
+            float(cfg["volume_bound"]),
+            float(cfg["algorithm"]["sca_constraint_tolerance"]),
+        )
+        (args.output/f"geometry_from_{args.stage}_log.txt").write_text(
+            "\n".join(records[0]["log"]), encoding="utf-8"
+        )
     print(
-        f"Case {args.case}: C0={restart_result.compliance:.9g}, "
-        f"Cfinal={final_result.compliance:.9g}, "
-        f"change={100*payload['relative_compliance_change']:.4f}%, "
-        f"outer={len(iteration_history)}, "
-        f"FEA={optimizer.analysis_count-start_count}"
+        f"Case {args.case}: runs={len(records)}, "
+        f"best C={best['final_compliance']:.9g} (run {best['run']})"
     )
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

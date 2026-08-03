@@ -3,7 +3,7 @@ message: >-
   If you use this software, please cite the software and the accompanying
   paper.
 type: software
-title: Python implementation of A New Paradigm for Stiffening Rib-Layout Optimization
+title: Python implementation of An Active-Set Framework for Explicit Stiffening-Rib Layout Optimization
 version: 1.0.0
 date-released: 2026-07-28
 doi: 10.5281/zenodo.21638173

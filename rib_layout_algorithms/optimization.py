@@ -609,7 +609,9 @@ class RibLayoutOptimizer:
         self.analysis_count = 0
         self.log: list[str] = []
         self.active_history: list[Stage] = []
+        self.sizing_history: list[dict] = []
         self.rationalization_history: list[dict] = []
+        self.geometry_termination_reason: str | None = None
         self.mirror_axes = mirror_axes(cfg)
         self.symmetry_width, self.symmetry_height = map(float, cfg["domain"])
 
@@ -753,6 +755,14 @@ class RibLayoutOptimizer:
             ),
         )
 
+    def _positive_move_limit_setting(
+        self, name: str, default: float
+    ) -> float:
+        value = float(self.cfg["algorithm"].get(name, default))
+        if value <= 0.0:
+            raise ValueError(f"{name} must be positive")
+        return value
+
     def _coordinate_move_step_scale(self, rib_count: int) -> np.ndarray:
         """Return the endpoint-coordinate scale used by geometry move limits.
 
@@ -847,10 +857,17 @@ class RibLayoutOptimizer:
             self.cfg["algorithm"].get("sca_consecutive_convergence_steps", 2)
         )
         current = self.analyze(ribs, full_x)
+        initial_volume = self.volume(ribs, full_x)
+        initial_feasible = initial_volume <= self.volume_bound * (
+            1.0+constraint_tolerance
+        )
+        best_x: np.ndarray | None = full_x.copy() if initial_feasible else None
+        best_result: AnalysisResult | None = current if initial_feasible else None
+        best_outer: int | None = 0 if initial_feasible else None
         move_limit = self._new_move_limit(
             np.full(len(x), self.t_lower), np.full(len(x), self.t_upper)
         )
-        violation = max(self.volume(ribs, full_x)/self.volume_bound-1.0, 0.0)
+        violation = max(initial_volume/self.volume_bound-1.0, 0.0)
         move_lower, move_upper = move_limit.update(
             x, current.compliance, violation, constraint_tolerance
         )
@@ -895,6 +912,12 @@ class RibLayoutOptimizer:
                 x, candidate, lower_global, upper_global
             )
             feasible = self.volume(ribs, full_candidate) <= self.volume_bound * (1.0 + constraint_tolerance)
+            if feasible and (
+                best_result is None or trial.compliance < best_result.compliance
+            ):
+                best_x = full_candidate.copy()
+                best_result = trial
+                best_outer = outer
             x, full_x, current = candidate, full_candidate, trial
             violation = max(self.volume(ribs, full_x)/self.volume_bound-1.0, 0.0)
             move_lower, move_upper = move_limit.update(
@@ -911,17 +934,53 @@ class RibLayoutOptimizer:
             consecutive_converged = (
                 consecutive_converged+1 if step_converged else 0
             )
+            self.sizing_history.append({
+                "outer": int(outer),
+                "compliance": float(trial.compliance),
+                "feasible": bool(feasible),
+                "best_feasible_outer": best_outer,
+                "best_feasible_compliance": (
+                    None if best_result is None else float(best_result.compliance)
+                ),
+                "is_best_feasible": bool(best_outer == outer),
+            })
             if consecutive_converged >= consecutive_required:
                 self.log.append(
                     f"sizing SCA converged: outer={outer}, "
                     f"dC={100*relative_change:.4f}%, dx={100*design_change:.4f}%, "
                     f"volume={self.volume(ribs,full_x):.7g}"
                 )
-                self._report_progress("sizing optimization", ribs, current)
-                return full_x, current
+                if best_result is None or best_x is None:
+                    self.log.append(
+                        "sizing SCA warning: no feasible true-FEA incumbent; "
+                        "returning the last iterate"
+                    )
+                    returned_x, returned_result = full_x, current
+                else:
+                    returned_x, returned_result = best_x, best_result
+                if best_outer is not None and best_outer != outer:
+                    self.log.append(
+                        "sizing SCA returned best feasible true-FEA incumbent: "
+                        f"outer={best_outer}, C={best_result.compliance:.7g}"
+                    )
+                self._report_progress("sizing optimization", ribs, returned_result)
+                return returned_x, returned_result
         self.log.append(f"sizing SCA warning: outer iteration limit {maxiter} reached")
-        self._report_progress("sizing optimization", ribs, current)
-        return full_x, current
+        if best_result is None or best_x is None:
+            self.log.append(
+                "sizing SCA warning: no feasible true-FEA incumbent; "
+                "returning the last iterate"
+            )
+            returned_x, returned_result = full_x, current
+        else:
+            returned_x, returned_result = best_x, best_result
+        if best_outer is not None and best_outer != int(maxiter):
+            self.log.append(
+                "sizing SCA returned best feasible true-FEA incumbent: "
+                f"outer={best_outer}, C={best_result.compliance:.7g}"
+            )
+        self._report_progress("sizing optimization", ribs, returned_result)
+        return returned_x, returned_result
 
     def filter(
         self,
@@ -1342,13 +1401,17 @@ class RibLayoutOptimizer:
         design so that its first convex approximation uses the correct
         reduced-topology displacement field. Each outer iteration solves the
         approximation without FEA; its output is analyzed as the next outer
-        iterate without a true-response rejection or rollback.
+        iterate. A configurable true-response check contracts the move limit
+        and resolves the same approximation when a trial is materially worse;
+        the best feasible true-FEA incumbent is always returned.
         """
         settings = self.cfg["algorithm"]
+        self.geometry_termination_reason = None
         max_iterations = int(settings["geometry_max_iterations"] if max_iterations_override is None else max_iterations_override)
         if current is None:
             current = self.analyze(ribs, thicknesses)
         if max_iterations <= 0:
+            self.geometry_termination_reason = "disabled"
             return ribs, thicknesses, current
         n = len(ribs)
         variable_map = build_mirror_variable_map(
@@ -1371,6 +1434,23 @@ class RibLayoutOptimizer:
         consecutive_required = int(
             settings.get("sca_consecutive_convergence_steps", 2)
         )
+        reject_worse = bool(
+            settings.get("geometry_true_response_rejection", True)
+        )
+        worsening_tolerance = float(
+            settings.get("geometry_true_response_worsening_tolerance", 1.0e-4)
+        )
+        maximum_response_retries = int(
+            settings.get("geometry_true_response_max_retries", 4)
+        )
+        if worsening_tolerance < 0.0:
+            raise ValueError(
+                "geometry_true_response_worsening_tolerance must be nonnegative"
+            )
+        if maximum_response_retries < 0:
+            raise ValueError(
+                "geometry_true_response_max_retries must be nonnegative"
+            )
 
         def unpack(x: np.ndarray) -> tuple[np.ndarray, list[Rib]]:
             t = variable_map.expand_thicknesses(x[:nt])
@@ -1433,6 +1513,10 @@ class RibLayoutOptimizer:
         move_lower, move_upper = move_limit.update(
             x, current.compliance, initial_violation, constraint_tolerance
         )
+        initial_feasible = initial_violation <= constraint_tolerance
+        best_x: np.ndarray | None = x.copy() if initial_feasible else None
+        best_result: AnalysisResult | None = current if initial_feasible else None
+        best_outer: int | None = 0 if initial_feasible else None
         consecutive_converged = 0
         for outer in range(1, max_iterations + 1):
             t, moved = unpack(x)
@@ -1464,84 +1548,166 @@ class RibLayoutOptimizer:
             # rib positions at the current outer design and resolve the same
             # FEA-free approximation. Other rib coordinates and every
             # thickness variable remain free; the global move limit is not
-            # contracted and no true-response trial is rejected.
-            inner_lower=move_lower.copy()
-            inner_upper=move_upper.copy()
-            frozen_geometry_indices: set[int] = set()
-            frozen_geometry_reasons: dict[int, set[str]] = {}
-            invalid = False
-            for inner in range(1, n+2):
-                candidate = solve_geometry_convex_subproblem(
-                    x,
-                    a,
-                    gp,
-                    volume_gradient,
-                    volume_k,
-                    self.volume_bound,
-                    proximal,
-                    scale_c,
-                    scale_p,
-                    inner_lower,
-                    inner_upper,
-                )
-                candidate_t,candidate_ribs=unpack(candidate)
-                candidate_t=self._feasible_start(candidate_ribs,candidate_t)
-                candidate[:nt]=variable_map.reduce_thicknesses(candidate_t)
-                candidate_t,candidate_ribs=unpack(candidate)
-                freeze_reasons = geometry_move_freeze_reasons(
-                    moved,
-                    candidate_ribs,
-                    0.25*float(self.cfg["initial_rib_cell_size"]),
-                )
-                if not freeze_reasons:
-                    invalid = False
-                    break
-                invalid = True
-                new_indices = set(freeze_reasons)-frozen_geometry_indices
-                if not new_indices:
-                    # This can only occur for a pre-existing invalid baseline
-                    # or a bound-tolerance artifact. Preserve all current rib
-                    # positions, retain the optimized thicknesses, and restore
-                    # exact volume feasibility without contracting Gstep.
+            # contracted only when the true FEA response is materially worse.
+            response_trials: list[dict] = []
+            accepted = False
+            for response_retry in range(maximum_response_retries+1):
+                if response_retry:
+                    move_lower, move_upper = move_limit.current_bounds(x)
+                inner_lower=move_lower.copy()
+                inner_upper=move_upper.copy()
+                frozen_geometry_indices: set[int] = set()
+                frozen_geometry_reasons: dict[int, set[str]] = {}
+                invalid = False
+                for inner in range(1, n+2):
+                    candidate = solve_geometry_convex_subproblem(
+                        x,
+                        a,
+                        gp,
+                        volume_gradient,
+                        volume_k,
+                        self.volume_bound,
+                        proximal,
+                        scale_c,
+                        scale_p,
+                        inner_lower,
+                        inner_upper,
+                    )
+                    candidate_t,candidate_ribs=unpack(candidate)
+                    candidate_t=self._feasible_start(candidate_ribs,candidate_t)
+                    candidate[:nt]=variable_map.reduce_thicknesses(candidate_t)
+                    candidate_t,candidate_ribs=unpack(candidate)
+                    freeze_reasons = geometry_move_freeze_reasons(
+                        moved,
+                        candidate_ribs,
+                        0.25*float(self.cfg["initial_rib_cell_size"]),
+                    )
+                    if not freeze_reasons:
+                        invalid = False
+                        break
+                    invalid = True
+                    new_indices = set(freeze_reasons)-frozen_geometry_indices
+                    if not new_indices:
+                        # This can only occur for a pre-existing invalid baseline
+                        # or a bound-tolerance artifact. Preserve all current rib
+                        # positions, retain the optimized thicknesses, and restore
+                        # exact volume feasibility without contracting Gstep.
+                        candidate[nt:]=x[nt:]
+                        candidate_t,candidate_ribs=unpack(candidate)
+                        candidate_t=self._feasible_start(candidate_ribs,candidate_t)
+                        candidate[:nt]=variable_map.reduce_thicknesses(candidate_t)
+                        candidate_t,candidate_ribs=unpack(candidate)
+                        invalid=False
+                        self.log.append(
+                            "geometry convex inner local freeze fallback: "
+                            "all rib positions retained at current outer design"
+                        )
+                        break
+                    for index in sorted(new_indices):
+                        variables = np.unique(
+                            variable_map.coordinate_variable[4*index:4*index+4]
+                        )
+                        variables = variables[variables >= 0]
+                        coordinate_indices = nt+variables
+                        inner_lower[coordinate_indices]=x[coordinate_indices]
+                        inner_upper[coordinate_indices]=x[coordinate_indices]
+                        frozen_geometry_reasons.setdefault(index,set()).update(
+                            freeze_reasons[index]
+                        )
+                    frozen_geometry_indices.update(new_indices)
+                    frozen_names=[ribs[index].name for index in sorted(new_indices)]
+                    self.log.append(
+                        f"geometry convex inner local freeze: inner={inner}, "
+                        f"ribs={frozen_names}, move_global unchanged="
+                        f"{move_limit.global_step:.5g}"
+                    )
+                if invalid:
+                    # Defensive final fallback; the current geometry is the valid
+                    # baseline, while thicknesses still use the inner optimum.
                     candidate[nt:]=x[nt:]
                     candidate_t,candidate_ribs=unpack(candidate)
                     candidate_t=self._feasible_start(candidate_ribs,candidate_t)
                     candidate[:nt]=variable_map.reduce_thicknesses(candidate_t)
                     candidate_t,candidate_ribs=unpack(candidate)
-                    invalid=False
-                    self.log.append(
-                        "geometry convex inner local freeze fallback: "
-                        "all rib positions retained at current outer design"
-                    )
-                    break
-                for index in sorted(new_indices):
-                    variables = np.unique(
-                        variable_map.coordinate_variable[4*index:4*index+4]
-                    )
-                    variables = variables[variables >= 0]
-                    coordinate_indices = nt+variables
-                    inner_lower[coordinate_indices]=x[coordinate_indices]
-                    inner_upper[coordinate_indices]=x[coordinate_indices]
-                    frozen_geometry_reasons.setdefault(index,set()).update(
-                        freeze_reasons[index]
-                    )
-                frozen_geometry_indices.update(new_indices)
-                frozen_names=[ribs[index].name for index in sorted(new_indices)]
-                self.log.append(
-                    f"geometry convex inner local freeze: inner={inner}, "
-                    f"ribs={frozen_names}, move_global unchanged="
-                    f"{move_limit.global_step:.5g}"
-                )
-            if invalid:
-                # Defensive final fallback; the current geometry is the valid
-                # baseline, while thicknesses still use the inner optimum.
-                candidate[nt:]=x[nt:]
-                candidate_t,candidate_ribs=unpack(candidate)
-                candidate_t=self._feasible_start(candidate_ribs,candidate_t)
-                candidate[:nt]=variable_map.reduce_thicknesses(candidate_t)
-                candidate_t,candidate_ribs=unpack(candidate)
 
-            trial=self.analyze(candidate_ribs,candidate_t)
+                move_global_trial = float(move_limit.global_step)
+                trial=self.analyze(candidate_ribs,candidate_t)
+                signed_trial_change = (
+                    (trial.compliance-current.compliance)
+                    / max(abs(current.compliance),1e-16)
+                )
+                candidate_volume=self.volume(candidate_ribs,candidate_t)
+                trial_violation=max(
+                    candidate_volume/self.volume_bound-1.0,0.0
+                )
+                current_feasible = initial_violation <= constraint_tolerance
+                trial_feasible = trial_violation <= constraint_tolerance
+                materially_worse = bool(
+                    reject_worse and current_feasible and trial_feasible
+                    and signed_trial_change > worsening_tolerance
+                )
+                response_trials.append({
+                    "retry": int(response_retry),
+                    "compliance": float(trial.compliance),
+                    "objective_relative_change_signed": float(signed_trial_change),
+                    "move_global": move_global_trial,
+                    "accepted": not materially_worse,
+                })
+                if not materially_worse:
+                    accepted = True
+                    break
+                self.log.append(
+                    "geometry true-response trial rejected: "
+                    f"outer={outer}, retry={response_retry}, "
+                    f"dC={100*signed_trial_change:.4f}%, "
+                    f"move_global={move_global_trial:.5g}"
+                )
+                move_limit.contract()
+
+            if not accepted:
+                self.geometry_termination_reason = (
+                    "true_response_backtracking_failed"
+                )
+                self.log.append(
+                    "geometry SCA stopped: no acceptable true-response step "
+                    f"after {maximum_response_retries+1} trials at outer={outer}"
+                )
+                if iteration_history is not None:
+                    iteration_history.append({
+                        "outer": int(outer),
+                        "objective": float(current.compliance),
+                        "compliance": float(current.compliance),
+                        "volume": float(volume_k),
+                        "volume_ratio": float(volume_k/self.volume_bound),
+                        "constraint_violation": float(initial_violation),
+                        "feasible": bool(current_feasible),
+                        "accepted": False,
+                        "termination_reason": (
+                            "true_response_backtracking_failed"
+                        ),
+                        "response_trials": response_trials,
+                        "response_retry_count": int(maximum_response_retries),
+                        "best_feasible_outer": best_outer,
+                        "best_feasible_compliance": (
+                            None if best_result is None
+                            else float(best_result.compliance)
+                        ),
+                        "rib_names": [rib.name for rib in moved],
+                        "thicknesses": [float(value) for value in t],
+                        "coordinates": [
+                            [float(value) for value in (*rib.p0, *rib.p1)]
+                            for rib in moved
+                        ],
+                    })
+                if best_x is None or best_result is None:
+                    self.log.append(
+                        "geometry SCA warning: no feasible true-FEA incumbent; "
+                        "returning the current iterate"
+                    )
+                    return moved,t,current
+                best_t,best_ribs=unpack(best_x)
+                return best_ribs,best_t,best_result
+
             relative_change=abs(trial.compliance-current.compliance)/max(abs(current.compliance),1e-16)
             signed_relative_change=(
                 (trial.compliance-current.compliance)
@@ -1566,7 +1732,6 @@ class RibLayoutOptimizer:
             maximum_absolute_coordinate_change=float(np.max(np.abs(
                 new_coordinates-old_coordinates
             )))
-            candidate_volume=self.volume(candidate_ribs,candidate_t)
             violation=max(candidate_volume/self.volume_bound-1.0,0.0)
             feasible=candidate_volume<=self.volume_bound*(1+constraint_tolerance)
             predicted_change=approximation(candidate)
@@ -1580,6 +1745,13 @@ class RibLayoutOptimizer:
             )
             move_global_used=float(move_limit.global_step)
             x,current=candidate,trial
+            initial_violation = violation
+            if feasible and (
+                best_result is None or current.compliance < best_result.compliance
+            ):
+                best_x = x.copy()
+                best_result = current
+                best_outer = outer
             move_lower,move_upper=move_limit.update(
                 x,current.compliance,violation,constraint_tolerance
             )
@@ -1603,6 +1775,15 @@ class RibLayoutOptimizer:
                     "volume_ratio": float(candidate_volume/self.volume_bound),
                     "constraint_violation": float(violation),
                     "feasible": bool(feasible),
+                    "accepted": True,
+                    "response_trials": response_trials,
+                    "response_retry_count": int(len(response_trials)-1),
+                    "best_feasible_outer": best_outer,
+                    "best_feasible_compliance": (
+                        None if best_result is None
+                        else float(best_result.compliance)
+                    ),
+                    "is_best_feasible": bool(best_outer == outer),
                     "objective_relative_change": float(relative_change),
                     "objective_relative_change_signed": float(signed_relative_change),
                     "design_change": float(design_change),
@@ -1637,14 +1818,42 @@ class RibLayoutOptimizer:
                     ],
                 })
             if consecutive_converged>=consecutive_required:
+                self.geometry_termination_reason = "converged"
+                if iteration_history is not None:
+                    iteration_history[-1]["termination_reason"] = "converged"
                 self.log.append(
                     f"geometry SCA converged: outer={outer}, "
                     f"dC={100*relative_change:.4f}%, dx={100*design_change:.4f}%"
                 )
-                return candidate_ribs,candidate_t,current
-        final_t,final_ribs=unpack(x)
+                if best_x is None or best_result is None:
+                    self.log.append(
+                        "geometry SCA warning: no feasible true-FEA incumbent; "
+                        "returning the current iterate"
+                    )
+                    return candidate_ribs,candidate_t,current
+                best_t,best_ribs=unpack(best_x)
+                if best_outer is not None and best_outer != outer:
+                    self.log.append(
+                        "geometry SCA returned best feasible true-FEA incumbent: "
+                        f"outer={best_outer}, C={best_result.compliance:.7g}"
+                    )
+                return best_ribs,best_t,best_result
         self.log.append(f"geometry SCA warning: outer iteration limit {max_iterations} reached")
-        return final_ribs,final_t,current
+        self.geometry_termination_reason = "iteration_limit"
+        if best_x is None or best_result is None:
+            final_t,final_ribs=unpack(x)
+            self.log.append(
+                "geometry SCA warning: no feasible true-FEA incumbent; "
+                "returning the last iterate"
+            )
+            return final_ribs,final_t,current
+        best_t,best_ribs=unpack(best_x)
+        if best_outer is not None and best_outer != max_iterations:
+            self.log.append(
+                "geometry SCA returned best feasible true-FEA incumbent: "
+                f"outer={best_outer}, C={best_result.compliance:.7g}"
+            )
+        return best_ribs,best_t,best_result
 
     def _solve_rationalization_eq18(
         self,
@@ -1693,11 +1902,9 @@ class RibLayoutOptimizer:
         if compliance_tolerance != 0.001:
             raise ValueError("rationalization_compliance_tolerance must be 0.001")
         compliance_limit = cref*(1.0+compliance_tolerance)
-        rationalization_move_step = float(
-            settings.get("rationalization_move_limit_initial", 0.5)
+        rationalization_move_step = self._positive_move_limit_setting(
+            "rationalization_move_limit_initial", 0.50
         )
-        if rationalization_move_step != 0.5:
-            raise ValueError("rationalization_move_limit_initial must be 0.5")
         proximal = float(settings["rationalization_sca_proximal"])
         dual_tolerance = float(
             settings.get("rationalization_dual_tolerance", 1.0e-9)
@@ -2117,8 +2324,8 @@ class RibLayoutOptimizer:
         reference_quantile = self.rationalization_reference_quantile(
             relaxation, n_rib_before_rationalization
         )
-        recovery_move_step = float(
-            settings.get("rationalization_move_limit_initial", 0.50)
+        recovery_move_step = self._positive_move_limit_setting(
+            "rationalization_move_limit_initial", 0.50
         )
         recovery_iterations = int(settings["rationalization_geometry_iterations"])
         tref = float(np.quantile(base_t, reference_quantile))
@@ -2492,6 +2699,12 @@ class RibLayoutOptimizer:
         return base_ribs, base_t, geometry_result
 
     def run(self, initial_ribs: list[Rib], candidates: Sequence[Rib], extra_relaxation: float | None = None) -> OptimizationRun:
+        geometry_move_step = self._positive_move_limit_setting(
+            "geometry_move_limit_initial", 0.50
+        )
+        self._positive_move_limit_setting(
+            "rationalization_move_limit_initial", 0.50
+        )
         run = OptimizationRun(log=self.log)
         start_count = self.analysis_count
         thicknesses, result = self.size(initial_ribs)
@@ -2504,7 +2717,10 @@ class RibLayoutOptimizer:
         run.stages.append(Stage("adaptive", list(ribs), thicknesses.copy(), result.compliance, self.analysis_count - phase_start))
 
         phase_start = self.analysis_count
-        ribs, thicknesses, result = self.optimize_geometry(ribs, thicknesses, result)
+        ribs, thicknesses, result = self.optimize_geometry(
+            ribs, thicknesses, result,
+            initial_move_step=geometry_move_step,
+        )
         run.stages.append(Stage("geometry", list(ribs), thicknesses.copy(), result.compliance, self.analysis_count - phase_start))
 
         phase_start = self.analysis_count

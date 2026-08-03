@@ -3,8 +3,8 @@
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21638173.svg)](https://doi.org/10.5281/zenodo.21638173)
 
 This folder contains the executable reference implementation of the
-multi-phase method described in *A New Paradigm for Stiffening Rib-Layout
-Optimization*. It implements:
+multi-phase method described in *An Active-Set Framework for Explicit
+Stiffening-Rib Layout Optimization*. It implements:
 
 1. compliance minimization with a rib-volume and thickness bounds;
 2. performance-validated thickness filtering using only the prescribed
@@ -125,8 +125,27 @@ default initial `Gstep=0.5` and `Lstep_i=1`, this gives initial half-widths
 scale. A successful same-direction history multiplies the variable factor by
 `1.2`; oscillation multiplies it by `0.7`. Direction detection uses moves
 normalized by each variable's global range; if either consecutive normalized
-move is within `1e-6` of zero, no `1.2/0.7` factor is applied. Every
-FEA-evaluated outer design is retained; the move limit is updated at that design for the next approximation.
+move is within `1e-6` of zero, no `1.2/0.7` factor is applied. For geometry
+optimization, each convex trial is checked by a true FEA before it becomes the
+next outer design. A feasible trial whose relative compliance increase exceeds
+`1e-4` (0.01%) is rejected; the global move limit is contracted by the existing
+unsuccessful-step factor `0.75`, and the same approximation is resolved. At
+most four contracted retries are permitted after the first trial. Exhausting
+this bound terminates the geometry stage with
+`true_response_backtracking_failed`; this safeguard parameter is not a
+convergence criterion. Sizing and geometry optimization retain and return the
+lowest-compliance feasible true-FEA incumbent encountered, including rollback
+from an inferior last iterate.
+
+The main geometry stage and rationalization have distinct initial-move
+settings: `geometry_move_limit_initial` and
+`rationalization_move_limit_initial`. Both default to `0.50`. Example II
+overrides both values to `0.05`; Examples I, III, and IV retain `0.50`. This is
+a case-specific calibration based on saved adaptive-stage restart diagnostics:
+the `case2_adaptive_move_005` run converged to
+`C = 13.8187025742`, whereas the tested `0.50` and `0.10` starts terminated by
+the true-response backtracking safeguard. This limited diagnostic observation
+does not establish robustness or global convergence.
 There is no fixed cumulative endpoint-displacement interval; only the ground-
 shell domain clips the adaptive local bounds.
 If an inner convex solution makes a rib newly too short or creates a new
@@ -142,12 +161,19 @@ approximation (SCA). Every outer iteration follows the same sequence:
 2. construct reciprocal/affine convex approximations with proximal terms and
    a linearized volume constraint;
 3. solve that approximate subproblem without any FEA inside the optimizer;
-4. use the inner optimum directly as the next outer design and run one FEA;
-5. do not reject or roll back that FEA-evaluated design;
-6. stop only when the true constraints are satisfied within `0.1%`, the
-   normalized design-variable change is below `1.0%`, and either the objective
-   change is below `0.5%` or normalized design-variable change is below `0.1%`,
-   for two consecutive outer steps.
+4. evaluate the inner optimum using true FEA;
+5. for geometry optimization, reject a materially worse feasible response,
+   contract the move limit, and resolve the same approximation within the
+   bounded retry safeguard; otherwise accept it as the next outer design;
+6. declare convergence only when the true constraints are satisfied within
+   `0.1%`, the normalized design-variable change is below `1.0%`, and either
+   the objective change is below `0.5%` or normalized design-variable change
+   is below `0.1%`, for two consecutive outer steps.
+
+A geometry stage terminates by one of three explicitly reported conditions:
+the convergence declaration above, the configured outer-iteration limit, or
+failure to obtain an acceptable true response within the bounded backtracking
+retries. Only the first condition is convergence.
 
 The Eq. (9) sizing problem is implemented as the thickness-only specialization
 of the Eq. (7) separable convex subproblem. Both use the same closed-form box-
@@ -297,6 +323,40 @@ all generated case folders. These options may be combined:
 The utilities under `tools/` provide restart audits, rationalization
 diagnostics, aggregate summaries, and post-processing. They are supporting
 diagnostics rather than the formal four-case entry point.
+
+The convergence and comparison diagnostics accept both module and direct
+script invocation. For example, these two forms are equivalent:
+
+```powershell
+.\.venv\Scripts\python.exe -m tools.run_geometry_restart_diagnostic --case 3 --source results\example_3\results.json --output diagnostics\restart3 --restarts 2 --multistarts 4
+.\.venv\Scripts\python.exe tools\run_geometry_restart_diagnostic.py --case 3 --source results\example_3\results.json --output diagnostics\restart3 --restarts 2 --multistarts 4
+```
+
+Multistarts apply seeded, symmetry-preserving thickness perturbations; they do
+not constitute a global-optimality proof. A topology-lifting consistency check
+can reinsert ribs deleted between two saved stages:
+
+```powershell
+.\.venv\Scripts\python.exe -m tools.run_topology_lifting_diagnostic --case 4 --source results\example_4\results.json --output diagnostics\lifting4 --full-stage geometry --reduced-stage rationalized
+```
+
+Lifting requires compatible source data. The tool checks case, quick-mode and
+mesh metadata, then reanalyzes both saved stages with the current executable;
+it stops if either compliance differs from the saved value by more than the
+configurable `--source-compliance-tolerance` (default `1e-6` relative).
+
+The complete generated candidate pool can be sized without active-set
+screening as an internal baseline:
+
+```powershell
+.\.venv\Scripts\python.exe tools\run_full_pool_baseline.py --case 1 2 --output diagnostics\full_pool
+```
+
+This full-pool calculation uses the same solver and candidate restrictions as
+the proposed method. It is an internal algorithmic baseline, not an independent
+literature-method comparison, and large formal pools can require substantial
+memory and runtime. None of these tools writes publication `results/` unless
+that location is explicitly passed through `--output`.
 
 ## Outputs
 

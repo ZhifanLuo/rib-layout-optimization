@@ -621,7 +621,7 @@ class CoreTests(unittest.TestCase):
         self.assertLess(abs(analytic-true_difference)/scale, 1.0e-4)
         self.assertLess(abs(analytic-centered)/scale, 1.0e-4)
 
-    def test_sizing_outer_iterate_is_not_rejected_when_true_objective_worsens(self):
+    def test_sizing_returns_best_feasible_true_fea_incumbent(self):
         cfg = load_case(1, quick=True)
 
         class WorseningModel:
@@ -640,8 +640,161 @@ class CoreTests(unittest.TestCase):
         optimizer = RibLayoutOptimizer(model, cfg)
         thicknesses, result = optimizer.size(initial_ribs(cfg)[:2], maxiter=1)
         self.assertEqual(model.calls, 2)
-        self.assertEqual(result.compliance, 2.0)
-        self.assertFalse(any("rejected" in line for line in optimizer.log))
+        self.assertEqual(result.compliance, 1.0)
+        self.assertEqual(optimizer.sizing_history[-1]["best_feasible_outer"], 0)
+        self.assertTrue(any("best feasible" in line for line in optimizer.log))
+
+    def test_geometry_rejects_worse_true_response_contracts_and_retries(self):
+        cfg = load_case(1, quick=True)
+        cfg["algorithm"]["geometry_max_iterations"] = 1
+        cfg["algorithm"]["geometry_true_response_max_retries"] = 2
+
+        class ResponseModel:
+            width, height = cfg["domain"]
+            dx = width/cfg["mesh"][0]
+            dy = height/cfg["mesh"][1]
+
+            def __init__(self):
+                self.responses = iter((1.2, 0.9))
+
+            @staticmethod
+            def compliance_gradient(ribs, thicknesses, result):
+                return -np.ones(len(ribs))
+
+            @staticmethod
+            def geometry_gradient(ribs, thicknesses, result, step):
+                return np.zeros((len(ribs), 4))
+
+            def analyze(self, ribs, thicknesses):
+                return SimpleNamespace(compliance=next(self.responses))
+
+        rib = Rib((0.0, 0.0), (10.0, 10.0), 2.0, "A")
+        optimizer = RibLayoutOptimizer(ResponseModel(), cfg)
+        history = []
+        with patch(
+            "rib_layout_algorithms.optimization.solve_geometry_convex_subproblem",
+            side_effect=lambda *args: np.asarray(args[0], float).copy(),
+        ):
+            _, _, result = optimizer.optimize_geometry(
+                [rib], np.array([0.2]), SimpleNamespace(compliance=1.0),
+                iteration_history=history,
+            )
+        self.assertEqual(result.compliance, 0.9)
+        self.assertEqual(history[0]["response_retry_count"], 1)
+        self.assertEqual(
+            [trial["accepted"] for trial in history[0]["response_trials"]],
+            [False, True],
+        )
+        self.assertAlmostEqual(
+            history[0]["response_trials"][1]["move_global"], 0.375
+        )
+
+    def test_geometry_returns_initial_incumbent_when_rejection_is_disabled(self):
+        cfg = load_case(1, quick=True)
+        cfg["algorithm"]["geometry_max_iterations"] = 1
+        cfg["algorithm"]["geometry_true_response_rejection"] = False
+
+        class WorseningGeometryModel:
+            width, height = cfg["domain"]
+            dx = width/cfg["mesh"][0]
+            dy = height/cfg["mesh"][1]
+
+            @staticmethod
+            def compliance_gradient(ribs, thicknesses, result):
+                return -np.ones(len(ribs))
+
+            @staticmethod
+            def geometry_gradient(ribs, thicknesses, result, step):
+                return np.zeros((len(ribs), 4))
+
+            @staticmethod
+            def analyze(ribs, thicknesses):
+                return SimpleNamespace(compliance=1.1)
+
+        rib = Rib((0.0, 0.0), (10.0, 10.0), 2.0, "A")
+        optimizer = RibLayoutOptimizer(WorseningGeometryModel(), cfg)
+        _, _, result = optimizer.optimize_geometry(
+            [rib], np.array([0.2]), SimpleNamespace(compliance=1.0)
+        )
+        self.assertEqual(result.compliance, 1.0)
+        self.assertTrue(any("best feasible" in line for line in optimizer.log))
+
+    def test_geometry_first_equal_compliance_feasible_trial_becomes_incumbent(self):
+        cfg = load_case(1, quick=True)
+        cfg["volume_bound"] = 1.0
+        cfg["algorithm"]["geometry_max_iterations"] = 1
+
+        class EqualResponseModel:
+            width, height = cfg["domain"]
+            dx = width/cfg["mesh"][0]
+            dy = height/cfg["mesh"][1]
+
+            @staticmethod
+            def compliance_gradient(ribs, thicknesses, result):
+                return -np.ones(len(ribs))
+
+            @staticmethod
+            def geometry_gradient(ribs, thicknesses, result, step):
+                return np.zeros((len(ribs), 4))
+
+            @staticmethod
+            def analyze(ribs, thicknesses):
+                return SimpleNamespace(compliance=1.0)
+
+        rib = Rib((0.0, 0.0), (10.0, 10.0), 2.0, "A")
+        optimizer = RibLayoutOptimizer(EqualResponseModel(), cfg)
+        history = []
+        with patch(
+            "rib_layout_algorithms.optimization.solve_geometry_convex_subproblem",
+            side_effect=lambda *args: np.asarray(args[0], float).copy(),
+        ):
+            _, final_t, result = optimizer.optimize_geometry(
+                [rib], np.array([0.2]), SimpleNamespace(compliance=1.0),
+                iteration_history=history,
+            )
+        self.assertEqual(result.compliance, 1.0)
+        self.assertLessEqual(optimizer.volume([rib], final_t), 1.001)
+        self.assertEqual(history[0]["best_feasible_outer"], 1)
+        self.assertTrue(history[0]["is_best_feasible"])
+
+    def test_geometry_backtracking_failure_has_explicit_termination_reason(self):
+        cfg = load_case(1, quick=True)
+        cfg["algorithm"]["geometry_max_iterations"] = 1
+        cfg["algorithm"]["geometry_true_response_max_retries"] = 1
+
+        class AlwaysWorseModel:
+            width, height = cfg["domain"]
+            dx = width/cfg["mesh"][0]
+            dy = height/cfg["mesh"][1]
+
+            @staticmethod
+            def compliance_gradient(ribs, thicknesses, result):
+                return -np.ones(len(ribs))
+
+            @staticmethod
+            def geometry_gradient(ribs, thicknesses, result, step):
+                return np.zeros((len(ribs), 4))
+
+            @staticmethod
+            def analyze(ribs, thicknesses):
+                return SimpleNamespace(compliance=1.2)
+
+        rib = Rib((0.0, 0.0), (10.0, 10.0), 2.0, "A")
+        optimizer = RibLayoutOptimizer(AlwaysWorseModel(), cfg)
+        history = []
+        optimizer.optimize_geometry(
+            [rib], np.array([0.2]), SimpleNamespace(compliance=1.0),
+            iteration_history=history,
+        )
+        self.assertEqual(
+            optimizer.geometry_termination_reason,
+            "true_response_backtracking_failed",
+        )
+        self.assertEqual(
+            history[-1]["termination_reason"],
+            "true_response_backtracking_failed",
+        )
+        self.assertFalse(history[-1]["accepted"])
 
     def test_near_endpoint_grid_intersection_does_not_create_shell_sliver(self):
         model = ShellStiffenedPlateModel(
@@ -979,6 +1132,9 @@ class CoreTests(unittest.TestCase):
         optimizer.cfg = {
             "rationalization_relaxation": 0.05,
             "further_rationalization_relaxation": 0.05,
+            "algorithm": {
+                "geometry_move_limit_initial": 0.25,
+            },
         }
         optimizer.analysis_count = 0
         optimizer.log = []
@@ -998,7 +1154,12 @@ class CoreTests(unittest.TestCase):
             self.analysis_count += 3
             return ribs, thicknesses, result(9.0)
 
-        def optimize_geometry(self, ribs, thicknesses, current):
+        geometry_move_steps = []
+
+        def optimize_geometry(
+            self, ribs, thicknesses, current, *, initial_move_step=None
+        ):
+            geometry_move_steps.append(initial_move_step)
             self.analysis_count += 4
             return ribs, thicknesses, result(8.0)
 
@@ -1032,6 +1193,7 @@ class CoreTests(unittest.TestCase):
         )
         self.assertEqual(calls[0], (("base",), 8.0))
         self.assertEqual(calls[1], (("rationalized_1",), 9.0))
+        self.assertEqual(geometry_move_steps, [0.25])
         self.assertEqual(run.stages[-1].analyses, 5)
         self.assertEqual(
             set(run.rationalization_histories),
@@ -1103,7 +1265,15 @@ class CoreTests(unittest.TestCase):
             self.assertEqual(
                 algorithm["rationalization_compliance_tolerance"], 0.001
             )
-            self.assertEqual(algorithm["rationalization_move_limit_initial"], 0.50)
+            expected_geometry_step = 0.05 if number == 2 else 0.50
+            expected_rationalization_step = 0.05 if number == 2 else 0.50
+            self.assertEqual(
+                algorithm["geometry_move_limit_initial"], expected_geometry_step
+            )
+            self.assertEqual(
+                algorithm["rationalization_move_limit_initial"],
+                expected_rationalization_step,
+            )
             self.assertEqual(algorithm["rationalization_min_iterations"], 11)
             self.assertEqual(
                 algorithm["rationalization_dual_tolerance"], 1.0e-9
@@ -1123,8 +1293,23 @@ class CoreTests(unittest.TestCase):
                 algorithm["move_limit_direction_zero_tolerance"], 1.0e-6
             )
             self.assertEqual(algorithm["move_limit_unsuccessful_decrease"], 0.75)
+            self.assertTrue(algorithm["geometry_true_response_rejection"])
+            self.assertEqual(
+                algorithm["geometry_true_response_worsening_tolerance"], 1.0e-4
+            )
+            self.assertEqual(algorithm["geometry_true_response_max_retries"], 4)
             self.assertEqual(algorithm["rationalization_beta_initial"], 1.0)
             self.assertEqual(algorithm["rationalization_beta_increment"], 1.0)
+
+    def test_geometry_and_rationalization_initial_move_steps_must_be_positive(self):
+        for name in (
+            "geometry_move_limit_initial",
+            "rationalization_move_limit_initial",
+        ):
+            cfg = load_case(1, quick=True)
+            cfg["algorithm"][name] = 0.0
+            with self.assertRaisesRegex(ValueError, f"{name} must be positive"):
+                RibLayoutOptimizer(object(), cfg).run([], [])
 
     def test_sca_convergence_requires_one_percent_design_guard(self):
         # A flat objective alone cannot stop an SCA stage while design
@@ -2205,7 +2390,7 @@ class CoreTests(unittest.TestCase):
             ]
         ))
         self.assertEqual(geometry_current_inputs, [None, None, None])
-        self.assertTrue(np.allclose(geometry_move_steps, [0.5, 0.5, 0.5]))
+        self.assertTrue(np.allclose(geometry_move_steps, [0.05, 0.05, 0.05]))
         self.assertEqual(
             [rib.name for rib in final_ribs],
             ["R0", "R1", "R2", "R3", "R4", "R5", "R7", "R8"],

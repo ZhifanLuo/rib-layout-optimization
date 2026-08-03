@@ -72,6 +72,7 @@ COMMON_CONFIG: dict[str, Any] = {
         "move_limit_direction_zero_tolerance": 1.0e-6,
         "move_limit_unsuccessful_decrease": 0.75,
         "move_limit_maximum_global": 10.0,
+        "geometry_move_limit_initial": 0.50,
         "geometry_sca_proximal": 0.20,
         "rationalization_sca_proximal": 0.20,
         "rationalization_dual_tolerance": 1.0e-9,
@@ -87,6 +88,12 @@ COMMON_CONFIG: dict[str, Any] = {
         ],
         "geometry_max_iterations": 100,
         "geometry_fd_fraction": 0.0002,
+        # A convex SCA step is accepted only after a true FEA check.  Small
+        # numerical increases below this relative tolerance remain admissible;
+        # materially worse trials contract the move limit and are retried.
+        "geometry_true_response_rejection": True,
+        "geometry_true_response_worsening_tolerance": 1.0e-4,
+        "geometry_true_response_max_retries": 4,
         "rationalization_beta": 10.0,
         "rationalization_beta_initial": 1.0,
         "rationalization_beta_increment": 1.0,
