@@ -1,0 +1,132 @@
+{
+  "schema_version": 1,
+  "evidence_run_id": "20260804-085055",
+  "core_source_aggregate_sha256": "9283b8f65554f017e20f7302439a41c1be58f980b7e834523237ea4109663bc6",
+  "core_source_file_count": 31,
+  "tools_aggregate_sha256": "7ed0e2d02a2245b117eabce1cf570d4478a32d474ff3dd18dbedeecdc95d7fb4",
+  "tool_file_count": 10,
+  "git_commit_at_execution": "276bd95b27bb01541d42e2f8ef9a058bffd10d6a",
+  "platform": {
+    "os": "Microsoft Windows 11 Home Chinese 10.0.26200, 64-bit",
+    "cpu": "Intel(R) Core(TM) Ultra 7 258V",
+    "physical_cores": 8,
+    "logical_processors": 8,
+    "python": "3.12.10",
+    "numpy": "2.5.1",
+    "scipy": "1.18.0",
+    "linear_solver_threads": 1,
+    "sensitivity_workers": 1,
+    "shell_omp_num_threads": 4
+  },
+  "formal_execution": {
+    "command": "cmd.exe /d /c \"call example_all.bat <nul\"",
+    "started_utc": "2026-08-04T02:14:01.5844110Z",
+    "completed_utc": "2026-08-04T02:34:20.8879100Z",
+    "exit_code": 0,
+    "results_sha256": {
+      "example_1": "a13e509ebfe756023eb2123096afc99f8dae1c29bb32a709153f491a37e18117",
+      "example_2": "11335bf8d41a52059783d5933bf5841b508de991f2034f30fe6bda2c705d7b24",
+      "example_3": "bde16ed4db8cdd52f1c129ddfe7aa9fade1583a611cc774cba122173ed658a09",
+      "example_4": "d87cc036cfc52a60052690f56e0521375dddf5bd805f006190476a24a8f2826c"
+    }
+  },
+  "release_state": {
+    "software_version": "v1.1.0",
+    "zenodo_concept_doi": "10.5281/zenodo.21638172",
+    "zenodo_version_doi": null,
+    "zenodo_version_doi_status": "pending_archival_publication",
+    "previous_release": {
+      "version": "v1.0.1",
+      "zenodo_version_doi": "10.5281/zenodo.21782271"
+    },
+    "new_release_archive_required": true
+  },
+  "files": [
+    {
+      "path": "verification/README.md",
+      "sha256": "091d081ba9631b880c39e31c4f23ae6373328e01e5bbb51985249bec1802d960",
+      "derivation": "human-readable provenance and interpretation guide"
+    },
+    {
+      "path": "verification/formal_stage_summary.csv",
+      "sha256": "b58ea49195363abdd1fe52f0fa713987fe43d907a18a288ea9b1ca4caf88ddb4",
+      "source_artifacts": [
+        "Code/results/example_1/results.json",
+        "Code/results/example_2/results.json",
+        "Code/results/example_3/results.json",
+        "Code/results/example_4/results.json"
+      ],
+      "source_fields": "mesh_used, quick, stages[*].{name,rib_count,compliance,volume,analyses}",
+      "derivation": "row-preserving stage extraction with full stored numeric precision"
+    },
+    {
+      "path": "verification/sensitivity_by_step.json",
+      "sha256": "4ff689add140e937262a1c14be4f6a527726008eb786a8330908400b4a35eaf2",
+      "source_artifact": "agent_work/runs/20260804-085055/diagnostics/sensitivity_case2_geometry/sensitivity_by_step_summary.json",
+      "source_artifact_sha256": "f9e864494114678bbb517841867b43b5043d399dabda3fe56812b0fa842609c8",
+      "source_fields": "all records",
+      "derivation": "value-preserving copy with normalized line endings"
+    },
+    {
+      "path": "verification/robustness_summary.csv",
+      "sha256": "b23736264fc3b1126791858b547d9dad605700a61eeb46ccdef05ff7fb255e8f",
+      "source_artifact": "agent_work/runs/20260804-085055/diagnostics/robustness_case2/robustness_summary.csv",
+      "source_artifact_sha256": "2b980bb35e792d1d7627fc6bfae4dcaf3f1bcba063d44c323f401bf27c7a86a5",
+      "source_fields": "all 18 rows and columns",
+      "derivation": "value-preserving copy with normalized line endings"
+    },
+    {
+      "path": "verification/fixed_layout_mesh_response.csv",
+      "sha256": "f4ff8188030955b87861e047b8b6a8fd7564bfeea03dcf4465162e2efe6d53b1",
+      "source_artifacts": [
+        "agent_work/runs/20260804-085055/diagnostics/robustness_case2/robustness_study.json",
+        "agent_work/runs/20260804-085055/diagnostics/response_only_160x80/response_160x80.json"
+      ],
+      "source_fields": "fixed_layout_mesh_reanalysis.meshes and response",
+      "derivation": "four-row response-only extraction for one fixed five-rib layout"
+    },
+    {
+      "path": "verification/restart_group_summary.json",
+      "sha256": "f2d1de83af995d883e75689de5de9ebd33206ad61e54636fc013b248d66cd56f",
+      "source_artifact": "agent_work/runs/20260804-085055/diagnostics/restarts/restart_matrix_summary.json",
+      "source_artifact_sha256": "aa73b7fe8c5ea5bcd2d36d9dc7aca30d04647f2d1179398960ccf3149b391570",
+      "source_fields": "group_count, run_count, process_counts, feasible_count, termination_counts, groups[*]",
+      "derivation": "value-preserving copy with normalized line endings"
+    },
+    {
+      "path": "verification/full_pool_stage_summary.csv",
+      "sha256": "5509e02327c3fe1f2033b4c8bb6f0093bd0a6c206681a5bf7bcc427c15adea49",
+      "source_artifacts": [
+        "agent_work/runs/20260804-085055/diagnostics/full_pool_cases1_2/full_pool_case_1.json",
+        "agent_work/runs/20260804-085055/diagnostics/full_pool_cases1_2/full_pool_case_2.json"
+      ],
+      "source_artifact_sha256": {
+        "case_1": "ee22166846afe4af5be1e1663e91197828347af19aba7e50f0bdb2ef0f4b2e5c",
+        "case_2": "b46aee068fb58bb3e4fbe8a2fb43b147c574c175dc71bea279413d0af18d6458"
+      },
+      "source_fields": "candidate_count, process_status, stages[*].{name,rib_count,compliance,volume,analyses,elapsed_seconds,phase_process_status,phase_termination_reason,phase_converged}",
+      "derivation": "stage extraction; cumulative_analysis_count is the ordered cumulative sum of stages[*].analyses"
+    },
+    {
+      "path": "verification/lifting_summary.csv",
+      "sha256": "78714b22eef34ec4b6e97de5e9c82533f30666e83f26a5c9238b99b9ab64b816",
+      "source_artifacts": [
+        "agent_work/runs/20260804-085055/diagnostics/lifting/case3_geometry_to_rationalized/topology_lifting_results.json",
+        "agent_work/runs/20260804-085055/diagnostics/lifting/case4_geometry_to_rationalized/topology_lifting_results.json"
+      ],
+      "source_artifact_sha256": {
+        "case_3": "7ec975825796e4fee66b0fbc6a782f41672f02903617cb74f55c104b5144762d",
+        "case_4": "60415d8397065ee9b51ccb5a00fb1481520972d0809ad6f32340c0b33359d7cf"
+      },
+      "source_fields": "case, full_stage, reduced_stage, rib counts, saved/lifted compliance, relative_to_reduced, total_analysis_count, geometry_termination_reason",
+      "derivation": "two-row field extraction; process completion is taken from the zero-exit diagnostic manifest"
+    },
+    {
+      "path": "verification/run_response_only_160x80.py",
+      "sha256": "f59ff2481298672db3f0a862fee899893a4a68784ad73396ec9014dcf11f00c7",
+      "source_artifact": "agent_work/runs/20260804-085055/diagnostics/response_only_160x80/run_160x80.py",
+      "source_artifact_sha256": "f59ff2481298672db3f0a862fee899893a4a68784ad73396ec9014dcf11f00c7",
+      "derivation": "byte-identical auxiliary script copy"
+    }
+  ]
+}

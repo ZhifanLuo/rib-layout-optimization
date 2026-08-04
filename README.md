@@ -282,6 +282,15 @@ Windows PowerShell:
 .\.venv\Scripts\python.exe run_all.py
 ```
 
+The exact Windows command used for the provenance-checked publication run was:
+
+```powershell
+cmd.exe /d /c "call example_all.bat <nul"
+```
+
+Run it from `Code/`. It executes all four full cases sequentially and stops at
+the first nonzero exit code.
+
 Linux or macOS shell:
 
 ```bash
@@ -324,6 +333,58 @@ The utilities under `tools/` provide restart audits, rationalization
 diagnostics, aggregate summaries, and post-processing. They are supporting
 diagnostics rather than the formal four-case entry point.
 
+### Numerical-verification commands
+
+The compact reviewed tables from the August 2026 evidence run are under
+`verification/`; see `verification/README.md` for provenance, field mappings,
+and interpretation limits. The following commands reproduce the main
+diagnostics from fresh formal `results/example_N/results.json` files.
+
+Case-II thickness and endpoint sensitivity verification at three perturbation
+steps, in both production mirror-reduced and unreduced spaces:
+
+```powershell
+.\.venv\Scripts\python.exe tools\run_sensitivity_verification.py --case 2 --source results\example_2\results.json --output diagnostics\sensitivity_case2_geometry --stage geometry --verification-space both --thickness-steps 0.01 0.003 0.001 --endpoint-steps 0.01 0.003 0.001
+```
+
+Case-II 18-run one-factor study (mesh, pool span, 70% retention threshold,
+1% convergence threshold, 5% rationalization relaxation, and starting
+layout), with a common `80 x 40` response reanalysis:
+
+```powershell
+.\.venv\Scripts\python.exe tools\run_robustness_study.py --case 2 --output diagnostics\robustness_case2 --studies mesh pool retention convergence relaxation starts --mesh-values 20x10 40x20 80x40 --pool-spans 1 2 3 --retention-thresholds 0.5 0.7 0.9 --convergence-thresholds 0.005 0.01 0.02 --relaxations 0.025 0.05 0.075 --starting-layouts all_orbits even_orbits odd_orbits --common-reanalysis-mesh 80 40 --seed 20260804
+```
+
+A deterministic restart/multistart group is run as follows; the reviewed
+13-group matrix, including the exact case/stage/move-step/seed combinations,
+is listed in `verification/README.md`.
+
+```powershell
+.\.venv\Scripts\python.exe tools\run_geometry_restart_diagnostic.py --case 2 --source results\example_2\results.json --output diagnostics\restarts\case2_geometry_move005 --stage geometry --restarts 1 --multistarts 3 --thickness-perturbation 0.10 --endpoint-perturbation 0.05 --seed 202608042 --initial-move-step 0.05
+```
+
+The full enumerated candidate pools for Cases I and II can be carried through
+sizing, geometry optimization, and one 5% rationalization pass:
+
+```powershell
+.\.venv\Scripts\python.exe tools\run_full_pool_baseline.py --case 1 2 --output diagnostics\full_pool_cases1_2 --post-sizing-policy rationalization --rationalization-relaxation 0.05
+```
+
+The topology-lifting consistency checks are:
+
+```powershell
+.\.venv\Scripts\python.exe tools\run_topology_lifting_diagnostic.py --case 3 --source results\example_3\results.json --output diagnostics\lifting\case3_geometry_to_rationalized --full-stage geometry --reduced-stage rationalized
+.\.venv\Scripts\python.exe tools\run_topology_lifting_diagnostic.py --case 4 --source results\example_4\results.json --output diagnostics\lifting\case4_geometry_to_rationalized --full-stage geometry --reduced-stage rationalized
+```
+
+`process_status=complete` means that a diagnostic command finished and wrote
+its payload. It does **not** mean that every optimization phase converged.
+Only `termination_reason=converged` (or the corresponding phase field) is a
+convergence declaration; `true_response_backtracking_failed` means that the
+best feasible incumbent was returned after the bounded safeguard stopped the
+phase. Preserve unsuccessful and adverse numerical outcomes when reporting a
+matrix.
+
 The convergence and comparison diagnostics accept both module and direct
 script invocation. For example, these two forms are equivalent:
 
@@ -332,8 +393,9 @@ script invocation. For example, these two forms are equivalent:
 .\.venv\Scripts\python.exe tools\run_geometry_restart_diagnostic.py --case 3 --source results\example_3\results.json --output diagnostics\restart3 --restarts 2 --multistarts 4
 ```
 
-Multistarts apply seeded, symmetry-preserving thickness perturbations; they do
-not constitute a global-optimality proof. A topology-lifting consistency check
+Multistarts can apply seeded, symmetry-preserving thickness and endpoint
+perturbations; they do not constitute a global-optimality proof. A
+topology-lifting consistency check
 can reinsert ribs deleted between two saved stages:
 
 ```powershell
@@ -345,11 +407,11 @@ mesh metadata, then reanalyzes both saved stages with the current executable;
 it stops if either compliance differs from the saved value by more than the
 configurable `--source-compliance-tolerance` (default `1e-6` relative).
 
-The complete generated candidate pool can be sized without active-set
+The complete generated candidate pool can be optimized without active-set
 screening as an internal baseline:
 
 ```powershell
-.\.venv\Scripts\python.exe tools\run_full_pool_baseline.py --case 1 2 --output diagnostics\full_pool
+.\.venv\Scripts\python.exe tools\run_full_pool_baseline.py --case 1 2 --output diagnostics\full_pool --post-sizing-policy rationalization --rationalization-relaxation 0.05
 ```
 
 This full-pool calculation uses the same solver and candidate restrictions as
@@ -371,10 +433,9 @@ Each case writes to `results/example_N/` by default. The common artifacts are:
 - rationalization history JSON and thickness CSV files when the corresponding
   rationalization iterations occur.
 
-Output directories are regenerated data and are ignored by default. A future
-public repository may deliberately retain small reviewed summaries under
-`results/reference/`; full raw outputs should be attached to an archival
-release when their size is appropriate.
+Output directories are regenerated data and are ignored by default. Compact
+reviewed evidence tables are retained under `verification/`; full raw outputs
+should be attached to an archival release when their size is appropriate.
 
 ## Tests
 
@@ -390,12 +451,14 @@ four-case run when validating publication results.
 
 ## Citation and license
 
-Software citation metadata for the current release, `v1.0.1`, are provided in `CITATION.cff`,
-and the development repository is available at
+Software citation metadata for the prepared `v1.1.0` release are provided in
+`CITATION.cff`, and the development repository is available at
 <https://github.com/ZhifanLuo/rib-layout-optimization>. GitHub exposes these
 metadata through its **Cite this repository** interface. The stable Zenodo
 concept DOI, <https://doi.org/10.5281/zenodo.21638172>, resolves the complete
-release family. The immutable `v1.0.1` archive is available at
+release family. The immutable DOI for `v1.1.0` is pending publication of the
+corresponding Zenodo archive and must not be inferred from the concept DOI.
+For release history, the preceding immutable `v1.0.1` archive is available at
 <https://doi.org/10.5281/zenodo.21782271>. ORCID and article publication
 metadata remain to be inserted when available.
 
