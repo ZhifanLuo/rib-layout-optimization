@@ -395,9 +395,9 @@ and the development repository is available at
 <https://github.com/ZhifanLuo/rib-layout-optimization>. GitHub exposes these
 metadata through its **Cite this repository** interface. The stable Zenodo
 concept DOI, <https://doi.org/10.5281/zenodo.21638172>, resolves the complete
-release family. A version-specific DOI for `v1.0.1` is not listed until Zenodo
-mints it. ORCID and article publication metadata remain to be inserted when
-available.
+release family. The immutable `v1.0.1` archive is available at
+<https://doi.org/10.5281/zenodo.21782271>. ORCID and article publication
+metadata remain to be inserted when available.
 
 The implementation is distributed under the BSD 3-Clause License; see
 `LICENSE`.
