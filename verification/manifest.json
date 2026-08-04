@@ -33,18 +33,18 @@
   "release_state": {
     "software_version": "v1.1.0",
     "zenodo_concept_doi": "10.5281/zenodo.21638172",
-    "zenodo_version_doi": null,
-    "zenodo_version_doi_status": "pending_archival_publication",
+    "zenodo_version_doi": "10.5281/zenodo.21784031",
+    "zenodo_version_doi_status": "published",
     "previous_release": {
       "version": "v1.0.1",
       "zenodo_version_doi": "10.5281/zenodo.21782271"
     },
-    "new_release_archive_required": true
+    "new_release_archive_required": false
   },
   "files": [
     {
       "path": "verification/README.md",
-      "sha256": "091d081ba9631b880c39e31c4f23ae6373328e01e5bbb51985249bec1802d960",
+      "sha256": "6c9be84b956014e7805e0aab28f62d5fc91403dbf1efbe35b5d81336ed2c512c",
       "derivation": "human-readable provenance and interpretation guide"
     },
     {

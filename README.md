@@ -456,9 +456,9 @@ Software citation metadata for the prepared `v1.1.0` release are provided in
 <https://github.com/ZhifanLuo/rib-layout-optimization>. GitHub exposes these
 metadata through its **Cite this repository** interface. The stable Zenodo
 concept DOI, <https://doi.org/10.5281/zenodo.21638172>, resolves the complete
-release family. The immutable DOI for `v1.1.0` is pending publication of the
-corresponding Zenodo archive and must not be inferred from the concept DOI.
-For release history, the preceding immutable `v1.0.1` archive is available at
+release family. The immutable archive for `v1.1.0` is available at
+<https://doi.org/10.5281/zenodo.21784031>. For release history, the preceding
+immutable `v1.0.1` archive is available at
 <https://doi.org/10.5281/zenodo.21782271>. ORCID and article publication
 metadata remain to be inserted when available.
 

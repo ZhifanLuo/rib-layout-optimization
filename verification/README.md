@@ -144,7 +144,6 @@ their last geometry phases. Adverse runs are part of the evidence set.
 ## Release state
 
 This package is prepared for software version `v1.1.0`. The stable Zenodo
-concept DOI is `10.5281/zenodo.21638172`; the immutable DOI for `v1.1.0` is
-pending publication of the corresponding Zenodo archive and must not be
-invented or replaced by the concept DOI. The preceding immutable `v1.0.1`
-archive (`10.5281/zenodo.21782271`) does not contain this verification package.
+concept DOI is `10.5281/zenodo.21638172`; the immutable `v1.1.0` archive is
+`10.5281/zenodo.21784031`. The preceding immutable `v1.0.1` archive
+(`10.5281/zenodo.21782271`) does not contain this verification package.
