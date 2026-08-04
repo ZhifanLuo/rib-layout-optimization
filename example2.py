@@ -39,11 +39,7 @@ CASE_CONFIG = {
     "rib": {"height": 2.0, "initial": 0.2, "upper": 2.0},
     "volume_bound": 90.0,
     "rationalization_relaxation": 0.05,
-    # Case-specific calibration from the saved adaptive-stage restart audit.
-    "algorithm": {
-        "geometry_move_limit_initial": 0.05,
-        "rationalization_move_limit_initial": 0.05,
-    },
+    "algorithm": {},
 }
 
 

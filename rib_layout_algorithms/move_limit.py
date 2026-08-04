@@ -39,12 +39,35 @@ class EnhancedMMAMoveLimit:
         self.upper = np.asarray(self.upper, float).copy()
         if self.lower.shape != self.upper.shape or np.any(self.upper < self.lower):
             raise ValueError("invalid global move-limit bounds")
+        scalar_settings = {
+            "initial_global_step": self.initial_global_step,
+            "same_direction_increase": self.same_direction_increase,
+            "oscillation_decrease": self.oscillation_decrease,
+            "unsuccessful_decrease": self.unsuccessful_decrease,
+            "maximum_global_step": self.maximum_global_step,
+        }
+        for name, value in scalar_settings.items():
+            if not np.isfinite(float(value)) or float(value) <= 0.0:
+                raise ValueError(f"{name} must be finite and positive")
+        if float(self.initial_global_step) > float(self.maximum_global_step):
+            raise ValueError(
+                "initial_global_step must not exceed maximum_global_step"
+            )
+        if not 0.0 < float(self.unsuccessful_decrease) < 1.0:
+            raise ValueError(
+                "unsuccessful_decrease must lie strictly between zero and one"
+            )
         if self.step_scale is not None:
             self.step_scale = np.asarray(self.step_scale, float).copy()
             if self.step_scale.shape != self.lower.shape:
                 raise ValueError("move-limit step scale does not match bounds")
-        if self.direction_zero_tolerance < 0.0:
-            raise ValueError("move-limit direction zero tolerance must be nonnegative")
+        if (
+            not np.isfinite(float(self.direction_zero_tolerance))
+            or self.direction_zero_tolerance < 0.0
+        ):
+            raise ValueError(
+                "move-limit direction zero tolerance must be finite and nonnegative"
+            )
         self.global_step = float(self.initial_global_step)
         self.local_step = np.ones_like(self.lower)
 
@@ -77,8 +100,6 @@ class EnhancedMMAMoveLimit:
             raise ValueError("move-limit design shape does not match bounds")
         self.iteration += 1
         if self.iteration == 1:
-            if self.global_step < 1.0e-3 or self.global_step > self.maximum_global_step:
-                self.global_step = 0.5
             self.local_step.fill(1.0)
         else:
             assert self.previous_objective is not None and self.previous_violation is not None

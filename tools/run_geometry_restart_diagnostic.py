@@ -552,9 +552,7 @@ def main(argv: list[str] | None = None) -> int:
             key: cfg["algorithm"].get(key)
             for key in (
                 "geometry_max_iterations", "geometry_fd_fraction",
-                "geometry_sca_proximal", "geometry_true_response_rejection",
-                "geometry_true_response_worsening_tolerance",
-                "geometry_true_response_max_retries", "sca_objective_tolerance",
+                "geometry_sca_proximal", "sca_objective_tolerance",
                 "sca_constraint_tolerance", "sca_design_tolerance",
             )
         },

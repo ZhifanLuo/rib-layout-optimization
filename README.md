@@ -119,33 +119,29 @@ reduced topology enters Eq. (7) directly, and its necessary initialization FEA
 is counted as part of Eq. (7). The former threshold homotopy is not used.
 
 For endpoint coordinates, the move-limit half-width is
-`Gstep * Lstep_i * 2*dx` in x and `Gstep * Lstep_i * 2*dy` in y. With the
+`Gstep * Lstep_i * 0.75*dx` in x and `Gstep * Lstep_i * 0.75*dy` in y. With the
 default initial `Gstep=0.5` and `Lstep_i=1`, this gives initial half-widths
-`dx` and `dy`. Thickness variables retain the enhanced-MMA current-value/range
+`0.375*dx` and `0.375*dy`. Thickness variables retain the enhanced-MMA current-value/range
 scale. A successful same-direction history multiplies the variable factor by
 `1.2`; oscillation multiplies it by `0.7`. Direction detection uses moves
 normalized by each variable's global range; if either consecutive normalized
 move is within `1e-6` of zero, no `1.2/0.7` factor is applied. For geometry
 optimization, each convex trial is checked by a true FEA before it becomes the
-next outer design. A feasible trial whose relative compliance increase exceeds
-`1e-4` (0.01%) is rejected; the global move limit is contracted by the existing
-unsuccessful-step factor `0.75`, and the same approximation is resolved. At
-most four contracted retries are permitted after the first trial. Exhausting
-this bound terminates the geometry stage with
-`true_response_backtracking_failed`; this safeguard parameter is not a
-convergence criterion. Sizing and geometry optimization retain and return the
-lowest-compliance feasible true-FEA incumbent encountered, including rollback
-from an inferior last iterate.
+next outer design. The generic severe-objective guard rejects a trial only when
+its relative compliance worsening is strictly greater than `0.50` (50%) or its
+objective is nonfinite. The global move limit is then multiplied by the
+unsuccessful-step factor `0.75`, and the same approximation is solved again from
+the unchanged outer starting design. At most four contracted retries are
+permitted after the first trial. Exhausting this budget, or reaching the minimum
+move, terminates the geometry stage with an `objective_rollback_failed_*` reason;
+this safeguard is not a convergence criterion. Sizing and geometry optimization
+retain and return the lowest-compliance feasible true-FEA incumbent encountered,
+including rollback from an inferior last iterate.
 
 The main geometry stage and rationalization have distinct initial-move
 settings: `geometry_move_limit_initial` and
-`rationalization_move_limit_initial`. Both default to `0.50`. Example II
-overrides both values to `0.05`; Examples I, III, and IV retain `0.50`. This is
-a case-specific calibration based on saved adaptive-stage restart diagnostics:
-the `case2_adaptive_move_005` run converged to
-`C = 13.8187025742`, whereas the tested `0.50` and `0.10` starts terminated by
-the true-response backtracking safeguard. This limited diagnostic observation
-does not establish robustness or global convergence.
+`rationalization_move_limit_initial`. Both default to `0.50`, and all four
+executable examples use `0.50` for both stages.
 There is no fixed cumulative endpoint-displacement interval; only the ground-
 shell domain clips the adaptive local bounds.
 If an inner convex solution makes a rib newly too short or creates a new
@@ -380,7 +376,7 @@ The topology-lifting consistency checks are:
 `process_status=complete` means that a diagnostic command finished and wrote
 its payload. It does **not** mean that every optimization phase converged.
 Only `termination_reason=converged` (or the corresponding phase field) is a
-convergence declaration; `true_response_backtracking_failed` means that the
+convergence declaration; an `objective_rollback_failed_*` reason means that the
 best feasible incumbent was returned after the bounded safeguard stopped the
 phase. Preserve unsuccessful and adverse numerical outcomes when reporting a
 matrix.

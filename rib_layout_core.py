@@ -72,6 +72,15 @@ COMMON_CONFIG: dict[str, Any] = {
         "move_limit_direction_zero_tolerance": 1.0e-6,
         "move_limit_unsuccessful_decrease": 0.75,
         "move_limit_maximum_global": 10.0,
+        # Phase-independent safeguard for a severely nonconservative SCA
+        # approximation.  A trial whose true objective is more than 50%
+        # worse than the accepted outer-iteration start is rolled back and
+        # retried from that complete start after contracting the global move.
+        # The threshold is configurable so that 0.30 and 0.50 can be compared
+        # in a subsequent formal parameter study.
+        "outer_objective_rollback_threshold": 0.50,
+        "outer_objective_rollback_max_retries": 4,
+        "outer_objective_rollback_minimum_move": 1.0e-3,
         "geometry_move_limit_initial": 0.50,
         "geometry_sca_proximal": 0.20,
         "rationalization_sca_proximal": 0.20,
@@ -88,12 +97,6 @@ COMMON_CONFIG: dict[str, Any] = {
         ],
         "geometry_max_iterations": 100,
         "geometry_fd_fraction": 0.0002,
-        # A convex SCA step is accepted only after a true FEA check.  Small
-        # numerical increases below this relative tolerance remain admissible;
-        # materially worse trials contract the move limit and are retried.
-        "geometry_true_response_rejection": True,
-        "geometry_true_response_worsening_tolerance": 1.0e-4,
-        "geometry_true_response_max_retries": 4,
         "rationalization_beta": 10.0,
         "rationalization_beta_initial": 1.0,
         "rationalization_beta_increment": 1.0,
@@ -115,6 +118,46 @@ def merge_config(base: Mapping[str, Any], override: Mapping[str, Any]) -> dict:
         else:
             result[key] = deepcopy(value)
     return result
+
+
+def _validate_outer_rollback_config(algorithm: Mapping[str, Any]) -> None:
+    """Validate the shared severe-objective rollback controls at load time."""
+    threshold = float(algorithm["outer_objective_rollback_threshold"])
+    retries_raw = algorithm["outer_objective_rollback_max_retries"]
+    retries = int(retries_raw)
+    minimum_move = float(algorithm["outer_objective_rollback_minimum_move"])
+    contraction = float(algorithm["move_limit_unsuccessful_decrease"])
+    maximum_move = float(algorithm["move_limit_maximum_global"])
+    if not np.isfinite(maximum_move) or maximum_move <= 0.0:
+        raise ValueError(
+            "move_limit_maximum_global must be finite and positive"
+        )
+    for name in (
+        "move_limit_initial",
+        "geometry_move_limit_initial",
+        "rationalization_move_limit_initial",
+    ):
+        value = float(algorithm[name])
+        if not np.isfinite(value) or value <= 0.0:
+            raise ValueError(f"{name} must be finite and positive")
+        if value > maximum_move:
+            raise ValueError(f"{name} must not exceed move_limit_maximum_global")
+    if not np.isfinite(threshold) or threshold < 0.0:
+        raise ValueError(
+            "outer_objective_rollback_threshold must be finite and nonnegative"
+        )
+    if isinstance(retries_raw, bool) or retries != retries_raw or retries < 0:
+        raise ValueError(
+            "outer_objective_rollback_max_retries must be a nonnegative integer"
+        )
+    if not np.isfinite(minimum_move) or minimum_move <= 0.0:
+        raise ValueError(
+            "outer_objective_rollback_minimum_move must be finite and positive"
+        )
+    if not 0.0 < contraction < 1.0:
+        raise ValueError(
+            "move_limit_unsuccessful_decrease must lie strictly between zero and one"
+        )
 
 
 def make_case_config(
@@ -145,6 +188,7 @@ def make_case_config(
             raise ValueError(
                 "further_rationalization_relaxation must be nonnegative"
             )
+    _validate_outer_rollback_config(cfg["algorithm"])
     return cfg
 
 

@@ -611,7 +611,9 @@ class RibLayoutOptimizer:
         self.active_history: list[Stage] = []
         self.sizing_history: list[dict] = []
         self.rationalization_history: list[dict] = []
+        self.sizing_termination_reason: str | None = None
         self.geometry_termination_reason: str | None = None
+        self.rationalization_termination_reason: str | None = None
         self.mirror_axes = mirror_axes(cfg)
         self.symmetry_width, self.symmetry_height = map(float, cfg["domain"])
 
@@ -759,23 +761,101 @@ class RibLayoutOptimizer:
         self, name: str, default: float
     ) -> float:
         value = float(self.cfg["algorithm"].get(name, default))
-        if value <= 0.0:
-            raise ValueError(f"{name} must be positive")
+        if not np.isfinite(value) or value <= 0.0:
+            raise ValueError(f"{name} must be finite and positive")
         return value
+
+    def _outer_objective_rollback_settings(self) -> tuple[float, int, float]:
+        """Return validated phase-independent severe-step rollback settings."""
+        settings = self.cfg["algorithm"]
+        threshold = float(
+            settings.get("outer_objective_rollback_threshold", 0.50)
+        )
+        retries_raw = settings.get("outer_objective_rollback_max_retries", 4)
+        retries = int(retries_raw)
+        minimum_move = float(
+            settings.get("outer_objective_rollback_minimum_move", 1.0e-3)
+        )
+        contraction = float(settings["move_limit_unsuccessful_decrease"])
+        if not np.isfinite(threshold) or threshold < 0.0:
+            raise ValueError(
+                "outer_objective_rollback_threshold must be finite and nonnegative"
+            )
+        if isinstance(retries_raw, bool) or retries != retries_raw or retries < 0:
+            raise ValueError(
+                "outer_objective_rollback_max_retries must be a nonnegative integer"
+            )
+        if not np.isfinite(minimum_move) or minimum_move <= 0.0:
+            raise ValueError(
+                "outer_objective_rollback_minimum_move must be finite and positive"
+            )
+        if not 0.0 < contraction < 1.0:
+            raise ValueError(
+                "move_limit_unsuccessful_decrease must lie strictly between zero and one"
+            )
+        return threshold, retries, minimum_move
+
+    @staticmethod
+    def _objective_worsening(start: float, trial: float) -> float:
+        """Signed relative worsening of a minimization objective."""
+        start_value = float(start)
+        trial_value = float(trial)
+        if not np.isfinite(start_value):
+            raise ValueError("accepted outer objective must be finite")
+        if not np.isfinite(trial_value):
+            return float("inf")
+        return (trial_value-start_value)/max(abs(start_value), 1.0e-16)
+
+    @classmethod
+    def _severe_objective_response(
+        cls, start: float, trial: float, threshold: float
+    ) -> tuple[float, bool, bool]:
+        """Classify a true trial objective, rejecting every non-finite value."""
+        trial_finite = bool(np.isfinite(float(trial)))
+        worsening = cls._objective_worsening(start, trial)
+        rejected = bool(not trial_finite or worsening > float(threshold))
+        return worsening, trial_finite, rejected
+
+    @staticmethod
+    def _candidate_design_is_finite(
+        candidate: Sequence[float],
+        ribs: Sequence[Rib],
+        thicknesses: Sequence[float],
+    ) -> bool:
+        """Return whether a candidate is safe to submit to finite-element analysis."""
+        if not np.all(np.isfinite(np.asarray(candidate, float))):
+            return False
+        if not np.all(np.isfinite(np.asarray(thicknesses, float))):
+            return False
+        return all(
+            np.all(np.isfinite(np.asarray([*rib.p0, *rib.p1, rib.height], float)))
+            for rib in ribs
+        )
+
+    @staticmethod
+    def _contract_outer_move_for_retry(
+        move_limit: EnhancedMMAMoveLimit, minimum_move: float
+    ) -> bool:
+        """Contract a global move, respecting a positive retry floor."""
+        if move_limit.global_step <= minimum_move*(1.0+1.0e-12):
+            return False
+        move_limit.contract()
+        move_limit.global_step = max(float(move_limit.global_step), minimum_move)
+        return True
 
     def _coordinate_move_step_scale(self, rib_count: int) -> np.ndarray:
         """Return the endpoint-coordinate scale used by geometry move limits.
 
-        The scale is twice the local ground-shell cell dimension. With the
+        The scale is 0.75 times the local ground-shell cell dimension. With the
         default initial global step of 0.5 and local step of 1.0, the initial
-        coordinate half-width is therefore one shell cell in each direction.
+        coordinate half-width is therefore 0.375 shell cells in each direction.
         """
         return np.tile(
             [
-                2.0*self.model.dx,
-                2.0*self.model.dy,
-                2.0*self.model.dx,
-                2.0*self.model.dy,
+                0.75*self.model.dx,
+                0.75*self.model.dy,
+                0.75*self.model.dx,
+                0.75*self.model.dy,
             ],
             int(rib_count),
         )
@@ -835,6 +915,12 @@ class RibLayoutOptimizer:
     def size(self, ribs: Sequence[Rib], initial: Sequence[float] | None = None, maxiter: int | None = None) -> tuple[np.ndarray, AnalysisResult]:
         if not ribs:
             raise ValueError("cannot size an empty rib set")
+        self.sizing_termination_reason = None
+        (
+            rollback_threshold,
+            rollback_max_retries,
+            rollback_minimum_move,
+        ) = self._outer_objective_rollback_settings()
         variable_map = build_mirror_variable_map(
             ribs, self.mirror_axes, self.symmetry_width, self.symmetry_height
         )
@@ -886,27 +972,125 @@ class RibLayoutOptimizer:
             # separable dual problem used for Eq. (7): the geometry-gradient
             # and coordinate arrays are empty, leaving the closed-form
             # t_i(lambda)=sqrt(a_i/(lambda*v_i)) update with box move limits.
-            candidate = solve_geometry_convex_subproblem(
-                x,
-                a,
-                np.empty(0),
-                coeff,
-                float(coeff@x),
-                self.volume_bound,
-                1.0,  # unused when no coordinate variables are present
-                max(current.compliance, 1.0e-16),
-                np.empty(0),
-                move_lower,
-                move_upper,
-            )
-            full_candidate = variable_map.expand_thicknesses(candidate)
-            full_candidate = self._feasible_start(ribs, full_candidate)
-            candidate = variable_map.reduce_thicknesses(full_candidate)
-            full_candidate = variable_map.expand_thicknesses(candidate)
+            response_trials: list[dict] = []
+            accepted = False
+            rollback_failure_reason = "unknown"
+            for response_retry in range(rollback_max_retries+1):
+                if response_retry:
+                    move_lower, move_upper = move_limit.current_bounds(x)
+                candidate = solve_geometry_convex_subproblem(
+                    x,
+                    a,
+                    np.empty(0),
+                    coeff,
+                    float(coeff@x),
+                    self.volume_bound,
+                    1.0,  # unused when no coordinate variables are present
+                    max(current.compliance, 1.0e-16),
+                    np.empty(0),
+                    move_lower,
+                    move_upper,
+                )
+                full_candidate = variable_map.expand_thicknesses(candidate)
+                full_candidate = self._feasible_start(ribs, full_candidate)
+                candidate = variable_map.reduce_thicknesses(full_candidate)
+                full_candidate = variable_map.expand_thicknesses(candidate)
+                move_global_trial = float(move_limit.global_step)
+                if not self._candidate_design_is_finite(
+                    candidate, ribs, full_candidate
+                ):
+                    response_trials.append({
+                        "retry": int(response_retry),
+                        "objective": None,
+                        "objective_relative_change_signed": None,
+                        "objective_finite": False,
+                        "design_finite": False,
+                        "fea_performed": False,
+                        "move_global": move_global_trial,
+                        "accepted": False,
+                        "rejection_reasons": ["nonfinite_candidate_design"],
+                    })
+                    if response_retry >= rollback_max_retries:
+                        rollback_failure_reason = "retry_budget_exhausted"
+                        break
+                    if not self._contract_outer_move_for_retry(
+                        move_limit, rollback_minimum_move
+                    ):
+                        rollback_failure_reason = "minimum_move_reached"
+                        break
+                    continue
+                trial = self.analyze(ribs, full_candidate)
+                (
+                    signed_trial_change,
+                    trial_objective_finite,
+                    severe_worsening,
+                ) = self._severe_objective_response(
+                    current.compliance, trial.compliance, rollback_threshold
+                )
+                response_trials.append({
+                    "retry": int(response_retry),
+                    "objective": (
+                        float(trial.compliance) if trial_objective_finite else None
+                    ),
+                    "objective_relative_change_signed": (
+                        float(signed_trial_change) if trial_objective_finite else None
+                    ),
+                    "objective_finite": trial_objective_finite,
+                    "design_finite": True,
+                    "fea_performed": True,
+                    "move_global": move_global_trial,
+                    "accepted": not severe_worsening,
+                })
+                if not severe_worsening:
+                    accepted = True
+                    break
+                self.log.append(
+                    "sizing severe-objective trial rejected: "
+                    f"outer={outer}, retry={response_retry}, "
+                    f"dC={100*signed_trial_change:.4f}%, "
+                    f"move_global={move_global_trial:.5g}"
+                )
+                if response_retry >= rollback_max_retries:
+                    rollback_failure_reason = "retry_budget_exhausted"
+                    break
+                if not self._contract_outer_move_for_retry(
+                    move_limit, rollback_minimum_move
+                ):
+                    rollback_failure_reason = "minimum_move_reached"
+                    break
 
-            # The convex subproblem above performs no FEA. Its output is the
-            # next outer-loop design; no true-response rejection is applied.
-            trial = self.analyze(ribs, full_candidate)
+            if not accepted:
+                self.sizing_termination_reason = "objective_rollback_failed"
+                current_feasible = self.volume(
+                    ribs, full_x
+                ) <= self.volume_bound*(1.0+constraint_tolerance)
+                self.sizing_history.append({
+                    "outer": int(outer),
+                    "compliance": float(current.compliance),
+                    "feasible": bool(current_feasible),
+                    "accepted": False,
+                    "termination_reason": "objective_rollback_failed",
+                    "rollback_failure_reason": rollback_failure_reason,
+                    "response_trials": response_trials,
+                    "response_retry_count": int(len(response_trials)-1),
+                    "best_feasible_outer": best_outer,
+                    "best_feasible_compliance": (
+                        None if best_result is None else float(best_result.compliance)
+                    ),
+                    "is_best_feasible": bool(best_outer == outer),
+                })
+                self.log.append(
+                    "sizing SCA stopped: no acceptable severe-objective step "
+                    f"after {len(response_trials)} trials at outer={outer}; "
+                    "the accepted outer start was restored"
+                )
+                if best_result is None or best_x is None:
+                    returned_x, returned_result = full_x, current
+                else:
+                    returned_x, returned_result = best_x, best_result
+                self._report_progress("sizing optimization", ribs, returned_result)
+                return returned_x, returned_result
+
             relative_change = abs(trial.compliance - current.compliance) / max(abs(current.compliance), 1.0e-16)
             design_change = maximum_normalized_design_change(
                 x, candidate, lower_global, upper_global
@@ -938,6 +1122,9 @@ class RibLayoutOptimizer:
                 "outer": int(outer),
                 "compliance": float(trial.compliance),
                 "feasible": bool(feasible),
+                "accepted": True,
+                "response_trials": response_trials,
+                "response_retry_count": int(len(response_trials)-1),
                 "best_feasible_outer": best_outer,
                 "best_feasible_compliance": (
                     None if best_result is None else float(best_result.compliance)
@@ -945,6 +1132,7 @@ class RibLayoutOptimizer:
                 "is_best_feasible": bool(best_outer == outer),
             })
             if consecutive_converged >= consecutive_required:
+                self.sizing_termination_reason = "converged"
                 self.log.append(
                     f"sizing SCA converged: outer={outer}, "
                     f"dC={100*relative_change:.4f}%, dx={100*design_change:.4f}%, "
@@ -966,6 +1154,7 @@ class RibLayoutOptimizer:
                 self._report_progress("sizing optimization", ribs, returned_result)
                 return returned_x, returned_result
         self.log.append(f"sizing SCA warning: outer iteration limit {maxiter} reached")
+        self.sizing_termination_reason = "iteration_limit"
         if best_result is None or best_x is None:
             self.log.append(
                 "sizing SCA warning: no feasible true-FEA incumbent; "
@@ -1434,23 +1623,11 @@ class RibLayoutOptimizer:
         consecutive_required = int(
             settings.get("sca_consecutive_convergence_steps", 2)
         )
-        reject_worse = bool(
-            settings.get("geometry_true_response_rejection", True)
-        )
-        worsening_tolerance = float(
-            settings.get("geometry_true_response_worsening_tolerance", 1.0e-4)
-        )
-        maximum_response_retries = int(
-            settings.get("geometry_true_response_max_retries", 4)
-        )
-        if worsening_tolerance < 0.0:
-            raise ValueError(
-                "geometry_true_response_worsening_tolerance must be nonnegative"
-            )
-        if maximum_response_retries < 0:
-            raise ValueError(
-                "geometry_true_response_max_retries must be nonnegative"
-            )
+        (
+            rollback_threshold,
+            rollback_max_retries,
+            rollback_minimum_move,
+        ) = self._outer_objective_rollback_settings()
 
         def unpack(x: np.ndarray) -> tuple[np.ndarray, list[Rib]]:
             t = variable_map.expand_thicknesses(x[:nt])
@@ -1547,11 +1724,15 @@ class RibLayoutOptimizer:
             # makes one or more ribs geometrically invalid, freeze only those
             # rib positions at the current outer design and resolve the same
             # FEA-free approximation. Other rib coordinates and every
-            # thickness variable remain free; the global move limit is not
-            # contracted only when the true FEA response is materially worse.
+            # thickness variable remain free. Local geometry freezing does not
+            # contract the global move limit; contraction occurs only when the
+            # generic severe-objective safeguard rejects the true FEA response.
             response_trials: list[dict] = []
             accepted = False
-            for response_retry in range(maximum_response_retries+1):
+            response_retry = 0
+            severe_retries_used = 0
+            rollback_failure_reason = "unknown"
+            while True:
                 if response_retry:
                     move_lower, move_upper = move_limit.current_bounds(x)
                 inner_lower=move_lower.copy()
@@ -1631,46 +1812,104 @@ class RibLayoutOptimizer:
                     candidate_t,candidate_ribs=unpack(candidate)
 
                 move_global_trial = float(move_limit.global_step)
-                trial=self.analyze(candidate_ribs,candidate_t)
-                signed_trial_change = (
-                    (trial.compliance-current.compliance)
-                    / max(abs(current.compliance),1e-16)
-                )
                 candidate_volume=self.volume(candidate_ribs,candidate_t)
+                candidate_design_finite = bool(
+                    self._candidate_design_is_finite(
+                        candidate, candidate_ribs, candidate_t
+                    )
+                    and np.isfinite(candidate_volume)
+                )
+                if not candidate_design_finite:
+                    severe_retries_used += 1
+                    response_trials.append({
+                        "retry": int(response_retry),
+                        "compliance": None,
+                        "objective_relative_change_signed": None,
+                        "objective_finite": False,
+                        "design_finite": False,
+                        "fea_performed": False,
+                        "move_global": move_global_trial,
+                        "accepted": False,
+                        "rejection_reasons": ["nonfinite_candidate_design"],
+                        "severe_retries_used": int(severe_retries_used),
+                    })
+                    if severe_retries_used > rollback_max_retries:
+                        rollback_failure_reason = (
+                            "severe_retry_budget_exhausted"
+                        )
+                        break
+                    if not self._contract_outer_move_for_retry(
+                        move_limit, rollback_minimum_move
+                    ):
+                        rollback_failure_reason = "minimum_move_reached"
+                        break
+                    response_retry += 1
+                    continue
+                trial=self.analyze(candidate_ribs,candidate_t)
+                (
+                    signed_trial_change,
+                    trial_objective_finite,
+                    severe_worsening,
+                ) = self._severe_objective_response(
+                    current.compliance, trial.compliance, rollback_threshold
+                )
                 trial_violation=max(
                     candidate_volume/self.volume_bound-1.0,0.0
                 )
-                current_feasible = initial_violation <= constraint_tolerance
-                trial_feasible = trial_violation <= constraint_tolerance
-                materially_worse = bool(
-                    reject_worse and current_feasible and trial_feasible
-                    and signed_trial_change > worsening_tolerance
+                rejected = bool(severe_worsening)
+                rejection_reasons = (
+                    ["severe_objective"] if severe_worsening else []
                 )
+                if severe_worsening:
+                    severe_retries_used += 1
                 response_trials.append({
                     "retry": int(response_retry),
-                    "compliance": float(trial.compliance),
-                    "objective_relative_change_signed": float(signed_trial_change),
+                    "compliance": (
+                        float(trial.compliance) if trial_objective_finite else None
+                    ),
+                    "objective_relative_change_signed": (
+                        float(signed_trial_change) if trial_objective_finite else None
+                    ),
+                    "objective_finite": trial_objective_finite,
+                    "design_finite": True,
+                    "fea_performed": True,
                     "move_global": move_global_trial,
-                    "accepted": not materially_worse,
+                    "accepted": not rejected,
+                    "rejection_reasons": rejection_reasons,
+                    "severe_retries_used": int(severe_retries_used),
                 })
-                if not materially_worse:
+                if not rejected:
                     accepted = True
                     break
                 self.log.append(
                     "geometry true-response trial rejected: "
                     f"outer={outer}, retry={response_retry}, "
                     f"dC={100*signed_trial_change:.4f}%, "
-                    f"move_global={move_global_trial:.5g}"
+                    f"move_global={move_global_trial:.5g}, "
+                    f"reasons={rejection_reasons}"
                 )
-                move_limit.contract()
+                if (
+                    severe_worsening
+                    and severe_retries_used > rollback_max_retries
+                ):
+                    rollback_failure_reason = "severe_retry_budget_exhausted"
+                    break
+                if not self._contract_outer_move_for_retry(
+                    move_limit, rollback_minimum_move
+                ):
+                    rollback_failure_reason = "minimum_move_reached"
+                    break
+                response_retry += 1
 
             if not accepted:
                 self.geometry_termination_reason = (
-                    "true_response_backtracking_failed"
+                    "objective_rollback_failed_"
+                    f"{rollback_failure_reason}"
                 )
                 self.log.append(
                     "geometry SCA stopped: no acceptable true-response step "
-                    f"after {maximum_response_retries+1} trials at outer={outer}"
+                    f"after {len(response_trials)} trials at outer={outer}; "
+                    f"reason={rollback_failure_reason}"
                 )
                 if iteration_history is not None:
                     iteration_history.append({
@@ -1680,13 +1919,16 @@ class RibLayoutOptimizer:
                         "volume": float(volume_k),
                         "volume_ratio": float(volume_k/self.volume_bound),
                         "constraint_violation": float(initial_violation),
-                        "feasible": bool(current_feasible),
+                        "feasible": bool(initial_feasible),
                         "accepted": False,
                         "termination_reason": (
-                            "true_response_backtracking_failed"
+                            "objective_rollback_failed_"
+                            f"{rollback_failure_reason}"
                         ),
+                        "rollback_failure_reason": rollback_failure_reason,
                         "response_trials": response_trials,
-                        "response_retry_count": int(maximum_response_retries),
+                        "response_retry_count": int(len(response_trials)-1),
+                        "severe_retry_count": int(severe_retries_used),
                         "best_feasible_outer": best_outer,
                         "best_feasible_compliance": (
                             None if best_result is None
@@ -1866,6 +2108,12 @@ class RibLayoutOptimizer:
     ) -> tuple[list[Rib], np.ndarray, AnalysisResult, np.ndarray]:
         """Solve the smooth Eq. (18) problem for the current active rib set."""
         settings = self.cfg["algorithm"]
+        self.rationalization_termination_reason = None
+        (
+            rollback_threshold,
+            rollback_max_retries,
+            rollback_minimum_move,
+        ) = self._outer_objective_rollback_settings()
         n = len(ribs)
         variable_map = build_mirror_variable_map(
             ribs, self.mirror_axes, self.symmetry_width, self.symmetry_height
@@ -2018,6 +2266,7 @@ class RibLayoutOptimizer:
             )
             consecutive_converged = 0
             converged = False
+            rollback_failed = False
             for outer in range(1, max_outer + 1):
                 beta = min(
                     beta_initial+(outer-1)*beta_increment,
@@ -2076,116 +2325,253 @@ class RibLayoutOptimizer:
                         + 0.5 * proximal * compliance_scale * np.sum((dp / scale_p)**2)
                     )
 
-                # The FEA-free inner loop solves the convex approximation. If
-                # a coordinate move creates invalid geometry, freeze only the
-                # responsible rib positions at the current outer design and
-                # resolve. Other coordinates and all thicknesses remain free;
-                # Gstep is unchanged and there is no true-response rejection.
-                invalid = False
-                inner_lower=move_lower.copy()
-                inner_upper=move_upper.copy()
-                frozen_geometry_indices: set[int] = set()
-                frozen_geometry_reasons: dict[int, set[str]] = {}
-                for inner in range(1, n+2):
-                    dual_result = solve_rationalization_convex_subproblem(
-                        current=current_x,
-                        count_gradient=count_gradient,
-                        reciprocal_coefficients=reciprocal_coeff,
-                        geometry_gradient=gp,
-                        volume_gradient=volume_gradient,
-                        compliance_at_current=current_result.compliance,
-                        compliance_bound=cref,
-                        volume_at_current=volume_k,
-                        volume_bound=self.volume_bound,
-                        proximal=proximal,
-                        compliance_scale=compliance_scale,
-                        thickness_scale=thickness_scale,
-                        coordinate_scale=scale_p,
-                        lower=inner_lower,
-                        upper=inner_upper,
-                        constraint_tolerance=dual_tolerance,
-                    )
-                    candidate = np.asarray(dual_result.x, float)
-                    candidate_t, candidate_ribs = unpack(candidate)
-                    candidate_t = self._feasible_start(candidate_ribs, candidate_t)
-                    candidate[:nt] = variable_map.reduce_thicknesses(candidate_t)
-                    candidate_t, candidate_ribs = unpack(candidate)
-                    freeze_reasons = geometry_move_freeze_reasons(
-                        current_ribs,candidate_ribs,min_length
-                    )
-                    if freeze_reasons:
-                        invalid = True
-                        new_indices=set(freeze_reasons)-frozen_geometry_indices
-                        if not new_indices:
-                            candidate[nt:]=current_x[nt:]
-                            candidate_t,candidate_ribs=unpack(candidate)
-                            candidate_t=self._feasible_start(candidate_ribs,candidate_t)
-                            candidate[:nt]=variable_map.reduce_thicknesses(candidate_t)
-                            candidate_t,candidate_ribs=unpack(candidate)
-                            invalid=False
-                            self.log.append(
-                                "rationalization convex inner local freeze fallback: "
-                                "all rib positions retained at current outer design"
-                            )
-                            break
-                        for index in sorted(new_indices):
-                            variables = np.unique(
-                                variable_map.coordinate_variable[4*index:4*index+4]
-                            )
-                            variables = variables[variables >= 0]
-                            coordinate_indices = nt+variables
-                            inner_lower[coordinate_indices]=current_x[coordinate_indices]
-                            inner_upper[coordinate_indices]=current_x[coordinate_indices]
-                            frozen_geometry_reasons.setdefault(index,set()).update(
-                                freeze_reasons[index]
-                            )
-                        frozen_geometry_indices.update(new_indices)
-                        frozen_names=[
-                            current_ribs[index].name for index in sorted(new_indices)
-                        ]
-                        self.log.append(
-                            "rationalization convex inner local freeze: "
-                            f"inner={inner}, ribs={frozen_names}, "
-                            f"move_global unchanged={move_limit.global_step:.5g}"
+                # Resolve the same beta/current-state approximation after a
+                # severe true member-count increase.  Rejected trials never
+                # replace ``projected`` or ``current_result``.
+                response_trials: list[dict] = []
+                accepted = False
+                rollback_failure_reason = "unknown"
+                for response_retry in range(rollback_max_retries+1):
+                    if response_retry:
+                        move_lower, move_upper = move_limit.current_bounds(current_x)
+                    invalid = False
+                    inner_lower=move_lower.copy()
+                    inner_upper=move_upper.copy()
+                    frozen_geometry_indices: set[int] = set()
+                    frozen_geometry_reasons: dict[int, set[str]] = {}
+                    for inner in range(1, n+2):
+                        dual_result = solve_rationalization_convex_subproblem(
+                            current=current_x,
+                            count_gradient=count_gradient,
+                            reciprocal_coefficients=reciprocal_coeff,
+                            geometry_gradient=gp,
+                            volume_gradient=volume_gradient,
+                            compliance_at_current=current_result.compliance,
+                            compliance_bound=cref,
+                            volume_at_current=volume_k,
+                            volume_bound=self.volume_bound,
+                            proximal=proximal,
+                            compliance_scale=compliance_scale,
+                            thickness_scale=thickness_scale,
+                            coordinate_scale=scale_p,
+                            lower=inner_lower,
+                            upper=inner_upper,
+                            constraint_tolerance=dual_tolerance,
                         )
+                        candidate = np.asarray(dual_result.x, float)
+                        candidate_t, candidate_ribs = unpack(candidate)
+                        candidate_t = self._feasible_start(candidate_ribs, candidate_t)
+                        candidate[:nt] = variable_map.reduce_thicknesses(candidate_t)
+                        candidate_t, candidate_ribs = unpack(candidate)
+                        freeze_reasons = geometry_move_freeze_reasons(
+                            current_ribs,candidate_ribs,min_length
+                        )
+                        if freeze_reasons:
+                            invalid = True
+                            new_indices=set(freeze_reasons)-frozen_geometry_indices
+                            if not new_indices:
+                                candidate[nt:]=current_x[nt:]
+                                candidate_t,candidate_ribs=unpack(candidate)
+                                candidate_t=self._feasible_start(candidate_ribs,candidate_t)
+                                candidate[:nt]=variable_map.reduce_thicknesses(candidate_t)
+                                candidate_t,candidate_ribs=unpack(candidate)
+                                invalid=False
+                                self.log.append(
+                                    "rationalization convex inner local freeze fallback: "
+                                    "all rib positions retained at current outer design"
+                                )
+                                break
+                            for index in sorted(new_indices):
+                                variables = np.unique(
+                                    variable_map.coordinate_variable[4*index:4*index+4]
+                                )
+                                variables = variables[variables >= 0]
+                                coordinate_indices = nt+variables
+                                inner_lower[coordinate_indices]=current_x[coordinate_indices]
+                                inner_upper[coordinate_indices]=current_x[coordinate_indices]
+                                frozen_geometry_reasons.setdefault(index,set()).update(
+                                    freeze_reasons[index]
+                                )
+                            frozen_geometry_indices.update(new_indices)
+                            frozen_names=[
+                                current_ribs[index].name for index in sorted(new_indices)
+                            ]
+                            self.log.append(
+                                "rationalization convex inner local freeze: "
+                                f"inner={inner}, ribs={frozen_names}, "
+                                f"move_global unchanged={move_limit.global_step:.5g}"
+                            )
+                            continue
+                        invalid=False
+                        break
+                    if invalid:
+                        candidate[nt:]=current_x[nt:]
+                        candidate_t, candidate_ribs = unpack(candidate)
+                        candidate_t=self._feasible_start(candidate_ribs,candidate_t)
+                        candidate[:nt]=variable_map.reduce_thicknesses(candidate_t)
+                        candidate_t,candidate_ribs=unpack(candidate)
+
+                    true_count = projected_count(
+                        candidate, beta, projection_threshold
+                    )
+                    candidate_volume = self.volume(candidate_ribs, candidate_t)
+                    candidate_variables_finite = self._candidate_design_is_finite(
+                        candidate, candidate_ribs, candidate_t
+                    )
+                    candidate_count_finite = bool(np.isfinite(true_count))
+                    candidate_volume_finite = bool(np.isfinite(candidate_volume))
+                    candidate_design_finite = bool(
+                        candidate_variables_finite
+                        and candidate_count_finite
+                        and candidate_volume_finite
+                    )
+                    move_global_trial = float(move_limit.global_step)
+                    if not candidate_design_finite:
+                        rejection_reasons = []
+                        if not candidate_variables_finite:
+                            rejection_reasons.append("nonfinite_candidate_design")
+                        if not candidate_count_finite:
+                            rejection_reasons.append("nonfinite_projected_count")
+                        if not candidate_volume_finite:
+                            rejection_reasons.append("nonfinite_volume_response")
+                        response_trials.append({
+                            "retry": int(response_retry),
+                            "objective": (
+                                float(true_count) if np.isfinite(true_count) else None
+                            ),
+                            "objective_relative_change_signed": None,
+                            "objective_finite": bool(np.isfinite(true_count)),
+                            "design_finite": False,
+                            "constraint_response_finite": False,
+                            "compliance": None,
+                            "fea_performed": False,
+                            "move_global": move_global_trial,
+                            "accepted": False,
+                            "rejection_reasons": rejection_reasons,
+                        })
+                        self.log.append(
+                            "rationalization invalid candidate rejected before FEA: "
+                            f"beta={beta:g}, outer={outer}, retry={response_retry}, "
+                            f"move_global={move_global_trial:.5g}"
+                        )
+                        if response_retry >= rollback_max_retries:
+                            rollback_failure_reason = "retry_budget_exhausted"
+                            break
+                        if not self._contract_outer_move_for_retry(
+                            move_limit, rollback_minimum_move
+                        ):
+                            rollback_failure_reason = "minimum_move_reached"
+                            break
                         continue
-                    invalid=False
+
+                    inner_predicted_objective = float(approximate_count(candidate))
+                    inner_predicted_compliance = float(approximate_compliance(candidate))
+                    inner_linearized_volume = float(
+                        volume_k + volume_gradient @ (candidate-current_x)
+                    )
+                    predicted_compliance_residual = inner_predicted_compliance-cref
+                    predicted_volume_residual = (
+                        inner_linearized_volume-self.volume_bound
+                    )
+                    inner_success = bool(
+                        dual_result.success
+                        and predicted_compliance_residual
+                        <= dual_tolerance*max(abs(cref), 1.0)
+                        and predicted_volume_residual
+                        <= dual_tolerance*max(abs(self.volume_bound), 1.0)
+                    )
+                    inner_status = int(dual_result.status)
+                    inner_iterations = int(dual_result.iterations)
+                    inner_message = str(dual_result.message)
+
+                    outer_fea += 1
+                    trial = self.analyze(candidate_ribs, candidate_t)
+                    (
+                        signed_count_change,
+                        trial_objective_finite,
+                        severe_worsening,
+                    ) = self._severe_objective_response(
+                        count_k, true_count, rollback_threshold
+                    )
+                    constraint_response_finite = bool(
+                        np.isfinite(float(trial.compliance))
+                        and np.isfinite(candidate_volume)
+                    )
+                    rejected = bool(
+                        severe_worsening or not constraint_response_finite
+                    )
+                    rejection_reasons = []
+                    if severe_worsening:
+                        rejection_reasons.append("severe_objective")
+                    if not constraint_response_finite:
+                        rejection_reasons.append("nonfinite_constraint_response")
+                    response_trials.append({
+                        "retry": int(response_retry),
+                        "objective": float(true_count),
+                        "objective_relative_change_signed": float(
+                            signed_count_change
+                        ),
+                        "objective_finite": trial_objective_finite,
+                        "design_finite": True,
+                        "constraint_response_finite": constraint_response_finite,
+                        "compliance": (
+                            float(trial.compliance)
+                            if np.isfinite(float(trial.compliance)) else None
+                        ),
+                        "fea_performed": True,
+                        "move_global": move_global_trial,
+                        "accepted": not rejected,
+                        "rejection_reasons": rejection_reasons,
+                    })
+                    if not rejected:
+                        accepted = True
+                        break
+                    self.log.append(
+                        "rationalization true-response trial rejected: "
+                        f"beta={beta:g}, outer={outer}, retry={response_retry}, "
+                        f"dN={100*signed_count_change:.4f}%, "
+                        f"move_global={move_global_trial:.5g}, "
+                        f"reasons={rejection_reasons}"
+                    )
+                    if response_retry >= rollback_max_retries:
+                        rollback_failure_reason = "retry_budget_exhausted"
+                        break
+                    if not self._contract_outer_move_for_retry(
+                        move_limit, rollback_minimum_move
+                    ):
+                        rollback_failure_reason = "minimum_move_reached"
+                        break
+
+                if not accepted:
+                    rollback_failed = True
+                    self.rationalization_termination_reason = (
+                        "objective_rollback_failed"
+                    )
+                    self.rationalization_history.append({
+                        "event": "eq18_outer_iteration",
+                        "outer": int(outer),
+                        "beta": float(beta),
+                        "current_objective": float(count_k),
+                        "objective": float(count_k),
+                        "current_compliance": current_compliance_value,
+                        "compliance": current_compliance_value,
+                        "volume": float(volume_k),
+                        "accepted": False,
+                        "termination_reason": "objective_rollback_failed",
+                        "rollback_failure_reason": rollback_failure_reason,
+                        "response_trials": response_trials,
+                        "response_retry_count": int(len(response_trials)-1),
+                        "rib_names": [rib.name for rib in current_ribs],
+                        "thicknesses": [float(value) for value in current_t],
+                    })
+                    self.log.append(
+                        "rationalization SCA stopped: no acceptable severe-"
+                        f"objective step after {len(response_trials)} trials "
+                        f"at beta={beta:g}, outer={outer}; the accepted outer "
+                        "start was restored"
+                    )
                     break
-                if invalid:
-                    candidate[nt:]=current_x[nt:]
-                    candidate_t, candidate_ribs = unpack(candidate)
-                    candidate_t=self._feasible_start(candidate_ribs,candidate_t)
-                    candidate[:nt]=variable_map.reduce_thicknesses(candidate_t)
-                    candidate_t,candidate_ribs=unpack(candidate)
 
-                inner_predicted_objective = float(approximate_count(candidate))
-                inner_predicted_compliance = float(approximate_compliance(candidate))
-                inner_linearized_volume = float(
-                    volume_k + volume_gradient @ (candidate-current_x)
-                )
-                predicted_compliance_residual = inner_predicted_compliance-cref
-                predicted_volume_residual = (
-                    inner_linearized_volume-self.volume_bound
-                )
-                inner_success = bool(
-                    dual_result.success
-                    and predicted_compliance_residual
-                    <= dual_tolerance*max(abs(cref), 1.0)
-                    and predicted_volume_residual
-                    <= dual_tolerance*max(abs(self.volume_bound), 1.0)
-                )
-                inner_status = int(dual_result.status)
-                inner_iterations = int(dual_result.iterations)
-                inner_message = str(dual_result.message)
-
-                # The inner optimum becomes the next outer iterate. The FEA
-                # is used for convergence and the next sensitivity field, not
-                # as an accept/reject filter.
-                outer_fea += 1
-                trial = self.analyze(candidate_ribs, candidate_t)
-                true_count = projected_count(
-                    candidate, beta, projection_threshold
-                )
                 count_change = abs(true_count-count_k)/max(abs(count_k),1.0e-16)
                 design_change = maximum_normalized_design_change(
                     current_x,candidate,global_lower,global_upper
@@ -2254,6 +2640,9 @@ class RibLayoutOptimizer:
                     "volume": float(self.volume(candidate_ribs, candidate_t)),
                     "objective_relative_change": float(count_change),
                     "design_change": float(design_change),
+                    "accepted": True,
+                    "response_trials": response_trials,
+                    "response_retry_count": int(len(response_trials)-1),
                     "compliance_feasible": bool(compliance_feasible),
                     "volume_feasible": bool(volume_feasible),
                     "rib_names": [rib.name for rib in candidate_ribs],
@@ -2279,6 +2668,7 @@ class RibLayoutOptimizer:
                 ):
                     converged = True
                 if converged:
+                    self.rationalization_termination_reason = "converged"
                     self.log.append(
                         f"rationalization SCA converged: beta={beta:g}, "
                         f"threshold={projection_threshold:.7g}, outer={outer}, "
@@ -2286,7 +2676,14 @@ class RibLayoutOptimizer:
                         f"projected count={true_count:.3f}, FEA={outer_fea}"
                     )
                     break
-            if not converged:
+            if rollback_failed:
+                self.log.append(
+                    f"rationalization SCA beta={beta:g}/{beta_max:g}, "
+                    f"threshold={projection_threshold:.7g} stopped after "
+                    f"objective rollback failure; FEA={outer_fea}"
+                )
+            elif not converged:
+                self.rationalization_termination_reason = "iteration_limit"
                 self.log.append(
                     f"rationalization SCA beta={beta:g}/{beta_max:g}, "
                     f"threshold={projection_threshold:.7g} reached outer limit {max_outer}; "
@@ -2313,6 +2710,7 @@ class RibLayoutOptimizer:
 
     def _rationalize(self, ribs: list[Rib], thicknesses: np.ndarray, geometry_result: AnalysisResult, relaxation: float) -> tuple[list[Rib], np.ndarray, AnalysisResult]:
         self.rationalization_history.clear()
+        self.rationalization_termination_reason = None
         if relaxation <= 0 or len(ribs) <= 3:
             return ribs, thicknesses, geometry_result
         settings = self.cfg["algorithm"]
