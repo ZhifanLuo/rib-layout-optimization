@@ -4,9 +4,9 @@ message: >-
   paper.
 type: software
 title: Python implementation of An Active-Set Framework for Explicit Stiffening-Rib Layout Optimization
-version: 1.0.0
-date-released: 2026-07-28
-doi: 10.5281/zenodo.21638173
+version: 1.0.1
+date-released: 2026-08-04
+doi: 10.5281/zenodo.21638172
 authors:
   - family-names: Luo
     given-names: Zhifan

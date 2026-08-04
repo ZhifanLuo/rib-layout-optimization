@@ -1,6 +1,6 @@
 # Rib layout optimization — reference Python implementation
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21638173.svg)](https://doi.org/10.5281/zenodo.21638173)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21638172.svg)](https://doi.org/10.5281/zenodo.21638172)
 
 This folder contains the executable reference implementation of the
 multi-phase method described in *An Active-Set Framework for Explicit
@@ -390,14 +390,14 @@ four-case run when validating publication results.
 
 ## Citation and license
 
-Software citation metadata for release `v1.0.0` are provided in `CITATION.cff`,
+Software citation metadata for the current release, `v1.0.1`, are provided in `CITATION.cff`,
 and the development repository is available at
 <https://github.com/ZhifanLuo/rib-layout-optimization>. GitHub exposes these
-metadata through its **Cite this repository** interface. The immutable `v1.0.0`
-archive is available from Zenodo at
-<https://doi.org/10.5281/zenodo.21638173>. The concept DOI for all versions is
-<https://doi.org/10.5281/zenodo.21638172>. ORCID and article publication
-metadata remain to be inserted when available.
+metadata through its **Cite this repository** interface. The stable Zenodo
+concept DOI, <https://doi.org/10.5281/zenodo.21638172>, resolves the complete
+release family. A version-specific DOI for `v1.0.1` is not listed until Zenodo
+mints it. ORCID and article publication metadata remain to be inserted when
+available.
 
 The implementation is distributed under the BSD 3-Clause License; see
 `LICENSE`.
