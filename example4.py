@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Example IV: 200 x 100 plate subjected to a force couple."""
+"""Example IV: 200 x 100 plate under two load cases."""
 
 from __future__ import annotations
 
@@ -9,7 +9,7 @@ from rib_layout_core import run_example_cli
 # Everything below is specific to Example IV.
 CASE_CONFIG = {
     "number": 4,
-    "name": "force_couple",
+    "name": "force_couple_and_transverse_load",
     # Finite-element model dimensions (mm), formal mesh, and optional quick mesh.
     "domain": [200.0, 100.0],
     # Mid-height reflection reverses the force couple but preserves compliance.
@@ -25,14 +25,25 @@ CASE_CONFIG = {
         "E": 70_000.0,
         "nu": 0.33,
     },
-    # Equal and opposite transverse forces form the applied couple.
-    "load_cases": [{
-        "weight": 1.0,
-        "forces": [
-            {"point": [0.0, 100.0], "value": [0.0, 0.0, 100.0]},
-            {"point": [0.0, 0.0], "value": [0.0, 0.0, -100.0]},
-        ],
-    }],
+    # Load case 1: equal and opposite transverse forces form the applied couple.
+    # Load case 2: the same two points and magnitudes, both directed along -Y.
+    # Equal weights give the two load cases equal importance in the objective.
+    "load_cases": [
+        {
+            "weight": 1.0,
+            "forces": [
+                {"point": [0.0, 100.0], "value": [0.0, 0.0, 100.0]},
+                {"point": [0.0, 0.0], "value": [0.0, 0.0, -100.0]},
+            ],
+        },
+        {
+            "weight": 1.0,
+            "forces": [
+                {"point": [0.0, 100.0], "value": [0.0, -100.0, 0.0]},
+                {"point": [0.0, 0.0], "value": [0.0, -100.0, 0.0]},
+            ],
+        },
+    ],
     "supports": {"type": "edge", "edge": "right"},
     # Rib design limits and material-volume constraint.
     "rib": {"height": 10.0, "initial": 0.5, "upper": 3.0},
@@ -53,8 +64,8 @@ CASE_CONFIG = {
 OUTPUT_OPTIONS = {
     "directory_name": "example_4",
     "roman": "IV",
-    "title": "Example IV — force couple",
-    "description": "200x100 plate, force couple, rib height 10 mm",
+    "title": "Example IV — two load cases",
+    "description": "200x100 plate, force couple plus negative-Y load case, rib height 10 mm",
     "detail_profile": "",
     "write_stage_images": True,
 }

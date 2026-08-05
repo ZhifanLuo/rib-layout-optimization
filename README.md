@@ -463,6 +463,9 @@ The implementation is distributed under the BSD 3-Clause License; see
 
 ## File map
 
+Example IV contains the refreshed two-load-case test: the original force-couple
+case plus an equally weighted negative-Y load case at the same two points.
+
 The principal user-facing Python files are in `Code/`:
 
 - `example1.py` through `example4.py` — FE dimensions, mesh, material, loads,
