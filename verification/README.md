@@ -1,5 +1,10 @@
 # Numerical verification package
 
+The Case-IV formal result was refreshed on 2026-08-05 after adding a second,
+equally weighted negative-Y load case. The Case-IV rows in
+formal_stage_summary.csv and the Case-IV manuscript figure are derived from
+that refreshed result.
+
 This directory contains compact, machine-readable extracts from the
 provenance-checked evidence run `20260804-153636`. It accompanies the Python
 source without duplicating the large iteration histories under `diagnostics/`.
@@ -41,10 +46,26 @@ SciPy 1.18.0, single-threaded solver/sensitivity settings, and
 `OMP_NUM_THREADS=4`. Elapsed times are platform observations, not portable
 complexity measures.
 
+## Case-IV refresh
+
+- Source change: Code/example4.py now defines two equally weighted load cases;
+  the second applies two 100 N negative-Y forces at the original two points.
+- Formal command: .\.venv\Scripts\python.exe -B example4.py from Code/,
+  without --quick.
+- Formal mesh: 80x40; total analyses: 167; elapsed time: 520.0764698 s.
+- Case-IV result SHA-256:
+  bc17d845731b1f98da51294d3c659579647467744cd4bfa8e7c9fe655a07aa7f.
+- Current core source aggregate SHA-256:
+  7af07a2a3468d37d715847568567f9394265724141de41694d125cd7cb828b4c.
+- Case-IV-specific sensitivity, restart and topology-lifting diagnostics in
+  the legacy package below were generated for the previous single-load
+  definition and are not used as evidence for the refreshed Case-IV result.
+
 ## Package contents and source fields
 
 | File | Evidence source and fields |
 | --- | --- |
+| case4_refresh.json | Current Case-IV load definition, source/result hashes and formal-run summary |
 | `formal_stage_summary.csv` | `results/example_N/results.json:mesh_used,quick,stages[*].{name,rib_count,compliance,volume,analyses}` |
 | `sensitivity_by_step.json` | `diagnostics/sensitivity_case2_geometry/sensitivity_verification.json:components`, grouped by variable space, derivative and step; trace-changing samples remain separate |
 | `robustness_summary.csv` | `diagnostics/robustness_case2/robustness_study.json:runs[*]`, retaining all 18 registered runs and common-mesh responses |
@@ -147,13 +168,14 @@ ratio. This serialization limitation is retained explicitly for provenance.
   rationalization, and Case II retains all 86.
 - The lifting runs are consistency/local-path diagnostics, not optimality
   proofs. Reoptimization after lifting improves Case III from
-  17.501170545842463 to 16.45881398550952 and Case IV from
-  266.3127460952643 to 265.598296539515, demonstrating remaining path
-  dependence rather than an effect of adding zero-thickness ribs alone.
+  17.501170545842463 to 16.45881398550952. The legacy Case-IV lifting row is
+  retained only for historical traceability because it predates the refreshed
+  two-load-case definition.
 - Connected rib intersections and Boolean-union volume accounting, a curved
-  multi-load shell with stress/buckling/frequency/manufacturing constraints,
-  and an independently implemented external baseline remain outside the
-  present evidence.
+  shell with stress/buckling/frequency/manufacturing constraints, and an
+  independently implemented external baseline remain outside the present
+  evidence. The refreshed Case-IV result is still planar, linear-elastic and
+  compliance-only.
 
 ## Release state
 
