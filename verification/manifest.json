@@ -89,12 +89,12 @@
     "files":  [
                   {
                       "path":  "verification/README.md",
-                      "sha256":  "dc315377339ffa4ac63edd293a2916daeeb38cd3151138eec5e856c1800fc51f",
+                      "sha256":  "f1024c77da0d7e15675107f48079553000e94afd01104e7fa80042fa0baa1648",
                       "derivation":  "human-readable provenance, reproduction, convergence semantics, and interpretation limits"
                   },
                   {
                       "path":  "verification/formal_stage_summary.csv",
-                      "sha256":  "e49d1dcf7b463f5552b1bc3de6bd9e57826e06b66f30093f910546aaf35ba551",
+                      "sha256":  "bef3db374baf03f64d0fbed61fb27eca50ee9c44efa22b2c3534f7a4a801348d",
                       "source_artifacts":  [
                                                "Code/results/example_1/results.json",
                                                "Code/results/example_2/results.json",
@@ -119,6 +119,17 @@
                       "source_artifact_sha256":  "79254a5bc376bf9090cd82b20702234cb7a65e74726dd489a8d62dfb065bf57a",
                       "source_fields":  "runs[*] final stage, analysis, termination, common reanalysis, and filter fields",
                       "derivation":  "all 18 registered rows retained"
+                  },
+                  {
+                      "path":  "verification/case4_refresh.json",
+                      "sha256":  "e83e0f22fed7660dabe081090d42b07959ec6991270ff590917253fb78b21ae9",
+                      "source_artifacts":  [
+                                                   "Code/example4.py",
+                                                   "Code/results/example_4/results.json",
+                                                   "Code/results/example_4/all_stages.png"
+                                               ],
+                      "source_fields":  "two load cases, mesh_used, quick, total_analyses, elapsed_seconds, result and figure hashes",
+                      "derivation":  "current Case-IV refresh manifest"
                   },
                   {
                       "path":  "verification/fixed_layout_mesh_response.csv",
