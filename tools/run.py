@@ -12,6 +12,7 @@ from pathlib import Path
 from rib_layout_core import make_case_config, run_optimization
 from rib_layout_env import DEFAULT_OUTPUT_ROOT
 from rib_layout_output import save_optimization_results
+from rib_layout_serialization import strict_json_dumps
 
 
 def rationalization_paths(number: int, cfg: dict) -> tuple[tuple[float, str], ...]:
@@ -73,7 +74,7 @@ def write_aggregate_summaries(output_root: Path) -> None:
     if not payloads:
         return
     (Path(output_root)/"all_results.json").write_text(
-        json.dumps(payloads, indent=2), encoding="utf-8"
+        strict_json_dumps(payloads, indent=2), encoding="utf-8"
     )
     with (Path(output_root)/"all_stage_statistics.csv").open(
         "w", newline="", encoding="utf-8"

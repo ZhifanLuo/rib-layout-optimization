@@ -9,6 +9,7 @@ import shutil
 from typing import Any, Mapping
 
 from rib_layout_env import PROJECT_ROOT
+from rib_layout_serialization import strict_json_dumps
 from rib_layout_algorithms.plotting import (
     example1_detailed_panels,
     example2_detailed_timeline,
@@ -84,7 +85,7 @@ def _write_rationalization_history(
         return
     suffix_text = f"_{suffix}" if suffix else ""
     (output / f"rationalization_history{suffix_text}.json").write_text(
-        json.dumps(history, indent=2), encoding="utf-8"
+        strict_json_dumps(history, indent=2), encoding="utf-8"
     )
     eq18 = next(
         (event for event in history if event.get("event") == "eq18_solution"),
@@ -256,7 +257,7 @@ def save_optimization_results(
     }
     # Save numerical results before any optional presentation work.
     (output / "checkpoint_results.json").write_text(
-        json.dumps(payload, indent=2), encoding="utf-8"
+        strict_json_dumps(payload, indent=2), encoding="utf-8"
     )
 
     if output_options.get("write_stage_images", True):
@@ -280,7 +281,7 @@ def save_optimization_results(
         number, stages
     )
     (output / "results.json").write_text(
-        json.dumps(payload, indent=2), encoding="utf-8"
+        strict_json_dumps(payload, indent=2), encoding="utf-8"
     )
     with (output / "summary.csv").open(
         "w", newline="", encoding="utf-8"

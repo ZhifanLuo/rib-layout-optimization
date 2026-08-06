@@ -17,6 +17,17 @@ def canonical_hash(value: object) -> str:
     return hashlib.sha256(payload).hexdigest()
 
 
+def script_identity(code_root: Path, source_provenance, portable_path) -> dict:
+    """Bind the script digest and executable provenance to this entry point."""
+    entry_tool = Path(__file__).resolve()
+    provenance = source_provenance(code_root, entry_tool)
+    provenance["entry_tool"] = portable_path(entry_tool, code_root)
+    return {
+        "script_sha256": hashlib.sha256(entry_tool.read_bytes()).hexdigest(),
+        "executable_provenance": provenance,
+    }
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--project-root", type=Path, required=True)
@@ -26,7 +37,9 @@ def main() -> int:
 
     project_root = args.project_root.resolve()
     code_root = project_root / "Code"
+    output = args.output.resolve()
     sys.path.insert(0, str(code_root))
+    from rib_layout_serialization import portable_artifact_path, strict_json_dumps
     from tools.run_robustness_study import reanalyze_on_mesh, source_provenance
 
     source = args.source.resolve()
@@ -48,7 +61,13 @@ def main() -> int:
     response = reanalyze_on_mesh(stage, config, (160, 80))
     if response["analysis_count"] != 1:
         raise RuntimeError("response-only extension did not use exactly one FEA")
-    entry_tool = code_root / "tools" / "run_robustness_study.py"
+    identity = script_identity(
+        code_root, source_provenance, portable_artifact_path
+    )
+    diagnostics_root = output.parents[1]
+    source_reference = portable_artifact_path(source, diagnostics_root)
+    if Path(source_reference).is_absolute():
+        raise RuntimeError("response source must lie inside the diagnostics archive root")
     payload = {
         "schema_version": 1,
         "process_status": "complete",
@@ -59,7 +78,7 @@ def main() -> int:
             "baseline layout; optimization, filtering, and rationalization are held fixed."
         ),
         "convergence_claim": "not_assessed_by_this_single_extension",
-        "source": str(source),
+        "source": source_reference,
         "source_sha256": hashlib.sha256(source.read_bytes()).hexdigest(),
         "baseline_run_id": baseline["run_id"],
         "baseline_optimization_mesh": baseline["config"]["mesh"],
@@ -68,12 +87,11 @@ def main() -> int:
         "baseline_config_canonical_sha256": canonical_hash(config),
         "baseline_layout_canonical_sha256": canonical_hash(stage["ribs"]),
         "baseline_stage_canonical_sha256": canonical_hash(stage),
-        "script_sha256": hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
-        "executable_provenance": source_provenance(code_root, entry_tool),
+        **identity,
         "response": response,
     }
-    args.output.parent.mkdir(parents=True, exist_ok=True)
-    args.output.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+    output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_text(strict_json_dumps(payload, indent=2), encoding="utf-8")
     print(
         f"mesh=160x80, ribs={stage['rib_count']}, "
         f"C={response['compliance']:.12g}, FEA={response['analysis_count']}"

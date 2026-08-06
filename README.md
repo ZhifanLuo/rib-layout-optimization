@@ -334,7 +334,20 @@ diagnostics rather than the formal four-case entry point.
 The compact reviewed tables from the August 2026 evidence run are under
 `verification/`; see `verification/README.md` for provenance, field mappings,
 and interpretation limits. The following commands reproduce the main
-diagnostics from fresh formal `results/example_N/results.json` files.
+diagnostics from fresh formal `results/example_N/results.json` files. Paths in
+result and verification metadata are repository-relative (for example,
+`results/example_2/results.json` and `diagnostics/robustness_case2/`); they do
+not include an obsolete `Code/` prefix or a local checkout path.
+
+Release `v1.2.0` binds the GitHub tag
+<https://github.com/ZhifanLuo/rib-layout-optimization/releases/tag/v1.2.0>
+to the immutable Zenodo version DOI
+<https://doi.org/10.5281/zenodo.21820166>. Its three release archives are the
+frozen source, the complete formal four-case results, and the complete numerical
+verification results. The latter contains the sensitivity, one-factor,
+restart/multistart, full-candidate-pool, and fixed-layout mesh studies underlying
+the paper. The Zenodo concept DOI
+<https://doi.org/10.5281/zenodo.21638172> resolves the release family.
 
 Case-II thickness and endpoint sensitivity verification at three perturbation
 steps, in both production mirror-reduced and unreduced spaces:
@@ -430,8 +443,12 @@ Each case writes to `results/example_N/` by default. The common artifacts are:
   rationalization iterations occur.
 
 Output directories are regenerated data and are ignored by default. Compact
-reviewed evidence tables are retained under `verification/`; full raw outputs
-should be attached to an archival release when their size is appropriate.
+reviewed evidence tables are retained under `verification/`. Release `v1.2.0`
+also provides the complete formal and diagnostic outputs in the three-archive
+release set described above. Newly generated JSON is strict RFC-compatible JSON:
+undefined diagnostic ratios use `null` with explicit status/reason metadata,
+and project-internal source/provenance paths are serialized as portable POSIX
+paths rather than workstation-specific absolute paths.
 
 ## Tests
 
@@ -447,16 +464,15 @@ four-case run when validating publication results.
 
 ## Citation and license
 
-Software citation metadata for the prepared `v1.1.0` release are provided in
+Software citation metadata for release `v1.2.0` are provided in
 `CITATION.cff`, and the development repository is available at
 <https://github.com/ZhifanLuo/rib-layout-optimization>. GitHub exposes these
 metadata through its **Cite this repository** interface. The stable Zenodo
 concept DOI, <https://doi.org/10.5281/zenodo.21638172>, resolves the complete
-release family. The immutable archive for `v1.1.0` is available at
-<https://doi.org/10.5281/zenodo.21784031>. For release history, the preceding
-immutable `v1.0.1` archive is available at
-<https://doi.org/10.5281/zenodo.21782271>. ORCID and article publication
-metadata remain to be inserted when available.
+release family. Cite the immutable `v1.2.0` archive for this paper and result
+set: <https://doi.org/10.5281/zenodo.21820166>. It corresponds to GitHub tag
+`v1.2.0` and includes the source plus both result archives. ORCID and article
+publication metadata remain to be inserted when available.
 
 The implementation is distributed under the BSD 3-Clause License; see
 `LICENSE`.

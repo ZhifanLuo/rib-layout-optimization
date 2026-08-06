@@ -33,6 +33,7 @@ from tools.run_geometry_restart_diagnostic import (
     validate_source_metadata,
 )
 from tools.run_robustness_study import source_provenance
+from rib_layout_serialization import portable_artifact_path, strict_json_dumps
 
 
 @dataclass(frozen=True)
@@ -541,7 +542,7 @@ def main(argv: list[str] | None = None) -> int:
         writer.writeheader()
         for record in records:
             writer.writerow({
-                key: json.dumps(value, separators=(",", ":"))
+                key: strict_json_dumps(value, separators=(",", ":"))
                 if isinstance(value, (dict, list)) else value
                 for key, value in record.items()
             })
@@ -559,7 +560,7 @@ def main(argv: list[str] | None = None) -> int:
             Path(__file__).resolve().parents[1], Path(__file__)
         ),
         "config": cfg,
-        "source": str(args.source.resolve()),
+        "source": portable_artifact_path(args.source),
         "source_sha256": hashlib.sha256(args.source.read_bytes()).hexdigest(),
         "source_stage": args.stage,
         "mesh": list(map(int, cfg["mesh"])),
@@ -588,7 +589,7 @@ def main(argv: list[str] | None = None) -> int:
         "components": records,
     }
     (args.output/"sensitivity_verification.json").write_text(
-        json.dumps(payload, indent=2), encoding="utf-8"
+        strict_json_dumps(payload, indent=2), encoding="utf-8"
     )
     invalid_count = sum(not record.get("valid", False) for record in records)
     print(

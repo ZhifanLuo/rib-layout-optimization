@@ -10,6 +10,7 @@ import numpy as np
 
 from rib_layout_core import build_model, load_case
 from rib_layout_env import PROJECT_ROOT
+from rib_layout_serialization import strict_json_dumps
 from rib_layout_algorithms.model import Rib
 
 
@@ -177,8 +178,8 @@ def main() -> None:
     rational_c = audit["designs"]["rationalized"]["solvers"]["superlu"]["compliance_fTu"]
     audit["rationalized_compliance_change"] = rational_c/geometry_c-1.0
     args.output.parent.mkdir(parents=True, exist_ok=True)
-    args.output.write_text(json.dumps(audit, indent=2), encoding="utf-8")
-    print(json.dumps(audit, indent=2))
+    args.output.write_text(strict_json_dumps(audit, indent=2), encoding="utf-8")
+    print(strict_json_dumps(audit, indent=2))
 
 
 if __name__ == "__main__":

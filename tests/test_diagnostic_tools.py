@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import csv
+import hashlib
 import json
 from pathlib import Path
 import subprocess
@@ -14,6 +15,7 @@ import numpy as np
 
 from rib_layout_algorithms.model import Rib
 from rib_layout_core import load_case
+from rib_layout_serialization import portable_artifact_path, strict_json_dumps
 from rib_layout_algorithms.symmetry import (
     build_mirror_variable_map,
     missing_mirror_partners,
@@ -62,9 +64,51 @@ from tools.run_topology_lifting_diagnostic import (
     validate_source_metadata,
     lifted_design,
 )
+from verification.run_response_only_160x80 import script_identity
 
 
 class DiagnosticToolTests(unittest.TestCase):
+    def test_response_only_identity_uses_its_own_entry_script(self):
+        code_root = Path(__file__).resolve().parents[1]
+        captured = {}
+
+        def fake_provenance(root, entry_tool):
+            captured["root"] = root
+            captured["entry_tool"] = entry_tool
+            return {"entry_tool_sha256": hashlib.sha256(
+                entry_tool.read_bytes()
+            ).hexdigest()}
+
+        identity = script_identity(
+            code_root, fake_provenance, portable_artifact_path
+        )
+        expected = code_root / "verification" / "run_response_only_160x80.py"
+        self.assertEqual(captured["root"], code_root)
+        self.assertEqual(captured["entry_tool"], expected)
+        self.assertEqual(
+            identity["executable_provenance"]["entry_tool"],
+            "verification/run_response_only_160x80.py",
+        )
+        self.assertEqual(
+            identity["script_sha256"],
+            identity["executable_provenance"]["entry_tool_sha256"],
+        )
+        self.assertNotIn(
+            "run_robustness_study.py",
+            identity["executable_provenance"]["entry_tool"],
+        )
+
+    def test_strict_json_and_absolute_source_path_normalization(self):
+        code_root = Path(__file__).resolve().parents[1]
+        absolute_source = code_root / "results" / "example_2" / "results.json"
+        self.assertEqual(
+            portable_artifact_path(absolute_source, code_root),
+            "results/example_2/results.json",
+        )
+        self.assertEqual(strict_json_dumps({"ratio": 0.5}), '{"ratio": 0.5}')
+        with self.assertRaisesRegex(ValueError, "Out of range float values"):
+            strict_json_dumps({"ratio": float("nan")})
+
     def test_restart_parser_defaults_are_deterministic(self):
         args = restart_parser().parse_args([
             "--case", "3", "--source", "results.json", "--output", "audit",
@@ -514,10 +558,13 @@ class DiagnosticToolTests(unittest.TestCase):
             "iteration_history": [],
             "log": [],
         }
+        code_root = Path(__file__).resolve().parents[1]
+        absolute_source = code_root / "results" / "example_1" / "results.json"
         payload = legacy_single_restart_payload(
-            case=1, source=Path("source.json"), stage_name="geometry",
+            case=1, source=absolute_source, stage_name="geometry",
             mesh=[20, 20], rib_count=1, saved_compliance=2.0, record=record,
         )
+        self.assertEqual(payload["source"], "results/example_1/results.json")
         self.assertEqual(payload["restart_compliance"], 2.0)
         self.assertEqual(payload["restart_initialization_fea"], 1)
         self.assertEqual(payload["geometry_outer_fea"], 3)

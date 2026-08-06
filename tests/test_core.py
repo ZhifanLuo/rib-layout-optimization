@@ -19,6 +19,7 @@ from rib_layout_algorithms.optimization import (
     collinear_covered,
     collinear_overlap,
     geometry_move_freeze_reasons,
+    objective_approximation_ratio,
     sca_step_converged,
     solve_geometry_convex_subproblem,
     solve_rationalization_convex_subproblem,
@@ -27,11 +28,13 @@ from rib_layout_algorithms.optimization import (
 )
 from rib_layout_algorithms.model import AnalysisResult, Rib, StiffenedPlateModel
 from rib_layout_algorithms.plotting import (
+    _draw_domain_3d,
     _format_3d_axis,
     _load_label_position,
     _place_panel_caption,
     _rib_footprint,
     _rib_prism_faces,
+    _support_plot_points,
     example1_detailed_panels,
     example2_detailed_timeline,
     paper_style_panels,
@@ -48,6 +51,27 @@ from tools.run import rationalization_paths
 
 
 class CoreTests(unittest.TestCase):
+    def test_objective_approximation_ratio_is_json_safe(self):
+        ratio, status, reason = objective_approximation_ratio(0.0, 0.0)
+        self.assertIsNone(ratio)
+        self.assertEqual(status, "undefined")
+        self.assertEqual(reason, "predicted_objective_change_near_zero")
+        json.dumps({
+            "approximation_ratio": ratio,
+            "approximation_ratio_status": status,
+            "approximation_ratio_reason": reason,
+        }, allow_nan=False)
+
+        ratio, status, reason = objective_approximation_ratio(-2.0, -4.0)
+        self.assertEqual(ratio, 0.5)
+        self.assertEqual(status, "defined")
+        self.assertIsNone(reason)
+
+        ratio, status, reason = objective_approximation_ratio(np.inf, 1.0)
+        self.assertIsNone(ratio)
+        self.assertEqual(status, "undefined")
+        self.assertEqual(reason, "nonfinite_objective_change")
+
     def test_progress_message_is_logged_and_flushed_immediately(self):
         cfg = load_case(1, quick=True)
         optimizer = RibLayoutOptimizer(object(), cfg)
@@ -1517,6 +1541,41 @@ class CoreTests(unittest.TestCase):
             self.assertGreater(label[1], 0.0)
             self.assertLess(label[1], height)
             self.assertGreater(label[2], 0.0)
+
+    def test_patch_spring_supports_use_patch_centers_for_plotting(self):
+        support = {
+            "type": "patch_springs",
+            "patches": [
+                {"center": [0.0, 0.0], "size": [4.0, 4.0]},
+                {"point": [0.0, 20.0], "size": [4.0, 4.0]},
+            ],
+        }
+        points = _support_plot_points(support, 40.0, 20.0)
+        np.testing.assert_allclose(points, [[0.0, 0.0], [0.0, 20.0]])
+
+    def test_patch_spring_domain_plot_renders_without_edge_selector(self):
+        cfg = load_case(1)
+        cfg["supports"] = {
+            "type": "patch_springs",
+            "patches": [
+                {"center": [0.0, 0.0], "size": [4.0, 4.0]},
+                {"center": [0.0, 20.0], "size": [4.0, 4.0]},
+            ],
+        }
+        figure = plt.figure()
+        try:
+            axis = figure.add_subplot(111, projection="3d")
+            _draw_domain_3d(axis, cfg, show_load_labels=False)
+            self.assertIn(
+                "spring support",
+                [collection.get_label() for collection in axis.collections],
+            )
+        finally:
+            plt.close(figure)
+
+    def test_unknown_plot_support_type_is_rejected_explicitly(self):
+        with self.assertRaisesRegex(ValueError, "unsupported support type"):
+            _support_plot_points({"type": "unknown"}, 20.0, 20.0)
 
     def test_further_rationalization_uses_first_rationalized_design(self):
         optimizer = object.__new__(RibLayoutOptimizer)

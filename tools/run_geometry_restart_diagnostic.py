@@ -22,6 +22,7 @@ from rib_layout_algorithms.model import Rib
 from rib_layout_algorithms.optimization import RibLayoutOptimizer
 from rib_layout_algorithms.symmetry import build_mirror_variable_map, mirror_axes
 from tools.run_robustness_study import source_provenance
+from rib_layout_serialization import portable_artifact_path, strict_json_dumps
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -282,7 +283,7 @@ def write_history(path: Path, history: list[dict]) -> None:
         writer.writeheader()
         for record in history:
             row = {key: record.get(key) for key in scalar_keys}
-            row["response_trials"] = json.dumps(
+            row["response_trials"] = strict_json_dumps(
                 record.get("response_trials", []), separators=(",", ":")
             )
             writer.writerow(row)
@@ -338,7 +339,7 @@ def write_legacy_history(
             for field in LEGACY_HISTORY_FIELDS:
                 value = record.get(field)
                 values.append(
-                    json.dumps(value, separators=(",", ":"))
+                    strict_json_dumps(value, separators=(",", ":"))
                     if isinstance(value, (list, dict)) else value
                 )
             writer.writerow(values+[thickness_by_name[name] for name in names])
@@ -351,7 +352,7 @@ def legacy_single_restart_payload(
     """Return the legacy top-level JSON schema plus additive new fields."""
     return {
         "case": case,
-        "source": str(source.resolve()),
+        "source": portable_artifact_path(source),
         "source_stage": stage_name,
         "mesh": mesh,
         "rib_count": rib_count,
@@ -490,13 +491,13 @@ def main(argv: list[str] | None = None) -> int:
         record.update({
             "executable_provenance": provenance,
             "config": cfg,
-            "source": str(args.source.resolve()),
+            "source": portable_artifact_path(args.source),
             "source_sha256": source_sha256,
             "source_stage": args.stage,
         })
         records.append(record)
         (args.output/f"geometry_{kind}_{run_index:02d}.json").write_text(
-            json.dumps(record, indent=2), encoding="utf-8"
+            strict_json_dumps(record, indent=2), encoding="utf-8"
         )
 
     successful = [
@@ -528,7 +529,7 @@ def main(argv: list[str] | None = None) -> int:
         "process_status": "complete_with_failures" if failed else "complete",
         "executable_provenance": provenance,
         "config": cfg,
-        "source": str(args.source.resolve()),
+        "source": portable_artifact_path(args.source),
         "source_sha256": source_sha256,
         "source_example": source.get("example"),
         "source_mesh": source.get("mesh_used"),
@@ -564,7 +565,7 @@ def main(argv: list[str] | None = None) -> int:
         "runs": records,
     }
     (args.output/"geometry_restart_results.json").write_text(
-        json.dumps(payload, indent=2), encoding="utf-8"
+        strict_json_dumps(payload, indent=2), encoding="utf-8"
     )
     # Preserve the original single-restart filenames and top-level result
     # fields for existing diagnostic scripts.
@@ -579,7 +580,7 @@ def main(argv: list[str] | None = None) -> int:
             record=records[0],
         )
         (args.output/f"geometry_from_{args.stage}_results.json").write_text(
-            json.dumps(legacy, indent=2), encoding="utf-8"
+            strict_json_dumps(legacy, indent=2), encoding="utf-8"
         )
         write_legacy_history(
             args.output/f"geometry_from_{args.stage}_iteration_history.csv",

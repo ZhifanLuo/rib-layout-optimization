@@ -87,6 +87,19 @@ def sca_step_converged(
     )
 
 
+def objective_approximation_ratio(
+    actual_change: float,
+    predicted_change: float,
+    denominator_tolerance: float = 1.0e-16,
+) -> tuple[float | None, str, str | None]:
+    """Return a JSON-safe actual/predicted objective-change ratio."""
+    if not np.isfinite(actual_change) or not np.isfinite(predicted_change):
+        return None, "undefined", "nonfinite_objective_change"
+    if abs(predicted_change) <= denominator_tolerance:
+        return None, "undefined", "predicted_objective_change_near_zero"
+    return float(actual_change/predicted_change), "defined", None
+
+
 def solve_geometry_convex_subproblem(
     current: np.ndarray,
     reciprocal_coefficients: np.ndarray,
@@ -1978,11 +1991,14 @@ class RibLayoutOptimizer:
             feasible=candidate_volume<=self.volume_bound*(1+constraint_tolerance)
             predicted_change=approximation(candidate)
             actual_change=trial.compliance-current.compliance
-            ratio=actual_change/predicted_change if abs(predicted_change)>1.0e-16 else np.nan
+            ratio, ratio_status, ratio_reason = objective_approximation_ratio(
+                actual_change, predicted_change
+            )
+            ratio_text = "undefined" if ratio is None else f"{ratio:.5g}"
             self.log.append(
                 f"geometry SCA outer completed: outer={outer}, "
                 f"predicted dC={predicted_change:.7g}, true dC={actual_change:.7g}, "
-                f"ratio={ratio:.5g}, dx={100*design_change:.4f}%, "
+                f"ratio={ratio_text}, dx={100*design_change:.4f}%, "
                 f"move_global={move_limit.global_step:.5g}"
             )
             move_global_used=float(move_limit.global_step)
@@ -2035,7 +2051,9 @@ class RibLayoutOptimizer:
                     "maximum_absolute_coordinate_change": maximum_absolute_coordinate_change,
                     "predicted_objective_change": float(predicted_change),
                     "true_objective_change": float(actual_change),
-                    "approximation_ratio": float(ratio),
+                    "approximation_ratio": ratio,
+                    "approximation_ratio_status": ratio_status,
+                    "approximation_ratio_reason": ratio_reason,
                     "inner_iterations": int(inner),
                     "frozen_geometry_count": int(len(frozen_geometry_indices)),
                     "frozen_geometry_indices": [

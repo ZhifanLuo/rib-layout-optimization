@@ -20,6 +20,7 @@ if __package__ in (None, ""):
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from rib_layout_core import build_model, candidate_ribs, initial_ribs, load_case
+from rib_layout_serialization import portable_artifact_path, strict_json_dumps
 from rib_layout_algorithms.model import Rib
 from rib_layout_algorithms.optimization import RibLayoutOptimizer
 from rib_layout_algorithms.symmetry import mirror_axes, mirror_groups, missing_mirror_partners
@@ -218,7 +219,7 @@ def source_provenance(code_root: Path, tool_path: Path | None = None) -> dict:
         "git_commit": commit,
         "git_dirty": None if status_text is None else bool(status_text),
         "git_status_porcelain": status_text,
-        "entry_tool": entry.resolve().relative_to(code_root.resolve()).as_posix(),
+        "entry_tool": portable_artifact_path(entry, code_root),
         "entry_tool_sha256": hashlib.sha256(entry.read_bytes()).hexdigest(),
     }
 
@@ -291,7 +292,7 @@ def flatten_record(record: dict) -> dict:
     return {
         "run_id": record["run_id"],
         "factor": record["factor"],
-        "value": json.dumps(record["value"], separators=(",", ":")),
+        "value": strict_json_dumps(record["value"], separators=(",", ":")),
         "starting_layout": record["starting_layout"],
         "process_status": record["process_status"],
         "mesh": "x".join(map(str, record["config"]["mesh"])),
@@ -314,7 +315,7 @@ def flatten_record(record: dict) -> dict:
 
 def write_aggregate(output: Path, payload: dict) -> None:
     (output/"robustness_study.json").write_text(
-        json.dumps(payload, indent=2), encoding="utf-8"
+        strict_json_dumps(payload, indent=2), encoding="utf-8"
     )
     rows = [flatten_record(record) for record in payload["runs"]]
     if rows:
@@ -446,7 +447,7 @@ def main(argv: list[str] | None = None) -> int:
             })
         payload["runs"].append(record)
         (args.output/f"{spec['run_id']}.json").write_text(
-            json.dumps(record, indent=2), encoding="utf-8"
+            strict_json_dumps(record, indent=2), encoding="utf-8"
         )
         write_aggregate(args.output, payload)
         print(

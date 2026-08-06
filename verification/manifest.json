@@ -1,255 +1,76 @@
-﻿{
-    "schema_version":  2,
-    "evidence_run_id":  "20260804-153636",
-    "core_source_aggregate_sha256":  "35adae362d057c25732ccda057fe06c0be84c18beef328bac659ecdaf2017d6b",
-    "core_source_file_count":  31,
-    "executable_plus_tools_aggregate_sha256":  "bd956744f58cd0bfc74713947dc1441b5c005240addcaf5d82937f8ee33c4856",
-    "tools_aggregate_sha256":  "0e1b0775d4daff53607b922978f774204ab00654aaacdefcce5044e542f78d89",
-    "tool_file_count":  10,
-    "git_commit_at_execution":  "a2bdfe80e8a5563723d72bef887c1e4115ec8666",
-    "git_dirty_at_execution":  true,
-    "platform":  {
-                     "os":  "Microsoft Windows 11 10.0.26200, 64-bit",
-                     "cpu":  "Intel(R) Core(TM) Ultra 7 258V",
-                     "physical_cores":  8,
-                     "logical_processors":  8,
-                     "memory_bytes":  33895956480,
-                     "python":  "3.12.10",
-                     "numpy":  "2.5.1",
-                     "scipy":  "1.18.0",
-                     "linear_solver_threads":  1,
-                     "sensitivity_workers":  1,
-                     "shell_omp_num_threads":  4
-                 },
-    "formal_execution":  {
-                             "command":  "cmd.exe /d /c \"call example_all.bat \u003cnul\"",
-                             "started_utc":  "2026-08-04T07:56:31.6572071Z",
-                             "completed_utc":  "2026-08-04T08:15:34.8146633Z",
-                             "exit_code":  0,
-                             "results_sha256":  {
-                                                    "example_1":  "1a6ca61b0a0350138da3111785ba2bd0ed3d4431b4868af32447b7c57264b003",
-                                                    "example_2":  "439e8fb82c67a4aaef2919a3d7afc04d9c2172acc6d67f9a9aeb75c31ad20102",
-                                                    "example_3":  "cfe8a568746dcdf0b73debcd807899cecb27945c9638ca02d9cf41ed7b6719d2",
-                                                    "example_4":  "b2de77071bedcb9d46c04d97faac254431f68e054dae875ff97c4c3f5cad80e6"
-                                                }
-                         },
-    "diagnostic_execution":  {
-                                 "started_utc":  "2026-08-04T08:22:41.6561783Z",
-                                 "completed_utc":  "2026-08-04T09:13:38.2330864Z",
-                                 "all_requested_commands_exit_zero":  true,
-                                 "sensitivity":  {
-                                                     "exit_code":  0,
-                                                     "output":  "Code/diagnostics/sensitivity_case2_geometry/sensitivity_verification.json"
-                                                 },
-                                 "robustness":  {
-                                                    "exit_code":  0,
-                                                    "planned_runs":  18,
-                                                    "completed_runs":  18,
-                                                    "output":  "Code/diagnostics/robustness_case2/robustness_study.json"
-                                                },
-                                 "response_160x80":  {
-                                                         "exit_code":  0,
-                                                         "analysis_count":  1,
-                                                         "output":  "Code/diagnostics/response_only_160x80/response_160x80.json"
-                                                     },
-                                 "restart_matrix":  {
-                                                        "exit_code":  0,
-                                                        "group_count":  13,
-                                                        "run_count":  45,
-                                                        "output_root":  "Code/diagnostics/restarts"
-                                                    },
-                                 "full_pool":  {
-                                                   "exit_code":  0,
-                                                   "cases":  [
-                                                                 1,
-                                                                 2
-                                                             ],
-                                                   "output_root":  "Code/diagnostics/full_pool_cases1_2"
-                                               },
-                                 "lifting":  {
-                                                 "exit_code":  0,
-                                                 "cases":  [
-                                                               3,
-                                                               4
-                                                           ],
-                                                 "output_root":  "Code/diagnostics/lifting"
-                                             },
-                                 "raw_serialization_warning":  "robustness_study.json contains two non-standard NaN approximation_ratio values at runs[16].rationalization_histories.rationalized[31:32]; compact JSON is strict"
-                             },
-    "release_state":  {
-                          "state":  "unreleased_working_tree_evidence",
-                          "zenodo_concept_doi":  "10.5281/zenodo.21638172",
-                          "latest_prior_archive":  {
-                                                       "version":  "v1.1.0",
-                                                       "zenodo_version_doi":  "10.5281/zenodo.21784031",
-                                                       "contains_current_package":  false
-                                                   },
-                          "new_versioned_archive_required":  true
-                      },
-    "files":  [
-                  {
-                      "path":  "verification/README.md",
-                      "sha256":  "f1024c77da0d7e15675107f48079553000e94afd01104e7fa80042fa0baa1648",
-                      "derivation":  "human-readable provenance, reproduction, convergence semantics, and interpretation limits"
-                  },
-                  {
-                      "path":  "verification/formal_stage_summary.csv",
-                      "sha256":  "bef3db374baf03f64d0fbed61fb27eca50ee9c44efa22b2c3534f7a4a801348d",
-                      "source_artifacts":  [
-                                               "Code/results/example_1/results.json",
-                                               "Code/results/example_2/results.json",
-                                               "Code/results/example_3/results.json",
-                                               "Code/results/example_4/results.json"
-                                           ],
-                      "source_fields":  "mesh_used, quick, stages[*].{name,rib_count,compliance,volume,analyses}",
-                      "derivation":  "row-preserving stage extraction with full stored precision"
-                  },
-                  {
-                      "path":  "verification/sensitivity_by_step.json",
-                      "sha256":  "2f0c2dbb12f1369158d068b96daf66353319cf78028bd521dfd4e7d215735150",
-                      "source_artifact":  "Code/diagnostics/sensitivity_case2_geometry/sensitivity_verification.json",
-                      "source_artifact_sha256":  "af431b71b63fd46be0de88a769bb7388eff896be9efa46eaab5f1d280ce3fbde",
-                      "source_fields":  "components[*].{variable_space,derivative,step_fraction,valid,relative_error,nonsmooth_trace_change}",
-                      "derivation":  "grouped count, maximum, and median extraction; smooth and trace-changing records separated"
-                  },
-                  {
-                      "path":  "verification/robustness_summary.csv",
-                      "sha256":  "020c1a4904792a5ad2135271f17891badf4b15bbc6125bbc870093f413d2cbf4",
-                      "source_artifact":  "Code/diagnostics/robustness_case2/robustness_study.json",
-                      "source_artifact_sha256":  "79254a5bc376bf9090cd82b20702234cb7a65e74726dd489a8d62dfb065bf57a",
-                      "source_fields":  "runs[*] final stage, analysis, termination, common reanalysis, and filter fields",
-                      "derivation":  "all 18 registered rows retained"
-                  },
-                  {
-                      "path":  "verification/case4_refresh.json",
-                      "sha256":  "e83e0f22fed7660dabe081090d42b07959ec6991270ff590917253fb78b21ae9",
-                      "source_artifacts":  [
-                                                   "Code/example4.py",
-                                                   "Code/results/example_4/results.json",
-                                                   "Code/results/example_4/all_stages.png"
-                                               ],
-                      "source_fields":  "two load cases, mesh_used, quick, total_analyses, elapsed_seconds, result and figure hashes",
-                      "derivation":  "current Case-IV refresh manifest"
-                  },
-                  {
-                      "path":  "verification/fixed_layout_mesh_response.csv",
-                      "sha256":  "65bb6f3b575e3287156db702d5d75f1338cad744c58a49e8b01a14fc69d5a803",
-                      "source_artifacts":  [
-                                               "Code/diagnostics/robustness_case2/robustness_study.json",
-                                               "Code/diagnostics/response_only_160x80/response_160x80.json"
-                                           ],
-                      "source_artifact_sha256":  {
-                                                     "robustness":  "79254a5bc376bf9090cd82b20702234cb7a65e74726dd489a8d62dfb065bf57a",
-                                                     "response_160x80":  "ff5de7a8b58c9424984c3c111a706350460babcb06e0cde322c3ad18fe767430"
-                                                 },
-                      "source_fields":  "fixed_layout_mesh_reanalysis.meshes and response",
-                      "derivation":  "four response-only rows for one fixed five-rib layout"
-                  },
-                  {
-                      "path":  "verification/restart_group_summary.json",
-                      "sha256":  "1182f3f345f17927854d3ffa019a36f634132bf696147431ca5643fff92f134d",
-                      "source_artifacts":  [
-                                               {
-                                                   "group":  "case1_geometry_move050",
-                                                   "path":  "Code/diagnostics/restarts/case1_geometry_move050/geometry_restart_results.json",
-                                                   "sha256":  "ce6305222446b94ab00aa7356d1717e369ce8b5a4b843883514e0191c3268bef"
-                                               },
-                                               {
-                                                   "group":  "case2_geometry_move005",
-                                                   "path":  "Code/diagnostics/restarts/case2_geometry_move005/geometry_restart_results.json",
-                                                   "sha256":  "2b3405962dbc0a82e2f0fc7837e7bbcad26f0e157d7260386190c8b86e7791e1"
-                                               },
-                                               {
-                                                   "group":  "case2_geometry_move025",
-                                                   "path":  "Code/diagnostics/restarts/case2_geometry_move025/geometry_restart_results.json",
-                                                   "sha256":  "d6d97e299d9e34723c0b507b9d15f457fe9ce63789bb53076424dc46bf663d86"
-                                               },
-                                               {
-                                                   "group":  "case2_geometry_move050",
-                                                   "path":  "Code/diagnostics/restarts/case2_geometry_move050/geometry_restart_results.json",
-                                                   "sha256":  "16d203d9f31fe204dfee2e04835c354362f3b310d57323a255129b1a0855a9c3"
-                                               },
-                                               {
-                                                   "group":  "case2_rationalized_move005",
-                                                   "path":  "Code/diagnostics/restarts/case2_rationalized_move005/geometry_restart_results.json",
-                                                   "sha256":  "eb26da27641f239a1cb01b107bc64d5ce5a50897429f313020190b3bdfbe13c4"
-                                               },
-                                               {
-                                                   "group":  "case2_rationalized_move025",
-                                                   "path":  "Code/diagnostics/restarts/case2_rationalized_move025/geometry_restart_results.json",
-                                                   "sha256":  "8acdd14b7e78b0e20d5b7f5640f1e1130e27166f04fd6bb502bd6e5a96acf3ee"
-                                               },
-                                               {
-                                                   "group":  "case2_rationalized_move050",
-                                                   "path":  "Code/diagnostics/restarts/case2_rationalized_move050/geometry_restart_results.json",
-                                                   "sha256":  "2279781ffe9c90aeb7da2c4349f4f3f9de227862d0be2bb875d73f58d237401d"
-                                               },
-                                               {
-                                                   "group":  "case3_geometry_move050",
-                                                   "path":  "Code/diagnostics/restarts/case3_geometry_move050/geometry_restart_results.json",
-                                                   "sha256":  "4a2bfd7545aa0f3a9a8a69d277b475dc06d033774c0769230c03bc6e237ea445"
-                                               },
-                                               {
-                                                   "group":  "case3_rationalized_move050",
-                                                   "path":  "Code/diagnostics/restarts/case3_rationalized_move050/geometry_restart_results.json",
-                                                   "sha256":  "34edd83bb86686fea3c1d4a13468c82a798d4c5879694c15c7e88b553e185e7b"
-                                               },
-                                               {
-                                                   "group":  "case4_geometry_move005",
-                                                   "path":  "Code/diagnostics/restarts/case4_geometry_move005/geometry_restart_results.json",
-                                                   "sha256":  "0230f931a327ec48c6c9d9f6579fc80c9e7cf0f0647422596781c3e00b1be953"
-                                               },
-                                               {
-                                                   "group":  "case4_geometry_move050",
-                                                   "path":  "Code/diagnostics/restarts/case4_geometry_move050/geometry_restart_results.json",
-                                                   "sha256":  "b6c76546a579e34283d43819f28bb06c86d80542d6790a6d2730bc8245f31553"
-                                               },
-                                               {
-                                                   "group":  "case4_rationalized_move005",
-                                                   "path":  "Code/diagnostics/restarts/case4_rationalized_move005/geometry_restart_results.json",
-                                                   "sha256":  "530e61446381ef67584cb00ed7cb076dfef2a1d83167beed3dc8b1939fe034c9"
-                                               },
-                                               {
-                                                   "group":  "case4_rationalized_move050",
-                                                   "path":  "Code/diagnostics/restarts/case4_rationalized_move050/geometry_restart_results.json",
-                                                   "sha256":  "4cb7179dede7d0c5769307234cbed279571c365d56f7f8ebdf9c9fe91d730a14"
-                                               }
-                                           ],
-                      "source_fields":  "group provenance/distribution and every runs[*] process, feasibility, compliance, analysis, termination, convergence field",
-                      "derivation":  "13-group, 45-run aggregation retaining all outcomes"
-                  },
-                  {
-                      "path":  "verification/full_pool_stage_summary.csv",
-                      "sha256":  "0297964bf9b3126a4318c1ddf0a8d38f3ad578fedf530d12ef39db8bfe3b7637",
-                      "source_artifacts":  [
-                                               "Code/diagnostics/full_pool_cases1_2/full_pool_case_1.json",
-                                               "Code/diagnostics/full_pool_cases1_2/full_pool_case_2.json"
-                                           ],
-                      "source_artifact_sha256":  {
-                                                     "case_1":  "ecb043ebb578d87a35e273ab173095aff0c5aac31c8452a3415a99cc4f6788a1",
-                                                     "case_2":  "48a6fff4f6f76a352addfa7a17b0dc964edb6b84e54d28de50bb264289083fdb"
-                                                 },
-                      "source_fields":  "candidate_count, process_status, stages[*] response, analyses, elapsed, termination, convergence",
-                      "derivation":  "stage extraction; cumulative count is the ordered sum of stage analyses"
-                  },
-                  {
-                      "path":  "verification/lifting_summary.csv",
-                      "sha256":  "7c683d6a3dec8bce48c791971778a765cb4cea7e171a2aaeaf36c30356a37931",
-                      "source_artifacts":  [
-                                               "Code/diagnostics/lifting/case3_geometry_to_rationalized/topology_lifting_results.json",
-                                               "Code/diagnostics/lifting/case4_geometry_to_rationalized/topology_lifting_results.json"
-                                           ],
-                      "source_artifact_sha256":  {
-                                                     "case_3":  "a860c5ff0358369fba41cc84e5167f9796e6babb4a78df65ae63e06454e48930",
-                                                     "case_4":  "284ef2d7bb84d3632bb886dd18c048177c9fa1c871d08ab0bfef98bf5080ff6e"
-                                                 },
-                      "source_fields":  "case, stages, rib counts, saved/reanalysed/lifted response, analysis count, geometry termination",
-                      "derivation":  "two-row exact field extraction"
-                  },
-                  {
-                      "path":  "verification/run_response_only_160x80.py",
-                      "sha256":  "f59ff2481298672db3f0a862fee899893a4a68784ad73396ec9014dcf11f00c7",
-                      "derivation":  "unchanged auxiliary fixed-layout response script"
-                  }
-              ]
+{
+  "schema_version": 2,
+  "release": {
+    "version": "1.2.0",
+    "github_tag": "v1.2.0",
+    "github_release": "https://github.com/ZhifanLuo/rib-layout-optimization/releases/tag/v1.2.0",
+    "zenodo_version_doi": "10.5281/zenodo.21820166",
+    "zenodo_concept_doi": "10.5281/zenodo.21638172",
+    "release_date": "2026-08-06",
+    "archives": [
+      "rib-layout-optimization-v1.2.0-source.zip",
+      "rib-layout-optimization-v1.2.0-formal-results.zip",
+      "rib-layout-optimization-v1.2.0-verification-results.zip"
+    ]
+  },
+  "frozen_source": {
+    "file_count": 41,
+    "aggregate_sha256": "d7a585a52198f6bff6cfd8096c8768d81c83349e5d5807a611fdf4385537a3c7",
+    "tests": {"passed":147,"failed":0},
+    "strict_json_writers": true,
+    "portable_project_paths": true
+  },
+  "formal_execution": {
+    "command": "cmd.exe /d /c \"call example_all.bat <nul\"",
+    "sequential": true,
+    "exit_code": 0,
+    "fresh_file_count": 58,
+    "fresh_files_aggregate_sha256": "47197feb63d0fd4e65f6f97715c1456eb873937e3bc35fdcf1d0bc609a91a483",
+    "strict_json_files": 16,
+    "cases": [
+      {"case":1,"mesh":"20x20","total_analyses":39,"elapsed_seconds":4.159286699956283,"results_json_sha256":"ea6758c241ad2b642c92c162def0f71f025b1c876cee23e90f855ffe68a037bc"},
+      {"case":2,"mesh":"40x20","total_analyses":93,"elapsed_seconds":41.892061099992134,"results_json_sha256":"27cbb67d2084f5b9e291001a993ca3950920e3eec049c795f630942c47e1d6fb"},
+      {"case":3,"mesh":"80x40","total_analyses":146,"elapsed_seconds":391.87588339997455,"results_json_sha256":"6b51917d2acef88a7d96cf27b25c5fd58274a50961b8a65dd387d2e83df4ac4b"},
+      {"case":4,"mesh":"80x40","total_analyses":167,"elapsed_seconds":508.00970130000496,"results_json_sha256":"848e646291d9929d23da2dbeb8e15842db9f15e4d66bc3b732d966435f1007a6"}
+    ]
+  },
+  "diagnostic_execution": {
+    "command_count": 19,
+    "all_exit_zero": true,
+    "file_count": 147,
+    "files_aggregate_sha256": "f5d4136f9bac400af456da58691f881ee902d88f065a22d0a933170b2dfbef1b",
+    "strict_json_files": 84,
+    "forbidden_path_matches": 0,
+    "sensitivity": {
+      "case_2_sha256": "a2e7fbda443b6cdf00f6859639b99738d431cefb66a198bc38c470e6a06ae24a",
+      "case_3_sha256": "56e71185d709d0cf6b4139fc55f4a9ee09031689ea660be0580e7e8fb85a7e45",
+      "case_4_sha256": "13f6d8de167a02d9d7952ce06e9585c9f908bdd49f2cc30bd8ee3dfa5e667108"
+    },
+    "robustness_sha256": "f536a9fd1310cc4e3fe377c1c90e5442ed445924573f7c3af6f5919e36e8c89a",
+    "response_160x80_sha256": "8a4fdebada0cab29ce473c5b8d9354968e8c210d15814e5f4b2b93533fa24fd3",
+    "full_pool": {
+      "case_1_sha256": "c20822e4a668124d46581ec1a525909bb2a90214c9e09728fc577a87e7d6c20b",
+      "case_2_sha256": "2dd3df4e5046dee9c86b513bc38cce9df412a4f1e6d0227684223c629f6ef609"
+    },
+    "restart_groups": 13,
+    "restart_runs": 45,
+    "undefined_ratio_encoding": {"value":null,"status":"undefined","reason":"predicted_objective_change_near_zero"}
+  },
+  "compact_evidence": [
+    {"path":"verification/README.md","sha256":"eb5a585ffef20f895d9ab92433cc5e2475d4a4cf45c2bf65cc41fd450e89ee1e"},
+    {"path":"verification/formal_stage_summary.csv","sha256":"511c55700ca836707ac510cf54f889e7dc334113458602648ea5b96f8d2a1802"},
+    {"path":"verification/sensitivity_by_step.json","sha256":"3777d4aa1bfc5f59cb2848f3433a71b711344355741343ac5bdcdcfb77a64e8b"},
+    {"path":"verification/robustness_summary.csv","sha256":"5029939126ac1eedd94858f9fe640520bff07b4ce5f33ad12c707cf066ae3705"},
+    {"path":"verification/fixed_layout_mesh_response.csv","sha256":"446c0b0a2a2591f57976de3344eabedbc5231b14064598ea4ea7e83cabaf44b2"},
+    {"path":"verification/restart_group_summary.json","sha256":"1fa9cc2eeb39c4c414d247c01e12a114cc5f90af73c8943dae3d260a3c11d219"},
+    {"path":"verification/full_pool_stage_summary.csv","sha256":"d35724bb0a46de363e5d6729fd243f5a409509ee23019be043a569524cb7440d"},
+    {"path":"verification/run_response_only_160x80.py","sha256":"26e28cb13682fb94a6671bee4cd8be9716e750c08d33d6591bb15962e5780022"}
+  ],
+  "historical_exclusions": [
+    "verification/case4_refresh.json",
+    "verification/case4_diagnostics_refresh.json",
+    "verification/lifting_summary.csv",
+    "verification/figure_provenance.json",
+    "results/formal_run_20260805-130032.log"
+  ]
 }

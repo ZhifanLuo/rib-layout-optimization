@@ -11,6 +11,7 @@ import numpy as np
 
 from rib_layout_core import load_case
 from rib_layout_env import PROJECT_ROOT as ROOT
+from rib_layout_serialization import portable_artifact_path, strict_json_dumps
 from rib_layout_algorithms.model import Rib
 from rib_layout_algorithms.optimization import Stage
 from rib_layout_algorithms.plotting import (
@@ -52,9 +53,13 @@ def generate(number: int, results_root: Path, output_root: Path) -> None:
         "initial_cell_size_mm": cfg["initial_rib_cell_size"],
         "initial_rib_length_mm": cfg["initial_rib_cell_size"] * np.sqrt(2.0),
         "initial_rib_count": len(stages[0].ribs),
-        "source_results": str(results_root / f"example_{number}" / "results.json"),
+        "source_results": portable_artifact_path(
+            results_root / f"example_{number}" / "results.json"
+        ),
     }
-    (destination / "corrected_parameters.json").write_text(json.dumps(parameters, indent=2), encoding="utf-8")
+    (destination / "corrected_parameters.json").write_text(
+        strict_json_dumps(parameters, indent=2), encoding="utf-8"
+    )
     plot_stage_3d(None, cfg, destination / "00_domain_loads_supports_3d.png")
     for index, stage in enumerate(stages, start=1):
         plot_stage_3d(stage, cfg, destination / f"{index:02d}_{stage.name}_3d.png")

@@ -1,3 +1,0 @@
-﻿"case","process_status","full_stage","reduced_stage","full_rib_count","reduced_rib_count","lifted_rib_count","saved_reduced_compliance","lifted_initial_compliance","lifted_final_compliance","relative_to_reduced","total_analysis_count","termination_reason","source"
-"3","complete","geometry","rationalized","32","26","6","17.501170545842463","17.500757798685942","16.45881398550952","-0.059559248200147574","38","converged","Code/diagnostics/lifting/case3_geometry_to_rationalized/topology_lifting_results.json"
-"4","complete","geometry","rationalized","24","10","14","266.3127460952643","266.31266401207995","265.598296539515","-0.0026827463808049012","5","converged","Code/diagnostics/lifting/case4_geometry_to_rationalized/topology_lifting_results.json"

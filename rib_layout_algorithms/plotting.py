@@ -36,6 +36,38 @@ def _load_label_position(point: Sequence[float], cfg: dict) -> np.ndarray:
     ])
 
 
+def _support_plot_points(
+    support: dict,
+    width: float,
+    height: float,
+) -> np.ndarray:
+    """Return representative XY points for each supported boundary region."""
+    support_type = support.get("type", "points")
+    if support_type == "points":
+        return np.asarray(support["points"], float)
+    if support_type == "patch_springs":
+        points = []
+        for patch in support.get("patches", []):
+            center = patch.get("center", patch.get("point"))
+            if center is None:
+                raise ValueError("a support patch requires center or point")
+            points.append(center)
+        if not points:
+            raise ValueError("patch_springs requires at least one patch")
+        return np.asarray(points, float)
+    if support_type != "edge":
+        raise ValueError(f"unsupported support type for plotting: {support_type}")
+
+    edge = support["edge"]
+    if edge == "right":
+        return np.c_[np.full(7, width), np.linspace(0, height, 7)]
+    if edge == "left":
+        return np.c_[np.zeros(7), np.linspace(0, height, 7)]
+    if edge == "top":
+        return np.c_[np.linspace(0, width, 7), np.full(7, height)]
+    return np.c_[np.linspace(0, width, 7), np.zeros(7)]
+
+
 def _draw_domain_3d(ax, cfg: dict, *, show_load_labels: bool = True) -> None:
     """Draw the ground wall, mesh guides, loads, and supports."""
     width, height = map(float, cfg["domain"])
@@ -69,19 +101,11 @@ def _draw_domain_3d(ax, cfg: dict, *, show_load_labels: bool = True) -> None:
         ax.plot([0, width], [y, y], [0, 0], color="#4b9a55", lw=0.22, alpha=1.0, zorder=2)
 
     support = cfg["supports"]
-    if support.get("type", "points") == "points":
-        points = np.asarray(support["points"], float)
-    else:
-        edge = support["edge"]
-        if edge == "right":
-            points = np.c_[np.full(7, width), np.linspace(0, height, 7)]
-        elif edge == "left":
-            points = np.c_[np.zeros(7), np.linspace(0, height, 7)]
-        elif edge == "top":
-            points = np.c_[np.linspace(0, width, 7), np.full(7, height)]
-        else:
-            points = np.c_[np.linspace(0, width, 7), np.zeros(7)]
-    ax.scatter(points[:, 0], points[:, 1], np.zeros(len(points)), marker="^", s=36, color="#e63946", edgecolor="white", linewidth=0.5, depthshade=False, label="fixed", zorder=4)
+    points = _support_plot_points(support, width, height)
+    support_label = (
+        "spring support" if support.get("type") == "patch_springs" else "fixed"
+    )
+    ax.scatter(points[:, 0], points[:, 1], np.zeros(len(points)), marker="^", s=36, color="#e63946", edgecolor="white", linewidth=0.5, depthshade=False, label=support_label, zorder=4)
 
     arrow_length = 0.22 * min(width, height)
     for load_case in cfg["load_cases"]:

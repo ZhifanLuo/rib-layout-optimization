@@ -22,6 +22,7 @@ if __package__ in (None, ""):
 from rib_layout_core import build_model, candidate_ribs, load_case
 from rib_layout_algorithms.optimization import RibLayoutOptimizer
 from tools.run_robustness_study import source_provenance
+from rib_layout_serialization import strict_json_dumps
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -345,7 +346,7 @@ def main(argv: list[str] | None = None) -> int:
             )
         records.append(record)
         (args.output/f"full_pool_case_{case_number}.json").write_text(
-            json.dumps(record, indent=2), encoding="utf-8"
+            strict_json_dumps(record, indent=2), encoding="utf-8"
         )
         write_summary(args.output, records)
     aggregate = {
@@ -361,7 +362,7 @@ def main(argv: list[str] | None = None) -> int:
         "cases": records,
     }
     (args.output/"full_pool_results.json").write_text(
-        json.dumps(aggregate, indent=2), encoding="utf-8"
+        strict_json_dumps(aggregate, indent=2), encoding="utf-8"
     )
     return 2 if failed else 0
 

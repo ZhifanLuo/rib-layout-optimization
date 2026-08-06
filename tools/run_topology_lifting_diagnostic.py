@@ -15,6 +15,7 @@ if __package__ in (None, ""):
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from rib_layout_core import build_model, load_case
+from rib_layout_serialization import portable_artifact_path, strict_json_dumps
 from rib_layout_algorithms.model import Rib
 from rib_layout_algorithms.optimization import RibLayoutOptimizer
 from tools.run_geometry_restart_diagnostic import rib_records, stage_design
@@ -160,7 +161,7 @@ def main(argv: list[str] | None = None) -> int:
     elapsed = time.perf_counter()-started
     payload = {
         "case": args.case,
-        "source": str(args.source.resolve()),
+        "source": portable_artifact_path(args.source),
         "full_stage": args.full_stage,
         "reduced_stage": args.reduced_stage,
         "full_rib_count": len(full_ribs),
@@ -197,7 +198,7 @@ def main(argv: list[str] | None = None) -> int:
     }
     args.output.mkdir(parents=True, exist_ok=True)
     (args.output/"topology_lifting_results.json").write_text(
-        json.dumps(payload, indent=2), encoding="utf-8"
+        strict_json_dumps(payload, indent=2), encoding="utf-8"
     )
     with (args.output/"topology_lifting_summary.csv").open(
         "w", newline="", encoding="utf-8"

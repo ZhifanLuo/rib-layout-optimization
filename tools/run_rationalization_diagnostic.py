@@ -10,6 +10,7 @@ from pathlib import Path
 import numpy as np
 
 from rib_layout_core import build_model, load_case
+from rib_layout_serialization import portable_artifact_path, strict_json_dumps
 from rib_layout_algorithms.model import Rib
 from rib_layout_algorithms.optimization import RibLayoutOptimizer
 
@@ -93,7 +94,7 @@ def main() -> None:
 
     payload = {
         "case": args.case,
-        "source": str(args.source.resolve()),
+        "source": portable_artifact_path(args.source),
         "source_stage": args.stage,
         "relaxation": float(args.relaxation),
         "mesh": cfg["mesh"],
@@ -122,7 +123,7 @@ def main() -> None:
         "log": optimizer.log,
     }
     (args.output / "diagnostic_results.json").write_text(
-        json.dumps(payload, indent=2), encoding="utf-8"
+        strict_json_dumps(payload, indent=2), encoding="utf-8"
     )
     (args.output / "diagnostic_log.txt").write_text(
         "\n".join(optimizer.log), encoding="utf-8"
