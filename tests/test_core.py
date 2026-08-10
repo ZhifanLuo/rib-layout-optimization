@@ -1733,7 +1733,8 @@ class CoreTests(unittest.TestCase):
             self.assertEqual(
                 algorithm["sca_consecutive_convergence_steps"], 2
             )
-            self.assertGreaterEqual(algorithm["sizing_max_iterations"], 60)
+            self.assertEqual(algorithm["sizing_max_iterations"], 100)
+            self.assertEqual(algorithm["active_set_max_iterations"], 10)
             self.assertEqual(algorithm["move_limit_initial"], 0.5)
             self.assertEqual(algorithm["move_limit_direction_increase"], 1.2)
             self.assertEqual(algorithm["move_limit_direction_decrease"], 0.7)

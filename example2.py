@@ -39,7 +39,10 @@ CASE_CONFIG = {
     "rib": {"height": 2.0, "initial": 0.2, "upper": 2.0},
     "volume_bound": 90.0,
     "rationalization_relaxation": 0.05,
-    "algorithm": {},
+    "algorithm": {
+        "sizing_max_iterations": 100,
+        "active_set_max_iterations": 10,
+    },
 }
 
 

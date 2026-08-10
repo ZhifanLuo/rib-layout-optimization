@@ -54,8 +54,8 @@ CASE_CONFIG = {
     "further_rationalization_relaxation": 0.05,
     "algorithm": {
         "filter_tolerance": 0.01,
-        "sizing_max_iterations": 60,
-        "active_set_max_iterations": 6,
+        "sizing_max_iterations": 100,
+        "active_set_max_iterations": 10,
     },
 }
 

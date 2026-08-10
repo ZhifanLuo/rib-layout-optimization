@@ -80,8 +80,10 @@ a stiffness-per-added-volume factor at least `70%` of the maximum factor among
 eligible candidates. Candidates fully covered by one existing
 rib or a gap-free union of existing collinear ribs are excluded before this
 reference is calculated; exactly `70%` is eligible. Covered or overlapping candidates are skipped while the
-ranked pool is scanned for a replacement. Member addition terminates only
-when the pool contains no valid uncovered candidate. If a selected longer
+ranked pool is scanned for a replacement. Member addition terminates when the
+pool contains no valid uncovered candidate, a sizing-only batch is rejected,
+filtering retains no new rib, the full-cycle improvement is below `1%`, or the
+configured round cap is reached. If a selected longer
 candidate wholly covers an existing shorter rib, the trial active set replaces
 the shorter rib with the longer candidate before sizing. A candidate wholly
 covered by one existing rib or by a gap-free union of existing collinear ribs
@@ -202,8 +204,9 @@ SLSQP iteration; its normalized constraint tolerance is configured as
 
 No contribution-based filtering is used. Active-set filtering removes only
 ribs below `10^-r t_0`, followed by the manuscript compliance validation.
-Example I starts at the enlarged threshold `0.1 t_0 = 0.02 mm`; the other
-examples retain the `0.01 t_0` starting threshold.
+All four examples start at `0.1 t_0` and continue through the configured
+lower thresholds; this gives `0.02 mm` in Examples I and II and `0.05 mm` in
+Examples III and IV.
 
 Mirror symmetry is declared per case with `mirror_symmetry`. Axis `x` reflects
 coordinates about `x=width/2`; axis `y` reflects them about `y=height/2`.
@@ -339,15 +342,15 @@ result and verification metadata are repository-relative (for example,
 `results/example_2/results.json` and `diagnostics/robustness_case2/`); they do
 not include an obsolete `Code/` prefix or a local checkout path.
 
-Release `v1.2.0` binds the GitHub tag
-<https://github.com/ZhifanLuo/rib-layout-optimization/releases/tag/v1.2.0>
-to the immutable Zenodo version DOI
-<https://doi.org/10.5281/zenodo.21820166>. Its three release archives are the
-frozen source, the complete formal four-case results, and the complete numerical
-verification results. The latter contains the sensitivity, one-factor,
-restart/multistart, full-candidate-pool, and fixed-layout mesh studies underlying
-the paper. The Zenodo concept DOI
-<https://doi.org/10.5281/zenodo.21638172> resolves the release family.
+Release `v1.2.0` and its immutable Zenodo version DOI
+<https://doi.org/10.5281/zenodo.21820166> remain the historical baseline for
+the numerical-verification studies: sensitivity, one-factor,
+restart/multistart, full-candidate-pool, and fixed-layout mesh studies. The
+current `v1.3.0` GitHub release
+<https://github.com/ZhifanLuo/rib-layout-optimization/releases/tag/v1.3.0>
+archives the revised source and the full four-case formal-results asset; no
+`v1.3.0` Zenodo version DOI is currently available. The stable Zenodo concept
+DOI <https://doi.org/10.5281/zenodo.21638172> resolves the release family.
 
 Case-II thickness and endpoint sensitivity verification at three perturbation
 steps, in both production mirror-reduced and unreduced spaces:
@@ -443,9 +446,10 @@ Each case writes to `results/example_N/` by default. The common artifacts are:
   rationalization iterations occur.
 
 Output directories are regenerated data and are ignored by default. Compact
-reviewed evidence tables are retained under `verification/`. Release `v1.2.0`
-also provides the complete formal and diagnostic outputs in the three-archive
-release set described above. Newly generated JSON is strict RFC-compatible JSON:
+reviewed evidence tables are retained under `verification/`; the `v1.2.0`
+numerical-verification studies remain historical baseline evidence. The
+current `v1.3.0` GitHub release archives the revised source and full
+four-case formal-results asset as described above. Newly generated JSON is strict RFC-compatible JSON:
 undefined diagnostic ratios use `null` with explicit status/reason metadata,
 and project-internal source/provenance paths are serialized as portable POSIX
 paths rather than workstation-specific absolute paths.
@@ -464,15 +468,17 @@ four-case run when validating publication results.
 
 ## Citation and license
 
-Software citation metadata for release `v1.2.0` are provided in
+Software citation metadata for release `v1.3.0` are provided in
 `CITATION.cff`, and the development repository is available at
 <https://github.com/ZhifanLuo/rib-layout-optimization>. GitHub exposes these
 metadata through its **Cite this repository** interface. The stable Zenodo
 concept DOI, <https://doi.org/10.5281/zenodo.21638172>, resolves the complete
-release family. Cite the immutable `v1.2.0` archive for this paper and result
-set: <https://doi.org/10.5281/zenodo.21820166>. It corresponds to GitHub tag
-`v1.2.0` and includes the source plus both result archives. ORCID and article
-publication metadata remain to be inserted when available.
+release family. The `v1.2.0` version DOI
+<https://doi.org/10.5281/zenodo.21820166> identifies the historical baseline
+and numerical-verification evidence, not the current software release. No
+`v1.3.0` Zenodo version DOI is currently available; use the current GitHub
+release link above. ORCID and article publication metadata remain to be
+inserted when available.
 
 The implementation is distributed under the BSD 3-Clause License; see
 `LICENSE`.
