@@ -1240,6 +1240,49 @@ class CoreTests(unittest.TestCase):
                 self.assertAlmostEqual(abs(delta[0]), abs(delta[1]), places=10)
             self.assertTrue(candidate_ribs(cfg))
 
+    def test_candidate_pools_are_complete_deterministic_lattice_graphs(self):
+        expected_counts = {1: 36, 2: 105, 3: 990, 4: 990}
+        for number, expected_count in expected_counts.items():
+            cfg = load_case(number, quick=True)
+            self.assertNotIn("candidate_directions", cfg["algorithm"])
+            self.assertNotIn("candidate_max_span_cells", cfg["algorithm"])
+            width, height = map(float, cfg["domain"])
+            cell = float(cfg["initial_rib_cell_size"])
+            nx, ny = int(round(width/cell)), int(round(height/cell))
+            nodes = [
+                (ix*cell, iy*cell)
+                for iy in range(ny+1)
+                for ix in range(nx+1)
+            ]
+            expected_ordered_pairs = [
+                (p0, p1)
+                for i, p0 in enumerate(nodes)
+                for p1 in nodes[i+1:]
+            ]
+
+            first = candidate_ribs(cfg)
+            second = candidate_ribs(cfg)
+            actual_pairs = [(rib.p0, rib.p1) for rib in first]
+
+            self.assertEqual(len(first), expected_count)
+            self.assertEqual(len(actual_pairs), len(set(actual_pairs)))
+            self.assertEqual(actual_pairs, expected_ordered_pairs)
+            self.assertTrue(all(
+                rib.p0 in nodes and rib.p1 in nodes and rib.p0 != rib.p1
+                for rib in first
+            ))
+            self.assertEqual(
+                [rib.name for rib in first],
+                [f"C{index}" for index in range(1, expected_count+1)],
+            )
+            self.assertEqual(
+                [(rib.name, rib.p0, rib.p1) for rib in first],
+                [(rib.name, rib.p0, rib.p1) for rib in second],
+            )
+            self.assertFalse(missing_mirror_partners(
+                first, mirror_axes(cfg), width, height
+            ))
+
     def test_case_mirror_symmetry_and_generated_sets_are_closed(self):
         expected_axes = {1: (), 2: ("x",), 3: ("y",), 4: ("y",)}
         for number, expected in expected_axes.items():

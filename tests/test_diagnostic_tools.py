@@ -359,12 +359,20 @@ class DiagnosticToolTests(unittest.TestCase):
         self.assertTrue(detail[0]["samples"][1]["differs_from_base"])
 
     def test_robustness_specs_are_one_factor_and_start_layouts_are_closed(self):
+        default_args = robustness_parser().parse_args(["--output", "audit"])
+        default_specs = build_study_specs(load_case(2), default_args)
+        self.assertEqual(len(default_specs), 15)
+        self.assertEqual(
+            {spec["factor"] for spec in default_specs},
+            {"mesh", "retention", "convergence", "relaxation", "starts"},
+        )
+
         args = robustness_parser().parse_args([
-            "--output", "audit", "--studies", "mesh", "pool", "starts",
+            "--output", "audit", "--studies", "mesh", "starts",
         ])
         cfg = load_case(2)
         specs = build_study_specs(cfg, args)
-        self.assertEqual(len(specs), 9)
+        self.assertEqual(len(specs), 6)
         self.assertEqual(mesh_value("20x10"), (20, 10))
         mesh_spec = next(spec for spec in specs if spec["factor"] == "mesh")
         self.assertEqual(mesh_spec["config"]["algorithm"], cfg["algorithm"])

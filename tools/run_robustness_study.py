@@ -26,7 +26,7 @@ from rib_layout_algorithms.optimization import RibLayoutOptimizer
 from rib_layout_algorithms.symmetry import mirror_axes, mirror_groups, missing_mirror_partners
 
 
-STUDIES = ("mesh", "pool", "retention", "convergence", "relaxation", "starts")
+STUDIES = ("mesh", "retention", "convergence", "relaxation", "starts")
 STARTING_LAYOUTS = ("all_orbits", "even_orbits", "odd_orbits")
 
 
@@ -47,7 +47,6 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--studies", nargs="+", choices=STUDIES, default=list(STUDIES))
     parser.add_argument("--mesh-values", nargs="+", type=mesh_value, default=((20, 10), (40, 20), (80, 40)))
-    parser.add_argument("--pool-spans", nargs="+", type=int, default=(1, 2, 3))
     parser.add_argument("--retention-thresholds", nargs="+", type=float, default=(0.50, 0.70, 0.90))
     parser.add_argument("--convergence-thresholds", nargs="+", type=float, default=(0.005, 0.010, 0.020))
     parser.add_argument("--relaxations", nargs="+", type=float, default=(0.025, 0.050, 0.075))
@@ -101,8 +100,6 @@ def build_study_specs(base_cfg: dict, args: argparse.Namespace) -> list[dict]:
         cfg.pop("further_rationalization_relaxation", None)
         if factor == "mesh":
             cfg["mesh"] = list(map(int, value))
-        elif factor == "pool":
-            cfg["algorithm"]["candidate_max_span_cells"] = int(value)
         elif factor == "retention":
             cfg["algorithm"]["addition_factor_min_ratio"] = float(value)
         elif factor == "convergence":
@@ -123,9 +120,6 @@ def build_study_specs(base_cfg: dict, args: argparse.Namespace) -> list[dict]:
     if "mesh" in selected:
         for value in args.mesh_values:
             add("mesh", value)
-    if "pool" in selected:
-        for value in args.pool_spans:
-            add("pool", value)
     if "retention" in selected:
         for value in args.retention_thresholds:
             add("retention", value)
@@ -330,8 +324,6 @@ def write_aggregate(output: Path, payload: dict) -> None:
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     aggregate_started_utc = datetime.now(timezone.utc).isoformat()
-    if any(span <= 0 for span in args.pool_spans):
-        raise ValueError("candidate-pool spans must be positive")
     if any(not 0.0 <= value <= 1.0 for value in args.retention_thresholds):
         raise ValueError("retention thresholds must lie in [0,1]")
     if any(value < 0.0 for value in (*args.convergence_thresholds, *args.relaxations)):

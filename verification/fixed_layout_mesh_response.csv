@@ -1,4 +1,4 @@
-﻿"mesh","rib_count","compliance","volume","analyses","optimization_held_fixed","process_status","source"
+"mesh","rib_count","compliance","volume","analyses","optimization_held_fixed","process_status","source"
 "20x10","5","12.43274788223292","89.99994651421633","1","True","complete","diagnostics/robustness_case2/robustness_study.json:fixed_layout_mesh_reanalysis.meshes[0]"
 "40x20","5","13.08414981614593","89.99994651421633","1","True","complete","diagnostics/robustness_case2/robustness_study.json:fixed_layout_mesh_reanalysis.meshes[1]"
 "80x40","5","13.488160942389507","89.99994651421633","1","True","complete","diagnostics/robustness_case2/robustness_study.json:fixed_layout_mesh_reanalysis.meshes[2]"

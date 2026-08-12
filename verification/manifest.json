@@ -1,76 +1,1210 @@
 {
-  "schema_version": 2,
+  "schema_version": 4,
+  "generated_from_completed_utc": "2026-08-12T09:07:49.1294836+00:00",
   "release": {
-    "version": "1.2.0",
-    "github_tag": "v1.2.0",
-    "github_release": "https://github.com/ZhifanLuo/rib-layout-optimization/releases/tag/v1.2.0",
-    "zenodo_version_doi": "10.5281/zenodo.21820166",
-    "zenodo_concept_doi": "10.5281/zenodo.21638172",
-    "release_date": "2026-08-06",
-    "archives": [
-      "rib-layout-optimization-v1.2.0-source.zip",
-      "rib-layout-optimization-v1.2.0-formal-results.zip",
-      "rib-layout-optimization-v1.2.0-verification-results.zip"
-    ]
+    "version": "1.4.0",
+    "tag": "v1.4.0",
+    "publication_status": "local_archive_only; not published by this builder"
   },
   "frozen_source": {
     "file_count": 41,
-    "aggregate_sha256": "d7a585a52198f6bff6cfd8096c8768d81c83349e5d5807a611fdf4385537a3c7",
-    "tests": {"passed":147,"failed":0},
-    "strict_json_writers": true,
-    "portable_project_paths": true
+    "aggregate_sha256": "3b06e4dab1fedffb90af0c7b3ee2c07676fb02cd3a87d20d4d45de3a7d99f6a0",
+    "source_unchanged_during_formal_run": true,
+    "source_unchanged_during_diagnostics": true,
+    "baseline_tests": {
+      "passed": 148,
+      "failed": 0
+    }
   },
-  "formal_execution": {
+  "formal_results": {
+    "status": "complete",
     "command": "cmd.exe /d /c \"call example_all.bat <nul\"",
-    "sequential": true,
+    "start_utc": "2026-08-12T07:12:48.6907498Z",
+    "end_utc": "2026-08-12T08:11:15.8463787Z",
     "exit_code": 0,
-    "fresh_file_count": 58,
-    "fresh_files_aggregate_sha256": "47197feb63d0fd4e65f6f97715c1456eb873937e3bc35fdcf1d0bc609a91a483",
-    "strict_json_files": 16,
+    "all_results_complete": true,
+    "all_results_fresh": true,
     "cases": [
-      {"case":1,"mesh":"20x20","total_analyses":39,"elapsed_seconds":4.159286699956283,"results_json_sha256":"ea6758c241ad2b642c92c162def0f71f025b1c876cee23e90f855ffe68a037bc"},
-      {"case":2,"mesh":"40x20","total_analyses":93,"elapsed_seconds":41.892061099992134,"results_json_sha256":"27cbb67d2084f5b9e291001a993ca3950920e3eec049c795f630942c47e1d6fb"},
-      {"case":3,"mesh":"80x40","total_analyses":146,"elapsed_seconds":391.87588339997455,"results_json_sha256":"6b51917d2acef88a7d96cf27b25c5fd58274a50961b8a65dd387d2e83df4ac4b"},
-      {"case":4,"mesh":"80x40","total_analyses":167,"elapsed_seconds":508.00970130000496,"results_json_sha256":"848e646291d9929d23da2dbeb8e15842db9f15e4d66bc3b732d966435f1007a6"}
+      {
+        "case": 1,
+        "results_json": "Code/results/example_1/results.json",
+        "results_json_sha256": "454f911766e3b3983a599a02e259de0bdab68eebd061464986b849a60b1905cc",
+        "fresh": true,
+        "elapsed_seconds": 14.420632799970917,
+        "total_analyses_including_optional_passes": 39,
+        "stages": [
+          {
+            "name": "initial_sizing",
+            "rib_count": 8,
+            "compliance": 89.72510276602938,
+            "volume": 45.0,
+            "analyses": 8
+          },
+          {
+            "name": "adaptive",
+            "rib_count": 3,
+            "compliance": 32.570558269218125,
+            "volume": 45.0,
+            "analyses": 22
+          },
+          {
+            "name": "geometry",
+            "rib_count": 3,
+            "compliance": 30.154567594647325,
+            "volume": 45.00000000000001,
+            "analyses": 9
+          },
+          {
+            "name": "rationalized",
+            "rib_count": 3,
+            "compliance": 30.154567594647325,
+            "volume": 45.00000000000001,
+            "analyses": 0
+          }
+        ]
+      },
+      {
+        "case": 2,
+        "results_json": "Code/results/example_2/results.json",
+        "results_json_sha256": "aab7c044d507853020bdb43e57e529604262fb9c9b65ef72d4a91b50a8002299",
+        "fresh": true,
+        "elapsed_seconds": 131.64613240002654,
+        "total_analyses_including_optional_passes": 93,
+        "stages": [
+          {
+            "name": "initial_sizing",
+            "rib_count": 16,
+            "compliance": 21.305551331701817,
+            "volume": 90.0,
+            "analyses": 6
+          },
+          {
+            "name": "adaptive",
+            "rib_count": 8,
+            "compliance": 13.995699026421185,
+            "volume": 89.99999999999999,
+            "analyses": 49
+          },
+          {
+            "name": "geometry",
+            "rib_count": 8,
+            "compliance": 12.953493617395223,
+            "volume": 90.00000000000001,
+            "analyses": 17
+          },
+          {
+            "name": "rationalized",
+            "rib_count": 5,
+            "compliance": 13.08414981614593,
+            "volume": 89.99994651421633,
+            "analyses": 21
+          }
+        ]
+      },
+      {
+        "case": 3,
+        "results_json": "Code/results/example_3/results.json",
+        "results_json_sha256": "a2fbe7d03f1bc6cc132dde6eaa3e8289dc7df7ae4f14fbfb97988d92c244a7d0",
+        "fresh": true,
+        "elapsed_seconds": 1036.2626601000084,
+        "total_analyses_including_optional_passes": 205,
+        "stages": [
+          {
+            "name": "initial_sizing",
+            "rib_count": 64,
+            "compliance": 66.02369392120714,
+            "volume": 11310.0,
+            "analyses": 27
+          },
+          {
+            "name": "adaptive",
+            "rib_count": 26,
+            "compliance": 19.273504640283985,
+            "volume": 11309.999999999996,
+            "analyses": 48
+          },
+          {
+            "name": "geometry",
+            "rib_count": 26,
+            "compliance": 17.62096906010024,
+            "volume": 11309.999999999998,
+            "analyses": 17
+          },
+          {
+            "name": "rationalized",
+            "rib_count": 22,
+            "compliance": 17.823539234368894,
+            "volume": 11309.963695500992,
+            "analyses": 47
+          },
+          {
+            "name": "further_rationalized",
+            "rib_count": 18,
+            "compliance": 17.964154570955152,
+            "volume": 11309.938230218033,
+            "analyses": 66
+          }
+        ]
+      },
+      {
+        "case": 4,
+        "results_json": "Code/results/example_4/results.json",
+        "results_json_sha256": "d0323d72ee3d1810770d64228cdd792a4ea6533ec6795deb4f9e876fa5cac033",
+        "fresh": true,
+        "elapsed_seconds": 2276.2067742999643,
+        "total_analyses_including_optional_passes": 172,
+        "stages": [
+          {
+            "name": "initial_sizing",
+            "rib_count": 64,
+            "compliance": 250.34723041104695,
+            "volume": 11309.999999999996,
+            "analyses": 5
+          },
+          {
+            "name": "adaptive",
+            "rib_count": 30,
+            "compliance": 170.7035968192009,
+            "volume": 11309.999999999998,
+            "analyses": 45
+          },
+          {
+            "name": "geometry",
+            "rib_count": 30,
+            "compliance": 133.26918659935342,
+            "volume": 11309.999999999998,
+            "analyses": 57
+          },
+          {
+            "name": "rationalized",
+            "rib_count": 20,
+            "compliance": 134.01321576502525,
+            "volume": 11310.000000000002,
+            "analyses": 18
+          },
+          {
+            "name": "further_rationalized",
+            "rib_count": 12,
+            "compliance": 137.671990524792,
+            "volume": 11310.0,
+            "analyses": 47
+          }
+        ]
+      }
     ]
   },
   "diagnostic_execution": {
     "command_count": 19,
-    "all_exit_zero": true,
-    "file_count": 147,
-    "files_aggregate_sha256": "f5d4136f9bac400af456da58691f881ee902d88f065a22d0a933170b2dfbef1b",
-    "strict_json_files": 84,
-    "forbidden_path_matches": 0,
+    "commands": [
+      {
+        "name": "sensitivity_case_2",
+        "command": "python tools/run_sensitivity_verification.py --case 2 --source results/example_2/results.json --output diagnostics/sensitivity_case2_geometry --stage geometry --verification-space both --thickness-steps 0.01 0.003 0.001 --endpoint-steps 0.01 0.003 0.001",
+        "exit_code": 0
+      },
+      {
+        "name": "sensitivity_case_3",
+        "command": "python tools/run_sensitivity_verification.py --case 3 --source results/example_3/results.json --output diagnostics/sensitivity_case3_geometry --stage geometry --verification-space both --thickness-steps 0.001 --endpoint-steps 0.001 0.01 --rib-indices 1",
+        "exit_code": 0
+      },
+      {
+        "name": "sensitivity_case_4",
+        "command": "python tools/run_sensitivity_verification.py --case 4 --source results/example_4/results.json --output diagnostics/sensitivity_case4_geometry --stage geometry --verification-space both --thickness-steps 0.001 --endpoint-steps 0.001 0.01 --rib-indices 1",
+        "exit_code": 0
+      },
+      {
+        "name": "robustness_case_2",
+        "command": "python tools/run_robustness_study.py --case 2 --output diagnostics/robustness_case2 --studies mesh retention convergence relaxation starts --mesh-values 20x10 40x20 80x40 --retention-thresholds 0.5 0.7 0.9 --convergence-thresholds 0.005 0.01 0.02 --relaxations 0.025 0.05 0.075 --starting-layouts all_orbits even_orbits odd_orbits --common-reanalysis-mesh 80 40 --seed 20260804",
+        "exit_code": null,
+        "completion_evidence": {
+          "aggregate_status": "complete",
+          "planned": 15,
+          "completed": 15,
+          "failed": 0,
+          "stderr_empty": true
+        },
+        "exit_code_note": "Detached Windows process completed, but the monitor attached after launch and could not recover the process exit code."
+      },
+      {
+        "name": "restart_case1_geometry_move050",
+        "command": "& ./.venv/Scripts/python.exe -B tools/run_geometry_restart_diagnostic.py --case 1 --source results/example_1/results.json --output <PROJECT_ROOT>/agent_work/runs/20260812-133356/diagnostics-current/restarts/case1_geometry_move050 --stage geometry --restarts 1 --multistarts 2 --thickness-perturbation 0.10 --endpoint-perturbation 0.05 --seed 202608041 --initial-move-step 0.50",
+        "start_utc": "2026-08-12T08:17:25.4811000Z",
+        "end_utc": "2026-08-12T08:18:19.3113445Z",
+        "elapsed_seconds": 53.820692799999996,
+        "exit_code": 0
+      },
+      {
+        "name": "restart_case2_geometry_move005",
+        "command": "& ./.venv/Scripts/python.exe -B tools/run_geometry_restart_diagnostic.py --case 2 --source results/example_2/results.json --output <PROJECT_ROOT>/agent_work/runs/20260812-133356/diagnostics-current/restarts/case2_geometry_move005 --stage geometry --restarts 1 --multistarts 3 --thickness-perturbation 0.10 --endpoint-perturbation 0.05 --seed 202608042 --initial-move-step 0.05",
+        "start_utc": "2026-08-12T08:18:20.6515575Z",
+        "end_utc": "2026-08-12T08:19:50.0553113Z",
+        "elapsed_seconds": 89.4034501,
+        "exit_code": 0
+      },
+      {
+        "name": "restart_case2_geometry_move025",
+        "command": "& ./.venv/Scripts/python.exe -B tools/run_geometry_restart_diagnostic.py --case 2 --source results/example_2/results.json --output <PROJECT_ROOT>/agent_work/runs/20260812-133356/diagnostics-current/restarts/case2_geometry_move025 --stage geometry --restarts 1 --multistarts 3 --thickness-perturbation 0.10 --endpoint-perturbation 0.05 --seed 202608043 --initial-move-step 0.25",
+        "start_utc": "2026-08-12T08:19:51.4667165Z",
+        "end_utc": "2026-08-12T08:22:16.4330462Z",
+        "elapsed_seconds": 144.96593439999998,
+        "exit_code": 0
+      },
+      {
+        "name": "restart_case2_geometry_move050",
+        "command": "& ./.venv/Scripts/python.exe -B tools/run_geometry_restart_diagnostic.py --case 2 --source results/example_2/results.json --output <PROJECT_ROOT>/agent_work/runs/20260812-133356/diagnostics-current/restarts/case2_geometry_move050 --stage geometry --restarts 1 --multistarts 3 --thickness-perturbation 0.10 --endpoint-perturbation 0.05 --seed 202608044 --initial-move-step 0.50",
+        "start_utc": "2026-08-12T08:22:17.6189348Z",
+        "end_utc": "2026-08-12T08:25:39.2046050Z",
+        "elapsed_seconds": 201.5853425,
+        "exit_code": 0
+      },
+      {
+        "name": "restart_case2_rationalized_move005",
+        "command": "& ./.venv/Scripts/python.exe -B tools/run_geometry_restart_diagnostic.py --case 2 --source results/example_2/results.json --output <PROJECT_ROOT>/agent_work/runs/20260812-133356/diagnostics-current/restarts/case2_rationalized_move005 --stage rationalized --restarts 1 --multistarts 3 --thickness-perturbation 0.10 --endpoint-perturbation 0.05 --seed 202608045 --initial-move-step 0.05",
+        "start_utc": "2026-08-12T08:25:40.2942395Z",
+        "end_utc": "2026-08-12T08:26:42.3222267Z",
+        "elapsed_seconds": 62.028225199999994,
+        "exit_code": 0
+      },
+      {
+        "name": "restart_case2_rationalized_move025",
+        "command": "& ./.venv/Scripts/python.exe -B tools/run_geometry_restart_diagnostic.py --case 2 --source results/example_2/results.json --output <PROJECT_ROOT>/agent_work/runs/20260812-133356/diagnostics-current/restarts/case2_rationalized_move025 --stage rationalized --restarts 1 --multistarts 3 --thickness-perturbation 0.10 --endpoint-perturbation 0.05 --seed 202608046 --initial-move-step 0.25",
+        "start_utc": "2026-08-12T08:26:43.3294491Z",
+        "end_utc": "2026-08-12T08:28:47.1682074Z",
+        "elapsed_seconds": 123.8381733,
+        "exit_code": 0
+      },
+      {
+        "name": "restart_case2_rationalized_move050",
+        "command": "& ./.venv/Scripts/python.exe -B tools/run_geometry_restart_diagnostic.py --case 2 --source results/example_2/results.json --output <PROJECT_ROOT>/agent_work/runs/20260812-133356/diagnostics-current/restarts/case2_rationalized_move050 --stage rationalized --restarts 1 --multistarts 3 --thickness-perturbation 0.10 --endpoint-perturbation 0.05 --seed 202608047 --initial-move-step 0.50",
+        "start_utc": "2026-08-12T08:28:48.5573877Z",
+        "end_utc": "2026-08-12T08:31:03.5779464Z",
+        "elapsed_seconds": 135.0192514,
+        "exit_code": 0
+      },
+      {
+        "name": "restart_case3_geometry_move050",
+        "command": "& ./.venv/Scripts/python.exe -B tools/run_geometry_restart_diagnostic.py --case 3 --source results/example_3/results.json --output <PROJECT_ROOT>/agent_work/runs/20260812-133356/diagnostics-current/restarts/case3_geometry_move050 --stage geometry --restarts 1 --multistarts 2 --thickness-perturbation 0.10 --endpoint-perturbation 0.05 --seed 202608048 --initial-move-step 0.50",
+        "start_utc": "2026-08-12T08:31:04.7182897Z",
+        "end_utc": "2026-08-12T08:37:22.4609360Z",
+        "elapsed_seconds": 377.74095819999997,
+        "exit_code": 0
+      },
+      {
+        "name": "restart_case3_rationalized_move050",
+        "command": "& ./.venv/Scripts/python.exe -B tools/run_geometry_restart_diagnostic.py --case 3 --source results/example_3/results.json --output <PROJECT_ROOT>/agent_work/runs/20260812-133356/diagnostics-current/restarts/case3_rationalized_move050 --stage rationalized --restarts 1 --multistarts 2 --thickness-perturbation 0.10 --endpoint-perturbation 0.05 --seed 202608049 --initial-move-step 0.50",
+        "start_utc": "2026-08-12T08:37:23.1125499Z",
+        "end_utc": "2026-08-12T08:45:34.2095902Z",
+        "elapsed_seconds": 491.09600709999995,
+        "exit_code": 0
+      },
+      {
+        "name": "restart_case4_geometry_move005",
+        "command": "& ./.venv/Scripts/python.exe -B tools/run_geometry_restart_diagnostic.py --case 4 --source results/example_4/results.json --output <PROJECT_ROOT>/agent_work/runs/20260812-133356/diagnostics-current/restarts/case4_geometry_move005 --stage geometry --restarts 1 --multistarts 2 --thickness-perturbation 0.10 --endpoint-perturbation 0.05 --seed 202608050 --initial-move-step 0.05",
+        "start_utc": "2026-08-12T08:45:35.0799115Z",
+        "end_utc": "2026-08-12T08:52:57.8271888Z",
+        "elapsed_seconds": 442.74672039999996,
+        "exit_code": 0
+      },
+      {
+        "name": "restart_case4_geometry_move050",
+        "command": "& ./.venv/Scripts/python.exe -B tools/run_geometry_restart_diagnostic.py --case 4 --source results/example_4/results.json --output <PROJECT_ROOT>/agent_work/runs/20260812-133356/diagnostics-current/restarts/case4_geometry_move050 --stage geometry --restarts 1 --multistarts 2 --thickness-perturbation 0.10 --endpoint-perturbation 0.05 --seed 202608051 --initial-move-step 0.50",
+        "start_utc": "2026-08-12T08:52:59.2148526Z",
+        "end_utc": "2026-08-12T09:02:35.5825830Z",
+        "elapsed_seconds": 576.3681892999999,
+        "exit_code": 0
+      },
+      {
+        "name": "restart_case4_rationalized_move005",
+        "command": "& ./.venv/Scripts/python.exe -B tools/run_geometry_restart_diagnostic.py --case 4 --source results/example_4/results.json --output <PROJECT_ROOT>/agent_work/runs/20260812-133356/diagnostics-current/restarts/case4_rationalized_move005 --stage rationalized --restarts 1 --multistarts 2 --thickness-perturbation 0.10 --endpoint-perturbation 0.05 --seed 202608052 --initial-move-step 0.05",
+        "start_utc": "2026-08-12T09:02:35.9375948Z",
+        "end_utc": "2026-08-12T09:04:54.0550509Z",
+        "elapsed_seconds": 138.11799589999998,
+        "exit_code": 0
+      },
+      {
+        "name": "restart_case4_rationalized_move050",
+        "command": "& ./.venv/Scripts/python.exe -B tools/run_geometry_restart_diagnostic.py --case 4 --source results/example_4/results.json --output <PROJECT_ROOT>/agent_work/runs/20260812-133356/diagnostics-current/restarts/case4_rationalized_move050 --stage rationalized --restarts 1 --multistarts 2 --thickness-perturbation 0.10 --endpoint-perturbation 0.05 --seed 202608053 --initial-move-step 0.50",
+        "start_utc": "2026-08-12T09:04:54.2960437Z",
+        "end_utc": "2026-08-12T09:07:33.3380378Z",
+        "elapsed_seconds": 159.0415635,
+        "exit_code": 0
+      },
+      {
+        "name": "full_pool_cases_1_2",
+        "command": "python tools/run_full_pool_baseline.py --case 1 2 --output diagnostics/full_pool_cases1_2 --post-sizing-policy rationalization --rationalization-relaxation 0.05",
+        "exit_code": 0
+      },
+      {
+        "name": "response_only_160x80",
+        "command": "python verification/run_response_only_160x80_v140.py --project-root .. --source diagnostics/robustness_case2/robustness_study.json --output diagnostics/response_only_160x80/response_160x80.json",
+        "exit_code": 0
+      }
+    ],
+    "all_numerical_outputs_complete": true,
+    "raw_archive": {
+      "file_count": 144,
+      "strict_json_files": 81,
+      "csv_files": 63,
+      "files_aggregate_sha256": "12a40d5386eb757ebf337a5f89db85a63e56230deb9ac27145b2a9454154bc11",
+      "inventory": [
+        {
+          "path": "diagnostics/full_pool_cases1_2/full_pool_case_1.json",
+          "bytes": 124855,
+          "sha256": "33c4d6c309b8b23488f63a2f1f5f8653bb7d1da81fbb59aa6f6038d39b3e6de6"
+        },
+        {
+          "path": "diagnostics/full_pool_cases1_2/full_pool_case_2.json",
+          "bytes": 282032,
+          "sha256": "001f89cd18af19a4a4407ff65c31a89453e9337d75d83b546b4da1f5a8ae3333"
+        },
+        {
+          "path": "diagnostics/full_pool_cases1_2/full_pool_results.json",
+          "bytes": 471979,
+          "sha256": "685445dcc608e8dad5ecaccea9ac45582f731b6622b21bc46985f9e002341e2f"
+        },
+        {
+          "path": "diagnostics/full_pool_cases1_2/full_pool_summary.csv",
+          "bytes": 716,
+          "sha256": "cea9737633746e5f6f9ce9d92a1aca0ad625fa1dc50c0dbe53efeae1db75add0"
+        },
+        {
+          "path": "diagnostics/response_only_160x80/response_160x80.json",
+          "bytes": 4855,
+          "sha256": "b44cfbcfbeb92aedfa35826d517e90cac24d064f5d4eca4127c2377ef62a6ca5"
+        },
+        {
+          "path": "diagnostics/restarts/case1_geometry_move050/geometry_multistart_02.json",
+          "bytes": 29896,
+          "sha256": "3df7a97cff7ec9ab1117326cb0b61a271ba9a5fe7fa70f2d5524bc9d0a35d68d"
+        },
+        {
+          "path": "diagnostics/restarts/case1_geometry_move050/geometry_multistart_02_history.csv",
+          "bytes": 5648,
+          "sha256": "70a4e0768f8ddd26e4fe4fd28329eb1ecce90072c1e7e9dedd436813ceae4c14"
+        },
+        {
+          "path": "diagnostics/restarts/case1_geometry_move050/geometry_multistart_03.json",
+          "bytes": 32017,
+          "sha256": "4c84d0ccfdc8c6ae2e7c6e98f555c052f8bb84740560aaebd84084e6b6c58192"
+        },
+        {
+          "path": "diagnostics/restarts/case1_geometry_move050/geometry_multistart_03_history.csv",
+          "bytes": 6118,
+          "sha256": "b694334dcc250f5608742b2ca63a8a523c326196a73475369a7077f86fc6197b"
+        },
+        {
+          "path": "diagnostics/restarts/case1_geometry_move050/geometry_restart_01.json",
+          "bytes": 29604,
+          "sha256": "4eeaf8df5af4a8b5f70e7602160f9ebf8e2f401179ce47cb6ee0c46028db5b06"
+        },
+        {
+          "path": "diagnostics/restarts/case1_geometry_move050/geometry_restart_01_history.csv",
+          "bytes": 5572,
+          "sha256": "fd18bef911e7b4feff944353ae472e5ca785232706584c731c4116ab552d4012"
+        },
+        {
+          "path": "diagnostics/restarts/case1_geometry_move050/geometry_restart_results.json",
+          "bytes": 111469,
+          "sha256": "e2dcc90f5414c702c0611dcd968535e645041058d1305d827fe900e653b13796"
+        },
+        {
+          "path": "diagnostics/restarts/case1_geometry_move050/geometry_restart_summary.csv",
+          "bytes": 974,
+          "sha256": "b03326e4a30425392b651bf18f310962671c37a35b668d6e2537806687c0d476"
+        },
+        {
+          "path": "diagnostics/restarts/case2_geometry_move005/geometry_multistart_02.json",
+          "bytes": 22479,
+          "sha256": "64af041cc337aee69cae84c26ed6348faba478eef30ab45493f7a03af377962c"
+        },
+        {
+          "path": "diagnostics/restarts/case2_geometry_move005/geometry_multistart_02_history.csv",
+          "bytes": 2565,
+          "sha256": "bdb6c81e91380ab17cd2ee67517c5aee06011384df5f3517b79ecf76d5ebd637"
+        },
+        {
+          "path": "diagnostics/restarts/case2_geometry_move005/geometry_multistart_03.json",
+          "bytes": 25999,
+          "sha256": "24c64bb36fa5471ff47d9605da1b7c9d60aa75771b1a88562c949b97634ddae0"
+        },
+        {
+          "path": "diagnostics/restarts/case2_geometry_move005/geometry_multistart_03_history.csv",
+          "bytes": 3167,
+          "sha256": "b00a4d3e1e0215e33293d4244c494f989a63f0078de61810219f08f4b7970a24"
+        },
+        {
+          "path": "diagnostics/restarts/case2_geometry_move005/geometry_multistart_04.json",
+          "bytes": 19095,
+          "sha256": "c68945c0e564180090e1efe4ea4b0cffcb5b31f23eb93de564afbab857f57ca4"
+        },
+        {
+          "path": "diagnostics/restarts/case2_geometry_move005/geometry_multistart_04_history.csv",
+          "bytes": 1920,
+          "sha256": "c9fe2e17b049ff2445b53dcf50d14c985ca559014f929e4b4fc8e124aaf3eb99"
+        },
+        {
+          "path": "diagnostics/restarts/case2_geometry_move005/geometry_restart_01.json",
+          "bytes": 36752,
+          "sha256": "b223adab3c1b20575d99ad2246ffc65b3fc52545023493c4ea476cce170f9353"
+        },
+        {
+          "path": "diagnostics/restarts/case2_geometry_move005/geometry_restart_01_history.csv",
+          "bytes": 5298,
+          "sha256": "0536ab7b58b6561afcc7c1656fde8f3e3eb25725b1b471cb9ddc455f4b8dbf26"
+        },
+        {
+          "path": "diagnostics/restarts/case2_geometry_move005/geometry_restart_results.json",
+          "bytes": 127133,
+          "sha256": "5ef2cddcb20630f325f110a80ef116bc090d3656d395fc412c0d22471570e0e8"
+        },
+        {
+          "path": "diagnostics/restarts/case2_geometry_move005/geometry_restart_summary.csv",
+          "bytes": 1226,
+          "sha256": "22ab0e981a90f660f303d882168da4b374c43d2fc0b9683348b56a90876a3417"
+        },
+        {
+          "path": "diagnostics/restarts/case2_geometry_move025/geometry_multistart_02.json",
+          "bytes": 47481,
+          "sha256": "9d2334e052aa24fd388d98fa1232006aa8c2c5ae8d2848ae0d106b26b48cee6f"
+        },
+        {
+          "path": "diagnostics/restarts/case2_geometry_move025/geometry_multistart_02_history.csv",
+          "bytes": 7104,
+          "sha256": "780306483bb45b46e451c792bf6eda13496c0529935d4795c63f53711b5345f8"
+        },
+        {
+          "path": "diagnostics/restarts/case2_geometry_move025/geometry_multistart_03.json",
+          "bytes": 32886,
+          "sha256": "736176cf8f9b6ca4a19b884d059a709b559350807d963739d9f430700523656f"
+        },
+        {
+          "path": "diagnostics/restarts/case2_geometry_move025/geometry_multistart_03_history.csv",
+          "bytes": 4285,
+          "sha256": "c6e2436bbc7656ce4a753ed20456660ee27db1b8512208b4415d12347e564bac"
+        },
+        {
+          "path": "diagnostics/restarts/case2_geometry_move025/geometry_multistart_04.json",
+          "bytes": 36498,
+          "sha256": "561a05620c0d9d1fce724cbcbfa3a63c7993cfd0b00380db8cc73efc92361b62"
+        },
+        {
+          "path": "diagnostics/restarts/case2_geometry_move025/geometry_multistart_04_history.csv",
+          "bytes": 4990,
+          "sha256": "cc8473d778d43aaf07567f1d153e7fd7f265d920b3f8c20b259fd2d6b0094900"
+        },
+        {
+          "path": "diagnostics/restarts/case2_geometry_move025/geometry_restart_01.json",
+          "bytes": 36095,
+          "sha256": "dd6ca54c958d4f31fd0a781d52abdfa4fc1aa6a7566caf0b02a0510ce45badaf"
+        },
+        {
+          "path": "diagnostics/restarts/case2_geometry_move025/geometry_restart_01_history.csv",
+          "bytes": 4982,
+          "sha256": "67f35cc000785e1ebda887766dcbc4cf21a395a7cd86b047a9a4f8e66c266acb"
+        },
+        {
+          "path": "diagnostics/restarts/case2_geometry_move025/geometry_restart_results.json",
+          "bytes": 182485,
+          "sha256": "8c73c1d8c47f4b172f993005509d4beab6524b3876adef7cab05373525f2ab7e"
+        },
+        {
+          "path": "diagnostics/restarts/case2_geometry_move025/geometry_restart_summary.csv",
+          "bytes": 1199,
+          "sha256": "a9abe878cfcae98adf3c3b7964835da5790575918ec058aae0c66e8953642440"
+        },
+        {
+          "path": "diagnostics/restarts/case2_geometry_move050/geometry_multistart_02.json",
+          "bytes": 46902,
+          "sha256": "5664c17a1435cbabfc95c5b95000bd60836e0df4905e87346691cf88cbb7fa7f"
+        },
+        {
+          "path": "diagnostics/restarts/case2_geometry_move050/geometry_multistart_02_history.csv",
+          "bytes": 6813,
+          "sha256": "6496f25ad6e607bcadff253a798e4e0f7462bf27bae22b7b519c7ffbf803c28e"
+        },
+        {
+          "path": "diagnostics/restarts/case2_geometry_move050/geometry_multistart_03.json",
+          "bytes": 50735,
+          "sha256": "b0a58c09c04b8270fbe49ed6f35f59ed369b336efd94c0305e22b64fa6b873e9"
+        },
+        {
+          "path": "diagnostics/restarts/case2_geometry_move050/geometry_multistart_03_history.csv",
+          "bytes": 7585,
+          "sha256": "ef7469b8801cd1c63ec7ccbe61b739812d42dade20ad095c4ece29e96f71c00f"
+        },
+        {
+          "path": "diagnostics/restarts/case2_geometry_move050/geometry_multistart_04.json",
+          "bytes": 53982,
+          "sha256": "a3cee46aa4c2b5b80d8c95543e7f747217dfbca42fefb1959903ec86c3684b24"
+        },
+        {
+          "path": "diagnostics/restarts/case2_geometry_move050/geometry_multistart_04_history.csv",
+          "bytes": 8239,
+          "sha256": "88fe7aeb0717e23ffa0d294071daea6887c3c8d7d647a1df27944c1e5d93b316"
+        },
+        {
+          "path": "diagnostics/restarts/case2_geometry_move050/geometry_restart_01.json",
+          "bytes": 47184,
+          "sha256": "55822926d0a1492e8557fe100450f653bab4258be03e3af773fc71a0fb100694"
+        },
+        {
+          "path": "diagnostics/restarts/case2_geometry_move050/geometry_restart_01_history.csv",
+          "bytes": 6914,
+          "sha256": "d0e8bec95d638246ecca1154727de500e6dd71ca181de085019b077a2a4708b8"
+        },
+        {
+          "path": "diagnostics/restarts/case2_geometry_move050/geometry_restart_results.json",
+          "bytes": 234583,
+          "sha256": "fc9c1299ff836496cb6a907385a13c3c0a412db3a2a3d65e383eddab1d236c22"
+        },
+        {
+          "path": "diagnostics/restarts/case2_geometry_move050/geometry_restart_summary.csv",
+          "bytes": 1203,
+          "sha256": "771621b5d0374cfee3cf961e8726753bc2404db0edddc25aa38772ad1dadc1e6"
+        },
+        {
+          "path": "diagnostics/restarts/case2_rationalized_move005/geometry_multistart_02.json",
+          "bytes": 18994,
+          "sha256": "2dc8ee9924d407cea9cf5309f241c4b387c5a9f072c0e544a01469bffd1ba1f5"
+        },
+        {
+          "path": "diagnostics/restarts/case2_rationalized_move005/geometry_multistart_02_history.csv",
+          "bytes": 2478,
+          "sha256": "e7eaa95eef124d9bc898064649bd9757a8bfba7b70c41e247b210235c9d2c618"
+        },
+        {
+          "path": "diagnostics/restarts/case2_rationalized_move005/geometry_multistart_03.json",
+          "bytes": 22409,
+          "sha256": "80ccac88ee3eabe9ae649969b95c717828a65bf77c8a6cf104a1ccd9f2e7ca9f"
+        },
+        {
+          "path": "diagnostics/restarts/case2_rationalized_move005/geometry_multistart_03_history.csv",
+          "bytes": 3146,
+          "sha256": "e8f83867293f6cc3af769d55cd451db79f5fb38b28298dd8ef1f7ffe817f418d"
+        },
+        {
+          "path": "diagnostics/restarts/case2_rationalized_move005/geometry_multistart_04.json",
+          "bytes": 22109,
+          "sha256": "eeb8739832527a9822eb38007936d9ccee84e2665b83c5a73117a21b183fa1df"
+        },
+        {
+          "path": "diagnostics/restarts/case2_rationalized_move005/geometry_multistart_04_history.csv",
+          "bytes": 3132,
+          "sha256": "415bffdab584afe734a3e567ba627c57553b82e3b74d2891f019b17a540eaba6"
+        },
+        {
+          "path": "diagnostics/restarts/case2_rationalized_move005/geometry_restart_01.json",
+          "bytes": 16007,
+          "sha256": "2c31279ea0357c6c8f7d0de6d2c8888af3e99bf79f6f84c567c3aac15e4d36db"
+        },
+        {
+          "path": "diagnostics/restarts/case2_rationalized_move005/geometry_restart_01_history.csv",
+          "bytes": 1904,
+          "sha256": "8da5d2abb9b1c52104306b7048261cff73467ebc8705ebd62e0a542aad915e33"
+        },
+        {
+          "path": "diagnostics/restarts/case2_rationalized_move005/geometry_restart_results.json",
+          "bytes": 98400,
+          "sha256": "81a957c9eb1ff3d007663e1b466cf33291b79139719ec09267f2507dd3cc17ec"
+        },
+        {
+          "path": "diagnostics/restarts/case2_rationalized_move005/geometry_restart_summary.csv",
+          "bytes": 1197,
+          "sha256": "48bfe746d2687e59dc14a7d2d814db00dd427f6127bd5c99181073817c45a0c2"
+        },
+        {
+          "path": "diagnostics/restarts/case2_rationalized_move025/geometry_multistart_02.json",
+          "bytes": 28072,
+          "sha256": "16d79b5e3bd87ac53928ab24fb4e41cdbbc4e6eec5bb099c128346750f6e5b87"
+        },
+        {
+          "path": "diagnostics/restarts/case2_rationalized_move025/geometry_multistart_02_history.csv",
+          "bytes": 4403,
+          "sha256": "ea275e0db6a0d79f6c328dfa3abbb3a30d5fa69a9d7275aa0da8fdb4438bb35e"
+        },
+        {
+          "path": "diagnostics/restarts/case2_rationalized_move025/geometry_multistart_03.json",
+          "bytes": 28204,
+          "sha256": "5167f9d6fb836ce5311c1d65868e085f91da08575f253a997a9db3282481c93e"
+        },
+        {
+          "path": "diagnostics/restarts/case2_rationalized_move025/geometry_multistart_03_history.csv",
+          "bytes": 4349,
+          "sha256": "e9e9291a2353c069b9ce9a73bd4b1a32a5271aa797e2ddf01b1639b991140a59"
+        },
+        {
+          "path": "diagnostics/restarts/case2_rationalized_move025/geometry_multistart_04.json",
+          "bytes": 34196,
+          "sha256": "51f2ea2149e3abde27155afb90ff66a91cd8f3874f9faa120c94a330da2229d6"
+        },
+        {
+          "path": "diagnostics/restarts/case2_rationalized_move025/geometry_multistart_04_history.csv",
+          "bytes": 5669,
+          "sha256": "9508382b7e296cc2fd6a182a09392ea3e920ffc68ee147e19073c573d049ba09"
+        },
+        {
+          "path": "diagnostics/restarts/case2_rationalized_move025/geometry_restart_01.json",
+          "bytes": 34088,
+          "sha256": "7cef43384e9d40a7a3b53b4b33b428e64b2ae98da4fba94ed91de87e498aa349"
+        },
+        {
+          "path": "diagnostics/restarts/case2_rationalized_move025/geometry_restart_01_history.csv",
+          "bytes": 5716,
+          "sha256": "219a19fd0e2e4116160741ed42659b0ff2d6ff8a32323c2c84714365ff1633cf"
+        },
+        {
+          "path": "diagnostics/restarts/case2_rationalized_move025/geometry_restart_results.json",
+          "bytes": 149205,
+          "sha256": "cb4ace9e50a14ceef3460b7f0f0b0d772318b945eedce264dc3a777ee6bde363"
+        },
+        {
+          "path": "diagnostics/restarts/case2_rationalized_move025/geometry_restart_summary.csv",
+          "bytes": 1183,
+          "sha256": "7169c670159fcfb14334cc425a062f17f0e78f1b8706baba2515967efc1da96e"
+        },
+        {
+          "path": "diagnostics/restarts/case2_rationalized_move050/geometry_multistart_02.json",
+          "bytes": 48993,
+          "sha256": "3c6e0468cce559428b736f46b2defe79d99fb945b3b328f2c013c875bc0fd5d9"
+        },
+        {
+          "path": "diagnostics/restarts/case2_rationalized_move050/geometry_multistart_02_history.csv",
+          "bytes": 8845,
+          "sha256": "cf99686e472a3055548506749f59e58a779022d7fb878727ab40df5d332ae9f1"
+        },
+        {
+          "path": "diagnostics/restarts/case2_rationalized_move050/geometry_multistart_03.json",
+          "bytes": 43063,
+          "sha256": "40307ecb23f3dc0aa60cd1d743d9e0f77b4931ba14f9fd68ee968babed1c85b3"
+        },
+        {
+          "path": "diagnostics/restarts/case2_rationalized_move050/geometry_multistart_03_history.csv",
+          "bytes": 7589,
+          "sha256": "98d3482c3cac9d343a0363975eac415cbb40d1e6436810442904855b338322fd"
+        },
+        {
+          "path": "diagnostics/restarts/case2_rationalized_move050/geometry_multistart_04.json",
+          "bytes": 45841,
+          "sha256": "1636d8e7fd6a590dfde76f2bbcfa6c129a0e65077f4c142eeab3e87d83db24f1"
+        },
+        {
+          "path": "diagnostics/restarts/case2_rationalized_move050/geometry_multistart_04_history.csv",
+          "bytes": 8097,
+          "sha256": "6c224fa7cf4d724fa072109de6fc2f309299ecf1133a1e981a56baab87492394"
+        },
+        {
+          "path": "diagnostics/restarts/case2_rationalized_move050/geometry_restart_01.json",
+          "bytes": 36988,
+          "sha256": "bc0f7b553f8f7fc3eade392f3e97cf859444d5042f8b20fd76bf39a818043594"
+        },
+        {
+          "path": "diagnostics/restarts/case2_rationalized_move050/geometry_restart_01_history.csv",
+          "bytes": 6201,
+          "sha256": "0fc039a495b8d2cfca50911d7a72e88ca382eac479b43b4120c5b6d090e25599"
+        },
+        {
+          "path": "diagnostics/restarts/case2_rationalized_move050/geometry_restart_results.json",
+          "bytes": 206065,
+          "sha256": "60b16c30fe8d5e82c6b5ad43d6e8176def6c88bb8dfb94e9f954ffef582b5b14"
+        },
+        {
+          "path": "diagnostics/restarts/case2_rationalized_move050/geometry_restart_summary.csv",
+          "bytes": 1190,
+          "sha256": "de03bbdadadd66d28e2de5b5162f1293b1b98d1f8e80fc72174e5b53fc4b9f40"
+        },
+        {
+          "path": "diagnostics/restarts/case3_geometry_move050/geometry_multistart_02.json",
+          "bytes": 96428,
+          "sha256": "e37a690ea03b3c7f8bf4db484a3e9e5467eece5fd8e1013759f1011098083920"
+        },
+        {
+          "path": "diagnostics/restarts/case3_geometry_move050/geometry_multistart_02_history.csv",
+          "bytes": 7669,
+          "sha256": "e7ee215c1766a6eef939131a41c48720b5f8903e84c7babe90e15fd9d0128319"
+        },
+        {
+          "path": "diagnostics/restarts/case3_geometry_move050/geometry_multistart_03.json",
+          "bytes": 96291,
+          "sha256": "a8f3481dfa737e37bfbf6ee616d832a3ab25e0df7e592882de62a4eff0b52ece"
+        },
+        {
+          "path": "diagnostics/restarts/case3_geometry_move050/geometry_multistart_03_history.csv",
+          "bytes": 7575,
+          "sha256": "97bd7106a97b51f22421974305d61cf6193cc9a80218edc89c48d703dfb4613c"
+        },
+        {
+          "path": "diagnostics/restarts/case3_geometry_move050/geometry_restart_01.json",
+          "bytes": 116740,
+          "sha256": "f1f8422e382ce6a93b51c113e604434f7f658d98035d5dc20f138ba7de252233"
+        },
+        {
+          "path": "diagnostics/restarts/case3_geometry_move050/geometry_restart_01_history.csv",
+          "bytes": 9601,
+          "sha256": "47e258426c72d1fa1d03d06d74779f755ea8baa2707394df0630803369c48dfe"
+        },
+        {
+          "path": "diagnostics/restarts/case3_geometry_move050/geometry_restart_results.json",
+          "bytes": 366637,
+          "sha256": "16c268602d202f49c4d3066cd7c89571081191a15e781c70802cc5ffb61368c4"
+        },
+        {
+          "path": "diagnostics/restarts/case3_geometry_move050/geometry_restart_summary.csv",
+          "bytes": 990,
+          "sha256": "d7fa9955277993350316aca84dc859a0ebc7bba002c72414cc68b237e4cabbfa"
+        },
+        {
+          "path": "diagnostics/restarts/case3_rationalized_move050/geometry_multistart_02.json",
+          "bytes": 98685,
+          "sha256": "a33108c5a356a5dfabdd87b76915515e2f58a80658ef012bf474c2c72d43d73d"
+        },
+        {
+          "path": "diagnostics/restarts/case3_rationalized_move050/geometry_multistart_02_history.csv",
+          "bytes": 8902,
+          "sha256": "17db0704aeca0a45d2e05081d44a706bdd4ee621deb88896f4d971da371be5c4"
+        },
+        {
+          "path": "diagnostics/restarts/case3_rationalized_move050/geometry_multistart_03.json",
+          "bytes": 97902,
+          "sha256": "ce26a50d794815721549d5c528d20682337b0c0d901e07f1f4b4e527dee24bcb"
+        },
+        {
+          "path": "diagnostics/restarts/case3_rationalized_move050/geometry_multistart_03_history.csv",
+          "bytes": 8717,
+          "sha256": "b9a2043e195d28a1708640d473ad11f3654e3149841a59f2607188d2d76d92fa"
+        },
+        {
+          "path": "diagnostics/restarts/case3_rationalized_move050/geometry_restart_01.json",
+          "bytes": 104865,
+          "sha256": "02698e8bc1ed6cdf1839955fddb88529a2e4d2f56a4bffe4b9289d388d018b5f"
+        },
+        {
+          "path": "diagnostics/restarts/case3_rationalized_move050/geometry_restart_01_history.csv",
+          "bytes": 9712,
+          "sha256": "294eaaa135418b823ed3e0aacc8201bea6cc4cd078624fa2c52f50d464061692"
+        },
+        {
+          "path": "diagnostics/restarts/case3_rationalized_move050/geometry_restart_results.json",
+          "bytes": 356498,
+          "sha256": "24da5426cb7b8898583fd879703d77d54291841645aa055001a351ab8d14e21d"
+        },
+        {
+          "path": "diagnostics/restarts/case3_rationalized_move050/geometry_restart_summary.csv",
+          "bytes": 998,
+          "sha256": "bc0177b68eca0ba6a4bae553b52927c971f190d9acaf451596ad954aff7d404b"
+        },
+        {
+          "path": "diagnostics/restarts/case4_geometry_move005/geometry_multistart_02.json",
+          "bytes": 60335,
+          "sha256": "d08c09f062b1a5f38170422112d48bcff7e05bf684f55f535046c33a9c397780"
+        },
+        {
+          "path": "diagnostics/restarts/case4_geometry_move005/geometry_multistart_02_history.csv",
+          "bytes": 3720,
+          "sha256": "cd5860dada4530d21449a0c4667d03c7d291863bc3e84925d9cf7db2b3a1f7eb"
+        },
+        {
+          "path": "diagnostics/restarts/case4_geometry_move005/geometry_multistart_03.json",
+          "bytes": 38227,
+          "sha256": "03005e2f73f037ebc3243dbc8a7ecfacd5f98f859ef8887ddf704ebafbcad391"
+        },
+        {
+          "path": "diagnostics/restarts/case4_geometry_move005/geometry_multistart_03_history.csv",
+          "bytes": 1838,
+          "sha256": "92f380b8be71332659af8dd92bfcbb7b8e0dd0d604384210effdfd937ed14146"
+        },
+        {
+          "path": "diagnostics/restarts/case4_geometry_move005/geometry_restart_01.json",
+          "bytes": 37746,
+          "sha256": "422a7975706f76cc47b782c4d7760b5d9adbb963ee3449b55e5185fe96fca547"
+        },
+        {
+          "path": "diagnostics/restarts/case4_geometry_move005/geometry_restart_01_history.csv",
+          "bytes": 1852,
+          "sha256": "a1281058863670243e241a56c39ffeaccf46de6157993385ab24210d3f8a2a76"
+        },
+        {
+          "path": "diagnostics/restarts/case4_geometry_move005/geometry_restart_results.json",
+          "bytes": 168549,
+          "sha256": "4e341be68ce99162019e5d5ac2bad9c3370c26840858dd5f4afbee47b46b1e4e"
+        },
+        {
+          "path": "diagnostics/restarts/case4_geometry_move005/geometry_restart_summary.csv",
+          "bytes": 975,
+          "sha256": "7d7c6eb00a47103743398f1808eb7e3dee94d259ddcdb4a357e600910df9817a"
+        },
+        {
+          "path": "diagnostics/restarts/case4_geometry_move050/geometry_multistart_02.json",
+          "bytes": 67157,
+          "sha256": "ce1aeed7afb08771963c56df0d2ecaba75da39d73c1f248d16f768b3328a51ac"
+        },
+        {
+          "path": "diagnostics/restarts/case4_geometry_move050/geometry_multistart_02_history.csv",
+          "bytes": 4281,
+          "sha256": "4f2431b6a7762ebfb0801f225081c59004836b44c0329a8ccd55fd0c50589054"
+        },
+        {
+          "path": "diagnostics/restarts/case4_geometry_move050/geometry_multistart_03.json",
+          "bytes": 67696,
+          "sha256": "db4f56faab7748f86bf242dd87a585af24c2c159a8622b9fd9208f9c5d5f5cbe"
+        },
+        {
+          "path": "diagnostics/restarts/case4_geometry_move050/geometry_multistart_03_history.csv",
+          "bytes": 4305,
+          "sha256": "f19a86d93d3ba21ff63eb176d9725e1fbf8637b363f8ed2c627fca2a4b9228e4"
+        },
+        {
+          "path": "diagnostics/restarts/case4_geometry_move050/geometry_restart_01.json",
+          "bytes": 37845,
+          "sha256": "e707038c46a001c0356a115668990bcb30e9f73dfea93a0d9ce89f0990234fd6"
+        },
+        {
+          "path": "diagnostics/restarts/case4_geometry_move050/geometry_restart_01_history.csv",
+          "bytes": 1866,
+          "sha256": "f990cf7f997d1e54b35d1a3a11c99780940dd04f1b773e87575080b3b76912de"
+        },
+        {
+          "path": "diagnostics/restarts/case4_geometry_move050/geometry_restart_results.json",
+          "bytes": 210866,
+          "sha256": "ab873103c897b44f1de2d22f67c2b800db602b10538786b104cd387d29723e59"
+        },
+        {
+          "path": "diagnostics/restarts/case4_geometry_move050/geometry_restart_summary.csv",
+          "bytes": 963,
+          "sha256": "635e60a359cbdbb8b48a9fa9a0ffda27e5cd698bfdb53c5e251eff75e5f90e59"
+        },
+        {
+          "path": "diagnostics/restarts/case4_rationalized_move005/geometry_multistart_02.json",
+          "bytes": 35325,
+          "sha256": "ff2477ec9dc79bd7fc53b35e3a214bf669c119891e53bf2f619dae2ffd1a2d5d"
+        },
+        {
+          "path": "diagnostics/restarts/case4_rationalized_move005/geometry_multistart_02_history.csv",
+          "bytes": 2467,
+          "sha256": "00d8e19e5c8ca918e83902cc8018c1f3dec5906c1867e6686287c0ddc7475757"
+        },
+        {
+          "path": "diagnostics/restarts/case4_rationalized_move005/geometry_multistart_03.json",
+          "bytes": 35395,
+          "sha256": "e2fe970316ae733f5a22c20734445fbf9ff938ee4ff70354c0c7774fd66cfeb3"
+        },
+        {
+          "path": "diagnostics/restarts/case4_rationalized_move005/geometry_multistart_03_history.csv",
+          "bytes": 2458,
+          "sha256": "704dae20fd1d76d57d06040ed776b1aedc3ed1ec867a73e332f16bff3b16a58e"
+        },
+        {
+          "path": "diagnostics/restarts/case4_rationalized_move005/geometry_restart_01.json",
+          "bytes": 29341,
+          "sha256": "f42ad6e73e094c15974059b787d97fd084d27bda7ec447be90d343f23973f964"
+        },
+        {
+          "path": "diagnostics/restarts/case4_rationalized_move005/geometry_restart_01_history.csv",
+          "bytes": 1837,
+          "sha256": "388342f0b37c644c9dbb8f1d9bba74bf5c842e8e10c70707314b9a9b54fb6ce5"
+        },
+        {
+          "path": "diagnostics/restarts/case4_rationalized_move005/geometry_restart_results.json",
+          "bytes": 125444,
+          "sha256": "85229729d8c011126843e6b4e0dfa98e9da25d3b79456346e0e74ae210f90750"
+        },
+        {
+          "path": "diagnostics/restarts/case4_rationalized_move005/geometry_restart_summary.csv",
+          "bytes": 1000,
+          "sha256": "5c8e077b3b012fbe9abb14c2bfd9ab8d772dd2ea768c2d0ae76d4e8a5188db81"
+        },
+        {
+          "path": "diagnostics/restarts/case4_rationalized_move050/geometry_multistart_02.json",
+          "bytes": 51780,
+          "sha256": "a3b7757292923dab2723c4b5c9651060933a2e6e2d51823ee1049d478c88cb20"
+        },
+        {
+          "path": "diagnostics/restarts/case4_rationalized_move050/geometry_multistart_02_history.csv",
+          "bytes": 4293,
+          "sha256": "6fcf05e73387a4e49afab51f6912734f2e2980a5e591989082af56a4c88984c1"
+        },
+        {
+          "path": "diagnostics/restarts/case4_rationalized_move050/geometry_multistart_03.json",
+          "bytes": 40624,
+          "sha256": "8af9fb4af917b3ca730337b23701fea6eef9a4df20050e66567dd7dcf14eb0c6"
+        },
+        {
+          "path": "diagnostics/restarts/case4_rationalized_move050/geometry_multistart_03_history.csv",
+          "bytes": 3106,
+          "sha256": "b3bad05b04b325d8aed705526f06e3237f06b0a98f6d745a824059fff17555b0"
+        },
+        {
+          "path": "diagnostics/restarts/case4_rationalized_move050/geometry_restart_01.json",
+          "bytes": 40341,
+          "sha256": "33eabc22528d4b49a721b831b5e19b2969c09f80bf99bb6586ecacdedc2c4b3e"
+        },
+        {
+          "path": "diagnostics/restarts/case4_rationalized_move050/geometry_restart_01_history.csv",
+          "bytes": 3057,
+          "sha256": "9e39e205ecb96d02b74ab2163ffb449b32374778be2c97cf4af0bbf07150b58b"
+        },
+        {
+          "path": "diagnostics/restarts/case4_rationalized_move050/geometry_restart_results.json",
+          "bytes": 163317,
+          "sha256": "1c113fe18c087c2374c856acc3d5936029a5c7f2de7b0c4c9d511711c0f0636a"
+        },
+        {
+          "path": "diagnostics/restarts/case4_rationalized_move050/geometry_restart_summary.csv",
+          "bytes": 973,
+          "sha256": "bd040b547749448108ab4f8f2d799454a5eeb9c5021a6af26dafa57aaddde697"
+        },
+        {
+          "path": "diagnostics/robustness_case2/001_mesh_[20,10].json",
+          "bytes": 118985,
+          "sha256": "7dff8be80e06194dd83382aab1840e35e6362391d0bcbea527802bc1238a5a35"
+        },
+        {
+          "path": "diagnostics/robustness_case2/002_mesh_[40,20].json",
+          "bytes": 96606,
+          "sha256": "dd3509ecbe9aca63b07bb2ae5b4cd444005e72e67903eda5205f7fe9d8304fa4"
+        },
+        {
+          "path": "diagnostics/robustness_case2/003_mesh_[80,40].json",
+          "bytes": 112887,
+          "sha256": "0d15021d3261c731c15f215997348ab1dcee341bccb97146fe12910b28eac526"
+        },
+        {
+          "path": "diagnostics/robustness_case2/004_retention_0.5.json",
+          "bytes": 152354,
+          "sha256": "cefbdd67e6a204feb3ab0dd85699f35ad96ae955d1c56848e16194b287600486"
+        },
+        {
+          "path": "diagnostics/robustness_case2/005_retention_0.7.json",
+          "bytes": 96591,
+          "sha256": "0185af36f167541aae64032d1e278ee0374752302db83eca5768e6caf558dc78"
+        },
+        {
+          "path": "diagnostics/robustness_case2/006_retention_0.9.json",
+          "bytes": 195709,
+          "sha256": "b4a19d312adc863962a619a485405c57072323e13b1c45916823958de0a64439"
+        },
+        {
+          "path": "diagnostics/robustness_case2/007_convergence_0.005.json",
+          "bytes": 96603,
+          "sha256": "848c5aae53dba2304534625e0330bbb37eb61b7ae064875051d734171c17d578"
+        },
+        {
+          "path": "diagnostics/robustness_case2/008_convergence_0.01.json",
+          "bytes": 96598,
+          "sha256": "e513f1cd83a7e4140747b5efcd875d72179edc0b0f86904d1735381a74b62e2e"
+        },
+        {
+          "path": "diagnostics/robustness_case2/009_convergence_0.02.json",
+          "bytes": 403116,
+          "sha256": "d9a1c0f4a805ec1e63dc923a96dfbda2f61e33b90fa044032c31df0bd484da24"
+        },
+        {
+          "path": "diagnostics/robustness_case2/010_relaxation_0.025.json",
+          "bytes": 103118,
+          "sha256": "2d475bbaa25c0657d475572090a11ccea8aa1fa14d97cac84f729fa83533c6ef"
+        },
+        {
+          "path": "diagnostics/robustness_case2/011_relaxation_0.05.json",
+          "bytes": 96597,
+          "sha256": "3eb77c218d358b242b1db54ee2117b79ed42978ccb50905f37ec662673b7541e"
+        },
+        {
+          "path": "diagnostics/robustness_case2/012_relaxation_0.075.json",
+          "bytes": 106921,
+          "sha256": "0c5a94e2d6a88eb35a8b4ae41e48574615696a7397cb2b5a42866ec1ba59479f"
+        },
+        {
+          "path": "diagnostics/robustness_case2/013_starts_all_orbits.json",
+          "bytes": 96603,
+          "sha256": "9342e8ded7a4d0596306f059c0a8581b0c0da03ae54ba66dc27baebd70ff30b6"
+        },
+        {
+          "path": "diagnostics/robustness_case2/014_starts_even_orbits.json",
+          "bytes": 197163,
+          "sha256": "a2f5046cdebb4494cee261c0a9b87133f8b6f809ef35a2bc7ff46e1dba42d5aa"
+        },
+        {
+          "path": "diagnostics/robustness_case2/015_starts_odd_orbits.json",
+          "bytes": 184250,
+          "sha256": "c118cdd97b4ff2e417aa45f520bf60f1403a9d524809382949c7ede705c66f4c"
+        },
+        {
+          "path": "diagnostics/robustness_case2/robustness_study.json",
+          "bytes": 2471730,
+          "sha256": "858567daa246e63071c89b497642439c91ede3b4c2da3be2559de4d5a7008292"
+        },
+        {
+          "path": "diagnostics/robustness_case2/robustness_summary.csv",
+          "bytes": 2809,
+          "sha256": "6276e53e2f44f937f4c53d5ed0d3acfe8f003bf0ab26167693444a6593d8a0f9"
+        },
+        {
+          "path": "diagnostics/sensitivity_case2_geometry/sensitivity_components.csv",
+          "bytes": 551968,
+          "sha256": "ed9e19cc5a5df4ad16b048685ebbbc22fb0aff0666f380eb537153aa104ad137"
+        },
+        {
+          "path": "diagnostics/sensitivity_case2_geometry/sensitivity_verification.json",
+          "bytes": 5468001,
+          "sha256": "11b834dbe3dfaddf4d897a6608c2b032a45b198fff776e559da30fae68b0d0dd"
+        },
+        {
+          "path": "diagnostics/sensitivity_case3_geometry/sensitivity_components.csv",
+          "bytes": 77112,
+          "sha256": "c17a15b3d07701022bd0ed29b47c9e2138c1dff7db62338181e0391dbe3f235b"
+        },
+        {
+          "path": "diagnostics/sensitivity_case3_geometry/sensitivity_verification.json",
+          "bytes": 764916,
+          "sha256": "36e18167c7fc04160818eca80efc8825a3bd1395b04b12464298188a7756cc2f"
+        },
+        {
+          "path": "diagnostics/sensitivity_case4_geometry/sensitivity_components.csv",
+          "bytes": 152136,
+          "sha256": "55e86e38470fe30a8960536f11e400b1638c311ba20e2549e60bb1ba4f18b704"
+        },
+        {
+          "path": "diagnostics/sensitivity_case4_geometry/sensitivity_verification.json",
+          "bytes": 1563640,
+          "sha256": "be5759468f8ca5dbe983d5320b70cb66334e87920fc9d38c95702ddb469affd0"
+        }
+      ],
+      "normalizations": [
+        {
+          "path": "diagnostics/response_only_160x80/response_160x80.json",
+          "field": "$.executable_provenance.entry_tool",
+          "reason": "replace workstation-absolute provenance path with portable archive path",
+          "source_sha256": "04b2c3054541f4b20bfb4797c107e60d4566d69437d98d6a3a85226f690a0de0",
+          "archived_sha256": "b44cfbcfbeb92aedfa35826d517e90cac24d064f5d4eca4127c2377ef62a6ca5",
+          "original_value_sha256": "47ed886edd9de72171e3defd62057b0e208f43f27c7a6f1f3d4e6d26a0339b3a"
+        }
+      ]
+    },
     "sensitivity": {
-      "case_2_sha256": "a2e7fbda443b6cdf00f6859639b99738d431cefb66a198bc38c470e6a06ae24a",
-      "case_3_sha256": "56e71185d709d0cf6b4139fc55f4a9ee09031689ea660be0580e7e8fb85a7e45",
-      "case_4_sha256": "13f6d8de167a02d9d7952ce06e9585c9f908bdd49f2cc30bd8ee3dfa5e667108"
+      "case_count": 3,
+      "source_stage_reanalysis_mismatches": [
+        0.0,
+        0.0,
+        0.0
+      ]
     },
-    "robustness_sha256": "f536a9fd1310cc4e3fe377c1c90e5442ed445924573f7c3af6f5919e36e8c89a",
-    "response_160x80_sha256": "8a4fdebada0cab29ce473c5b8d9354968e8c210d15814e5f4b2b93533fa24fd3",
+    "robustness": {
+      "runs": 15,
+      "display_outcomes": 11,
+      "reference_run_ids": [
+        "002_mesh_[40,20]",
+        "005_retention_0.7",
+        "008_convergence_0.01",
+        "011_relaxation_0.05",
+        "013_starts_all_orbits"
+      ],
+      "fixed_meshes": [
+        {
+          "mesh": "20x10",
+          "rib_count": 5,
+          "compliance": 12.43274788223292,
+          "volume": 89.99994651421633,
+          "analyses": 1,
+          "optimization_held_fixed": true,
+          "process_status": "complete",
+          "source": "diagnostics/robustness_case2/robustness_study.json:fixed_layout_mesh_reanalysis.meshes[0]"
+        },
+        {
+          "mesh": "40x20",
+          "rib_count": 5,
+          "compliance": 13.08414981614593,
+          "volume": 89.99994651421633,
+          "analyses": 1,
+          "optimization_held_fixed": true,
+          "process_status": "complete",
+          "source": "diagnostics/robustness_case2/robustness_study.json:fixed_layout_mesh_reanalysis.meshes[1]"
+        },
+        {
+          "mesh": "80x40",
+          "rib_count": 5,
+          "compliance": 13.488160942389507,
+          "volume": 89.99994651421633,
+          "analyses": 1,
+          "optimization_held_fixed": true,
+          "process_status": "complete",
+          "source": "diagnostics/robustness_case2/robustness_study.json:fixed_layout_mesh_reanalysis.meshes[2]"
+        },
+        {
+          "mesh": "160x80",
+          "rib_count": 5,
+          "compliance": 13.981085103377055,
+          "volume": 89.99994651421633,
+          "analyses": 1,
+          "optimization_held_fixed": true,
+          "process_status": "complete",
+          "source": "diagnostics/response_only_160x80/response_160x80.json:response"
+        }
+      ]
+    },
+    "restarts": {
+      "group_count": 13,
+      "run_count": 45,
+      "complete_count": 45,
+      "converged_count": 45,
+      "feasible_count": 45,
+      "failed_count": 0,
+      "improved_count": 38
+    },
     "full_pool": {
-      "case_1_sha256": "c20822e4a668124d46581ec1a525909bb2a90214c9e09728fc577a87e7d6c20b",
-      "case_2_sha256": "2dd3df4e5046dee9c86b513bc38cce9df412a4f1e6d0227684223c629f6ef609"
-    },
-    "restart_groups": 13,
-    "restart_runs": 45,
-    "undefined_ratio_encoding": {"value":null,"status":"undefined","reason":"predicted_objective_change_near_zero"}
+      "case_count": 2,
+      "candidate_counts": {
+        "1": 36,
+        "2": 105
+      }
+    }
   },
-  "compact_evidence": [
-    {"path":"verification/README.md","sha256":"eb5a585ffef20f895d9ab92433cc5e2475d4a4cf45c2bf65cc41fd450e89ee1e"},
-    {"path":"verification/formal_stage_summary.csv","sha256":"511c55700ca836707ac510cf54f889e7dc334113458602648ea5b96f8d2a1802"},
-    {"path":"verification/sensitivity_by_step.json","sha256":"3777d4aa1bfc5f59cb2848f3433a71b711344355741343ac5bdcdcfb77a64e8b"},
-    {"path":"verification/robustness_summary.csv","sha256":"5029939126ac1eedd94858f9fe640520bff07b4ce5f33ad12c707cf066ae3705"},
-    {"path":"verification/fixed_layout_mesh_response.csv","sha256":"446c0b0a2a2591f57976de3344eabedbc5231b14064598ea4ea7e83cabaf44b2"},
-    {"path":"verification/restart_group_summary.json","sha256":"1fa9cc2eeb39c4c414d247c01e12a114cc5f90af73c8943dae3d260a3c11d219"},
-    {"path":"verification/full_pool_stage_summary.csv","sha256":"d35724bb0a46de363e5d6729fd243f5a409509ee23019be043a569524cb7440d"},
-    {"path":"verification/run_response_only_160x80.py","sha256":"26e28cb13682fb94a6671bee4cd8be9716e750c08d33d6591bb15962e5780022"}
+  "failed_attempts": [
+    {
+      "name": "robustness_case2_attempt1_stdout_pipe_failure",
+      "disposition": "excluded from raw archive and all compact evidence",
+      "reason": "calling terminal closed its stdout pipe; later progress writes raised OSError; infrastructure failure, not a numerical result",
+      "replacement": "robustness_case2 successful retry with identical preregistered parameters"
+    }
   ],
-  "historical_exclusions": [
-    "verification/case4_refresh.json",
-    "verification/case4_diagnostics_refresh.json",
-    "verification/lifting_summary.csv",
-    "verification/figure_provenance.json",
-    "results/formal_run_20260805-130032.log"
-  ]
+  "compact_evidence": [
+    {
+      "path": "verification/README.md",
+      "sha256": "cbc354056166e1dc5d8a2ea62c7562f994f5a161d9e8f231236e1d67b16688e5"
+    },
+    {
+      "path": "verification/fixed_layout_mesh_response.csv",
+      "sha256": "bec2fc591f2495aabae71191ee0b748a140d1aaa0896c6d3b0682376c79d9cf0"
+    },
+    {
+      "path": "verification/formal_stage_summary.csv",
+      "sha256": "2706558e1aeedf5312c19bd29243cb4c2e17115825186f7505c5f7637ee91539"
+    },
+    {
+      "path": "verification/full_pool_stage_summary.csv",
+      "sha256": "a451f33425c8304c2c75631c3190db469534c02f79c8213492c98ef7a1d976ec"
+    },
+    {
+      "path": "verification/restart_group_summary.json",
+      "sha256": "62b78fc4b46c60785dff5b9ab108b414c7dd55e47d981a9662772b333785e690"
+    },
+    {
+      "path": "verification/robustness_summary.csv",
+      "sha256": "96f057a0bada8d3ef9f0e8337e7dd757ceed737f0bce5ac56e89d6eb7254a4af"
+    },
+    {
+      "path": "verification/sensitivity_by_step.json",
+      "sha256": "e6aa9b1e0bc722081ff89dbc296894912234a2aef33010ea420ec514e7739b73"
+    }
+  ],
+  "scope": {
+    "included": [
+      "sensitivity Cases II--IV",
+      "Case-II five-factor robustness",
+      "13 restart/multistart groups",
+      "four-level fixed-layout mesh response",
+      "complete-pool Cases I--II"
+    ],
+    "excluded": [
+      "failed stdout-pipe robustness attempt",
+      "topology-lifting and auxiliary local/Q8/mortar/solid studies"
+    ]
+  }
 }

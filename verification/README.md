@@ -1,80 +1,34 @@
-# v1.2.0 compact publication evidence
+# v1.4.0 numerical-verification evidence
 
-This directory contains the reviewed, compact evidence index for GitHub tag
-`v1.2.0` and Zenodo version DOI
-[`10.5281/zenodo.21820166`](https://doi.org/10.5281/zenodo.21820166).
-The stable concept DOI is
-[`10.5281/zenodo.21638172`](https://doi.org/10.5281/zenodo.21638172).
+This directory indexes the complete successful numerical-diagnostic archive regenerated from the fresh formal v1.4.0 stages. The frozen executable-source aggregate SHA-256 is `3b06e4dab1fedffb90af0c7b3ee2c07676fb02cd3a87d20d4d45de3a7d99f6a0`. The archive contains 144 raw numerical files (81 strict JSON and 63 CSV), three sensitivity studies, 15 Case-II five-factor runs, 13 restart/multistart groups containing 45 runs, complete-pool Cases I--II, and a four-level fixed-layout response sequence through 160x80.
 
-## Release archives
+The formal four-case outputs are authoritative. Sensitivity, robustness, restart, full-pool, and fixed-layout checks were all regenerated from the same frozen executable source and fresh formal stages where applicable. The 15 raw robustness executions contain five equivalent reference-setting executions; their identical stage arrays are collapsed to one reference row only for manuscript display, giving 11 displayed outcomes. Raw records remain separate.
 
-The release is distributed as three archives with identical assets on GitHub
-and Zenodo:
+The initial robustness attempt affected only stdout delivery and is excluded from the numerical archive. Its disposition is recorded in `manifest.json:failed_attempts`. The successful retry has 15 complete records, zero failed records, empty stderr, and a complete final aggregate; its detached Windows process exit code was not recoverable and is not fabricated.
 
-1. `rib-layout-optimization-v1.2.0-source.zip` — frozen source and this compact
-   index;
-2. `rib-layout-optimization-v1.2.0-formal-results.zip` — complete formal outputs
-   for Cases I–IV;
-3. `rib-layout-optimization-v1.2.0-verification-results.zip` — complete
-   sensitivity, one-factor, restart/multistart, fixed-layout mesh, and full-pool
-   diagnostic outputs plus run manifests.
+## Compact files
 
-The frozen executable snapshot contains 41 source files with aggregate SHA-256
-`d7a585a52198f6bff6cfd8096c8768d81c83349e5d5807a611fdf4385537a3c7`.
-The four-case command ran sequentially and all 19 diagnostic commands exited
-zero. All 16 formal JSON and all 84 diagnostic JSON files parse as strict JSON;
-all fresh formal and diagnostic files are free of workstation-specific absolute
-paths. Mathematically undefined `0/0` approximation ratios are represented as
-`null` with explicit `undefined` status and
-`predicted_objective_change_near_zero` reason.
+| File | Contents |
+| --- | --- |
+| `formal_stage_summary.csv` | Every stored stage in the four formal results |
+| `sensitivity_by_step.json` | Cases II--IV finite-difference summaries by variable space and step |
+| `robustness_summary.csv` | All 15 raw runs plus the explicit 11-outcome display mapping |
+| `fixed_layout_mesh_response.csv` | One fixed five-rib layout on 20x10, 40x20, 80x40 and 160x80 meshes |
+| `restart_group_summary.json` | All 13 restart/multistart groups and 45-run distributions |
+| `full_pool_stage_summary.csv` | Complete 36- and 105-candidate pool stages for Cases I--II |
+| `manifest.json` | Version, commands, provenance, raw inventory, hashes and failed-attempt disposition |
+| `SHA256SUMS` | SHA-256 digests for the compact evidence set |
 
-## Current compact files
+Formal `results.json` SHA-256 values:
 
-| File | Contents | Full release source |
-| --- | --- | --- |
-| `formal_stage_summary.csv` | All 18 stored stages for Cases I–IV | formal-results archive, `results/example_N/results.json` |
-| `sensitivity_by_step.json` | Cases II–IV by-step smooth/nonsmooth error summaries | verification-results archive, `diagnostics/sensitivity_case*_geometry/` |
-| `robustness_summary.csv` | All 18 registered Case-II one-factor runs | verification-results archive, `diagnostics/robustness_case2/` |
-| `fixed_layout_mesh_response.csv` | One fixed five-rib layout at `20x10` through `160x80` | robustness and response-only diagnostics |
-| `restart_group_summary.json` | All 13 groups and their 45-run distributions | verification-results archive, `diagnostics/restarts/` |
-| `full_pool_stage_summary.csv` | Cases I and II complete-pool sizing, geometry, and rationalization | verification-results archive, `diagnostics/full_pool_cases1_2/` |
-| `manifest.json` | Release identity, frozen-source/result hashes, and field-level provenance | both result archives |
-| `SHA256SUMS` | Digests for this current compact set and the required response-only script | this directory |
+- Case 1: `454f911766e3b3983a599a02e259de0bdab68eebd061464986b849a60b1905cc`
+- Case 2: `aab7c044d507853020bdb43e57e529604262fb9c9b65ef72d4a91b50a8002299`
+- Case 3: `a2fbe7d03f1bc6cc132dde6eaa3e8289dc7df7ae4f14fbfb97988d92c244a7d0`
+- Case 4: `d0323d72ee3d1810770d64228cdd792a4ea6533ec6795deb4f9e876fa5cac033`
 
-The complete formal result hashes are:
+Raw diagnostic aggregate SHA-256: `12a40d5386eb757ebf337a5f89db85a63e56230deb9ac27145b2a9454154bc11`.
 
-- Case I: `ea6758c241ad2b642c92c162def0f71f025b1c876cee23e90f855ffe68a037bc`
-- Case II: `27cbb67d2084f5b9e291001a993ca3950920e3eec049c795f630942c47e1d6fb`
-- Case III: `6b51917d2acef88a7d96cf27b25c5fd58274a50961b8a65dd387d2e83df4ac4b`
-- Case IV: `848e646291d9929d23da2dbeb8e15842db9f15e4d66bc3b732d966435f1007a6`
-
-The aggregate over 58 fresh formal files is
-`47197feb63d0fd4e65f6f97715c1456eb873937e3bc35fdcf1d0bc609a91a483`;
-the aggregate over 147 diagnostic files is
-`f5d4136f9bac400af456da58691f881ee902d88f065a22d0a933170b2dfbef1b`.
-
-## Interpretation limits
-
-Wall-clock measurements are retained as platform observations, not numerical
-invariants; FEA counts are the reproducible cost measure. Restart and multistart
-results show deterministic local-path variation and do not prove global
-optimality. The fixed-layout mesh table repeats only response analysis: the rib
-layout, thicknesses, and volume are held fixed.
-
-## Historical exclusions
-
-The following locally retained files predate the v1.2.0 evidence run and are not
-current publication evidence: `case4_refresh.json`,
-`case4_diagnostics_refresh.json`, `lifting_summary.csv`,
-`figure_provenance.json`, and the auxiliary local/Q8/mortar/solid convergence
-outputs or scripts not named by `SHA256SUMS`. They are intentionally excluded
-from `manifest.json` and `SHA256SUMS`; their presence in a working tree must not
-be interpreted as inclusion in the v1.2.0 release evidence.
-
-Likewise, the pre-existing `results/formal_run_20260805-130032.log` contains
-workstation paths and must not be placed in a release archive.
-
-Verify the compact set from this directory with:
+Verify this compact directory from PowerShell:
 
 ```powershell
 Get-Content SHA256SUMS | ForEach-Object {

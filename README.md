@@ -346,10 +346,10 @@ Release `v1.2.0` and its immutable Zenodo version DOI
 <https://doi.org/10.5281/zenodo.21820166> remain the historical baseline for
 the numerical-verification studies: sensitivity, one-factor,
 restart/multistart, full-candidate-pool, and fixed-layout mesh studies. The
-current `v1.3.0` GitHub release
-<https://github.com/ZhifanLuo/rib-layout-optimization/releases/tag/v1.3.0>
+current `v1.4.0` GitHub release
+<https://github.com/ZhifanLuo/rib-layout-optimization/releases/tag/v1.4.0>
 archives the revised source and the full four-case formal-results asset; no
-`v1.3.0` Zenodo version DOI is currently available. The stable Zenodo concept
+`v1.4.0` Zenodo version DOI is currently available. The stable Zenodo concept
 DOI <https://doi.org/10.5281/zenodo.21638172> resolves the release family.
 
 Case-II thickness and endpoint sensitivity verification at three perturbation
@@ -359,12 +359,12 @@ steps, in both production mirror-reduced and unreduced spaces:
 .\.venv\Scripts\python.exe tools\run_sensitivity_verification.py --case 2 --source results\example_2\results.json --output diagnostics\sensitivity_case2_geometry --stage geometry --verification-space both --thickness-steps 0.01 0.003 0.001 --endpoint-steps 0.01 0.003 0.001
 ```
 
-Case-II 18-run one-factor study (mesh, pool span, 70% retention threshold,
-1% convergence threshold, 5% rationalization relaxation, and starting
-layout), with a common `80 x 40` response reanalysis:
+Case-II 15-run one-factor study (mesh, 70% retention threshold, 1%
+convergence threshold, 5% rationalization relaxation, and starting layout),
+with a common `80 x 40` response reanalysis:
 
 ```powershell
-.\.venv\Scripts\python.exe tools\run_robustness_study.py --case 2 --output diagnostics\robustness_case2 --studies mesh pool retention convergence relaxation starts --mesh-values 20x10 40x20 80x40 --pool-spans 1 2 3 --retention-thresholds 0.5 0.7 0.9 --convergence-thresholds 0.005 0.01 0.02 --relaxations 0.025 0.05 0.075 --starting-layouts all_orbits even_orbits odd_orbits --common-reanalysis-mesh 80 40 --seed 20260804
+.\.venv\Scripts\python.exe tools\run_robustness_study.py --case 2 --output diagnostics\robustness_case2 --studies mesh retention convergence relaxation starts --mesh-values 20x10 40x20 80x40 --retention-thresholds 0.5 0.7 0.9 --convergence-thresholds 0.005 0.01 0.02 --relaxations 0.025 0.05 0.075 --starting-layouts all_orbits even_orbits odd_orbits --common-reanalysis-mesh 80 40 --seed 20260804
 ```
 
 A deterministic restart/multistart group is run as follows; the reviewed
@@ -419,8 +419,10 @@ mesh metadata, then reanalyzes both saved stages with the current executable;
 it stops if either compliance differs from the saved value by more than the
 configurable `--source-compliance-tolerance` (default `1e-6` relative).
 
-The complete generated candidate pool can be optimized without active-set
-screening as an internal baseline:
+The candidate pool is the complete undirected graph over the lattice nodes:
+each unordered pair of distinct nodes defines exactly one potential rib. The
+complete generated pool can be optimized without active-set screening as an
+internal baseline:
 
 ```powershell
 .\.venv\Scripts\python.exe tools\run_full_pool_baseline.py --case 1 2 --output diagnostics\full_pool --post-sizing-policy rationalization --rationalization-relaxation 0.05
@@ -448,7 +450,7 @@ Each case writes to `results/example_N/` by default. The common artifacts are:
 Output directories are regenerated data and are ignored by default. Compact
 reviewed evidence tables are retained under `verification/`; the `v1.2.0`
 numerical-verification studies remain historical baseline evidence. The
-current `v1.3.0` GitHub release archives the revised source and full
+current `v1.4.0` GitHub release archives the revised source and full
 four-case formal-results asset as described above. Newly generated JSON is strict RFC-compatible JSON:
 undefined diagnostic ratios use `null` with explicit status/reason metadata,
 and project-internal source/provenance paths are serialized as portable POSIX
@@ -468,7 +470,7 @@ four-case run when validating publication results.
 
 ## Citation and license
 
-Software citation metadata for release `v1.3.0` are provided in
+Software citation metadata for release `v1.4.0` are provided in
 `CITATION.cff`, and the development repository is available at
 <https://github.com/ZhifanLuo/rib-layout-optimization>. GitHub exposes these
 metadata through its **Cite this repository** interface. The stable Zenodo
@@ -476,7 +478,7 @@ concept DOI, <https://doi.org/10.5281/zenodo.21638172>, resolves the complete
 release family. The `v1.2.0` version DOI
 <https://doi.org/10.5281/zenodo.21820166> identifies the historical baseline
 and numerical-verification evidence, not the current software release. No
-`v1.3.0` Zenodo version DOI is currently available; use the current GitHub
+`v1.4.0` Zenodo version DOI is currently available; use the current GitHub
 release link above. ORCID and article publication metadata remain to be
 inserted when available.
 

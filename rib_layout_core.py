@@ -15,6 +15,7 @@ import argparse
 from copy import deepcopy
 from dataclasses import dataclass
 import importlib
+from itertools import combinations
 from pathlib import Path
 import time
 from typing import Any, Mapping, Sequence
@@ -90,11 +91,6 @@ COMMON_CONFIG: dict[str, Any] = {
         "addition_factor_min_ratio": 0.70,
         "addition_sizing_improvement_min": 0.01,
         "active_cycle_improvement_min": 0.01,
-        "candidate_max_span_cells": 3,
-        "candidate_directions": [
-            [1, 0], [0, 1], [1, 1], [1, -1],
-            [2, 1], [2, -1], [1, 2], [1, -2],
-        ],
         "geometry_max_iterations": 100,
         "geometry_fd_fraction": 0.0002,
         "rationalization_beta": 10.0,
@@ -284,37 +280,27 @@ def initial_ribs(cfg: dict) -> list[Rib]:
 
 
 def candidate_ribs(cfg: dict) -> list[Rib]:
-    """Generate the shared finite lattice candidate ground structure."""
+    """Generate the complete undirected graph on the lattice nodes."""
     width, height = map(float, cfg["domain"])
     cell = float(cfg["initial_rib_cell_size"])
-    nx, ny = int(round(width/cell)), int(round(height/cell))
+    nx_float, ny_float = width/cell, height/cell
+    nx, ny = int(round(nx_float)), int(round(ny_float))
+    if not np.isclose(nx_float, nx) or not np.isclose(ny_float, ny):
+        raise ValueError(
+            "domain dimensions must be integer multiples of "
+            "initial_rib_cell_size"
+        )
     rib_height = cfg["rib"]["height"]
     segments = cfg["rib"]["segments"]
-    directions = [
-        tuple(map(int, direction))
-        for direction in cfg["algorithm"]["candidate_directions"]
+    nodes = [
+        (ix*cell, iy*cell)
+        for iy in range(ny+1)
+        for ix in range(nx+1)
     ]
-    max_span = int(cfg["algorithm"]["candidate_max_span_cells"])
-    candidates: list[Rib] = []
-    seen: set[tuple] = set()
-    counter = 0
-    for iy in range(ny+1):
-        for ix in range(nx+1):
-            for dx, dy in directions:
-                for span in range(1, max_span+1):
-                    jx, jy = ix+span*dx, iy+span*dy
-                    if not (0 <= jx <= nx and 0 <= jy <= ny):
-                        continue
-                    p0 = (ix*cell, iy*cell)
-                    p1 = (jx*cell, jy*cell)
-                    key = tuple(sorted((p0, p1)))
-                    if key in seen:
-                        continue
-                    seen.add(key)
-                    counter += 1
-                    candidates.append(Rib(
-                        p0, p1, rib_height, f"C{counter}", segments
-                    ))
+    candidates = [
+        Rib(p0, p1, rib_height, f"C{counter}", segments)
+        for counter, (p0, p1) in enumerate(combinations(nodes, 2), 1)
+    ]
     missing = missing_mirror_partners(
         candidates, mirror_axes(cfg), width, height
     )
