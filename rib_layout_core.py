@@ -178,11 +178,16 @@ def make_case_config(
     missing = [key for key in required if key not in cfg]
     if missing:
         raise ValueError(f"case configuration is missing: {missing}")
+    relaxation = float(cfg["rationalization_relaxation"])
+    if not np.isfinite(relaxation) or relaxation < 0.0:
+        raise ValueError(
+            "rationalization_relaxation must be finite and nonnegative"
+        )
     if "further_rationalization_relaxation" in cfg:
         further_relaxation = float(cfg["further_rationalization_relaxation"])
-        if further_relaxation < 0.0:
+        if not np.isfinite(further_relaxation) or further_relaxation < 0.0:
             raise ValueError(
-                "further_rationalization_relaxation must be nonnegative"
+                "further_rationalization_relaxation must be finite and nonnegative"
             )
     _validate_outer_rollback_config(cfg["algorithm"])
     return cfg

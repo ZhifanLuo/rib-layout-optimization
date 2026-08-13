@@ -897,21 +897,20 @@ class RibLayoutOptimizer:
             raise ValueError("short_rib_thickness_factor must exceed one")
         return factor
 
-    def rationalization_reference_quantile(
-        self, relaxation: float, n_rib: int
+    def rationalization_reference_threshold(
+        self, thicknesses: Sequence[float]
     ) -> float:
-        """Return ``q = 1/n_rib + rho`` for the ``tref`` quantile."""
-        rib_count = int(n_rib)
-        if rib_count <= 0 or rib_count != n_rib:
-            raise ValueError("n_rib must be a positive integer")
-        quantile = 1.0/rib_count+float(relaxation)
-        if not 0.0 < quantile < 1.0:
+        """Return ``max(0.1*t0, quantile_(1/n_rib)(thicknesses))``."""
+        if not np.isfinite(self.t0) or self.t0 <= 0.0:
+            raise ValueError("initial rib thickness t0 must be finite and positive")
+        values = np.asarray(thicknesses, float)
+        if values.ndim != 1 or len(values) <= 1 or not np.all(np.isfinite(values)):
             raise ValueError(
-                "rationalization reference quantile q=1/n_rib+rho must "
-                f"lie strictly between zero and one; got q={quantile:.7g} "
-                f"for n_rib={rib_count}, rho={float(relaxation):.7g}"
+                "rationalization reference thicknesses must be a finite "
+                "one-dimensional sequence with at least two entries"
             )
-        return quantile
+        quantile = 1.0/len(values)
+        return max(0.1*self.t0, float(np.quantile(values, quantile)))
 
     def _feasible_start(self, ribs: Sequence[Rib], initial: Sequence[float] | None) -> np.ndarray:
         x = np.full(len(ribs), self.t0) if initial is None else np.clip(np.asarray(initial, float), self.t_lower, self.t_upper)
@@ -2729,30 +2728,53 @@ class RibLayoutOptimizer:
     def _rationalize(self, ribs: list[Rib], thicknesses: np.ndarray, geometry_result: AnalysisResult, relaxation: float) -> tuple[list[Rib], np.ndarray, AnalysisResult]:
         self.rationalization_history.clear()
         self.rationalization_termination_reason = None
-        if relaxation <= 0 or len(ribs) <= 3:
+        relaxation_value = float(relaxation)
+        if not np.isfinite(relaxation_value) or relaxation_value < 0.0:
+            raise ValueError(
+                "rationalization relaxation rho must be finite and nonnegative"
+            )
+        if len(ribs) <= 3:
             return ribs, thicknesses, geometry_result
         settings = self.cfg["algorithm"]
-        cref = (1.0 + float(relaxation)) * geometry_result.compliance
+        cref = (1.0 + relaxation_value) * geometry_result.compliance
         acceptance_limit = cref
         base_ribs = list(ribs)
         base_t = np.asarray(thicknesses, float).copy()
         n_rib_before_rationalization = len(base_ribs)
-        reference_quantile = self.rationalization_reference_quantile(
-            relaxation, n_rib_before_rationalization
-        )
         recovery_move_step = self._positive_move_limit_setting(
             "rationalization_move_limit_initial", 0.50
         )
         recovery_iterations = int(settings["rationalization_geometry_iterations"])
-        tref = float(np.quantile(base_t, reference_quantile))
+        reference_quantile = 1.0/n_rib_before_rationalization
+        reference_quantile_thickness = float(
+            np.quantile(base_t, reference_quantile)
+        )
+        reference_threshold_floor = 0.1*self.t0
+        tref = self.rationalization_reference_threshold(base_t)
+        if reference_threshold_floor > reference_quantile_thickness:
+            reference_threshold_governing_term = "initial_thickness_floor"
+        elif reference_quantile_thickness > reference_threshold_floor:
+            reference_threshold_governing_term = "thickness_quantile"
+        else:
+            reference_threshold_governing_term = "equal"
         phase_start = self.analysis_count
         reference_record = {
             "event": "reference",
             "tref": tref,
+            "reference_threshold_formula": (
+                "max(0.1*t0, quantile_q(t_e))"
+            ),
+            "reference_threshold_factor": 0.1,
+            "reference_threshold_floor": reference_threshold_floor,
+            "initial_rib_thickness": self.t0,
             "reference_quantile": reference_quantile,
-            "reference_quantile_formula": "1/n_rib + rho",
+            "reference_quantile_formula": "1/n_rib",
+            "reference_quantile_thickness": reference_quantile_thickness,
+            "reference_threshold_governing_term": (
+                reference_threshold_governing_term
+            ),
             "n_rib_before_rationalization": n_rib_before_rationalization,
-            "relaxation": float(relaxation),
+            "relaxation": relaxation_value,
             "recovery_strategy": "fixed_initial_deleted_seed_count_thickest_first",
             "recovery_seed_target_formula": "max(1, ceil(n_rrib/3))",
             "recovery_seed_target_basis": "initial_deleted_rib_count",
@@ -2768,11 +2790,12 @@ class RibLayoutOptimizer:
         }
         self.rationalization_history.append(reference_record)
         self.log.append(
-            f"rationalization quantile-threshold solve: tref={tref:.7g}, "
-            f"{100*reference_quantile:.7g}th percentile of "
-            f"{len(base_t)} geometry-stage thicknesses "
-            f"(q=1/{n_rib_before_rationalization} + "
-            f"{float(relaxation):.7g}), "
+            f"rationalization threshold solve: tref={tref:.7g} = max(" 
+            f"0.1*t0={reference_threshold_floor:.7g}, "
+            f"quantile_q(t_e)={reference_quantile_thickness:.7g}), "
+            f"q=1/{n_rib_before_rationalization}={reference_quantile:.7g}, "
+            f"governing={reference_threshold_governing_term}; "
+            f"rho={relaxation_value:.7g} gives "
             f"Cref={cref:.7g}, Eq.18 compliance limit={1.001*cref:.7g}"
         )
         continuous_ribs, continuous_t, continuous_result, bounds = (

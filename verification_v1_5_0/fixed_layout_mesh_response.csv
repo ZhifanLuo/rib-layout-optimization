@@ -1,0 +1,5 @@
+"mesh","rib_count","compliance","change_from_previous","volume","analyses","optimization_held_fixed","process_status","source"
+"20x10","5","12.43439411308203","","89.9998702798662","1","True","complete","Code/diagnostics_v1_5_0/fixed_layout_mesh/fixed_layout_mesh_results.json:meshes[0]"
+"40x20","5","13.08702040396116","0.052485572271874004","89.9998702798662","1","True","complete","Code/diagnostics_v1_5_0/fixed_layout_mesh/fixed_layout_mesh_results.json:meshes[1]"
+"80x40","5","13.489910652057723","0.030785483300279415","89.9998702798662","1","True","complete","Code/diagnostics_v1_5_0/fixed_layout_mesh/fixed_layout_mesh_results.json:meshes[2]"
+"160x80","5","13.98216918618579","0.036490866902293195","89.9998702798662","1","True","complete","Code/diagnostics_v1_5_0/fixed_layout_mesh/fixed_layout_mesh_results.json:meshes[3]"

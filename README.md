@@ -94,11 +94,13 @@ Geometry optimization treats every active thickness and endpoint coordinate
 simultaneously. Endpoint coordinates are bounded only by the ground-shell
 domain; their local bounds are recomputed around the current coordinates after
 every FEA by the enhanced-MMA move-limit rule. Rationalization uses the same
-dynamic move limits. It solves Eq. (18) once with `tref` equal to the
-`q = 1/n_rib + rho` thickness quantile of the geometry-stage ribs, where
-`n_rib` is the number of ribs immediately before rationalization and `rho` is
-the prescribed compliance relaxation. This value is calculated once and kept
-fixed throughout rationalization. Its projection continuation starts at
+dynamic move limits. It solves Eq. (18) once with the projection threshold
+`tref = max(0.1*t0, quantile_q({t_e}))`, where `t0` is the configured initial
+rib thickness, `{t_e}` are the geometry-stage rib thicknesses, and
+`q = 1/n_rib` for the number of ribs immediately before rationalization. The
+prescribed relaxation `rho` determines only the compliance reference
+`Cref = (1 + rho) Cgeo`. The threshold is calculated once and kept fixed
+throughout rationalization. Its projection continuation starts at
 `beta=1`, increases beta by one
 per outer iteration, and caps it at `beta=10`; convergence checks start only at
 the cap, so the two-consecutive-step rule requires at least eleven iterations.
@@ -346,10 +348,11 @@ Release `v1.2.0` and its immutable Zenodo version DOI
 <https://doi.org/10.5281/zenodo.21820166> remain the historical baseline for
 the numerical-verification studies: sensitivity, one-factor,
 restart/multistart, full-candidate-pool, and fixed-layout mesh studies. The
-current `v1.4.0` GitHub release
-<https://github.com/ZhifanLuo/rib-layout-optimization/releases/tag/v1.4.0>
-archives the revised source and the full four-case formal-results asset; no
-`v1.4.0` Zenodo version DOI is currently available. The stable Zenodo concept
+current `v1.5.0` GitHub release
+<https://github.com/ZhifanLuo/rib-layout-optimization/releases/tag/v1.5.0>
+archives the revised source, the full four-case formal-results asset, and the
+affected numerical-verification evidence; no `v1.5.0` Zenodo version DOI is
+currently available. The stable Zenodo concept
 DOI <https://doi.org/10.5281/zenodo.21638172> resolves the release family.
 
 Case-II thickness and endpoint sensitivity verification at three perturbation
@@ -450,7 +453,7 @@ Each case writes to `results/example_N/` by default. The common artifacts are:
 Output directories are regenerated data and are ignored by default. Compact
 reviewed evidence tables are retained under `verification/`; the `v1.2.0`
 numerical-verification studies remain historical baseline evidence. The
-current `v1.4.0` GitHub release archives the revised source and full
+current `v1.3.0` GitHub release archives the revised source and full
 four-case formal-results asset as described above. Newly generated JSON is strict RFC-compatible JSON:
 undefined diagnostic ratios use `null` with explicit status/reason metadata,
 and project-internal source/provenance paths are serialized as portable POSIX
@@ -470,7 +473,7 @@ four-case run when validating publication results.
 
 ## Citation and license
 
-Software citation metadata for release `v1.4.0` are provided in
+Software citation metadata for release `v1.5.0` are provided in
 `CITATION.cff`, and the development repository is available at
 <https://github.com/ZhifanLuo/rib-layout-optimization>. GitHub exposes these
 metadata through its **Cite this repository** interface. The stable Zenodo
@@ -478,7 +481,7 @@ concept DOI, <https://doi.org/10.5281/zenodo.21638172>, resolves the complete
 release family. The `v1.2.0` version DOI
 <https://doi.org/10.5281/zenodo.21820166> identifies the historical baseline
 and numerical-verification evidence, not the current software release. No
-`v1.4.0` Zenodo version DOI is currently available; use the current GitHub
+`v1.5.0` Zenodo version DOI is currently available; use the current GitHub
 release link above. ORCID and article publication metadata remain to be
 inserted when available.
 

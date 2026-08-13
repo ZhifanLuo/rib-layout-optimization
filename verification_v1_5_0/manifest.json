@@ -1,0 +1,1872 @@
+{
+  "schema_version": 1,
+  "generated_utc": "2026-08-13T06:43:39.195408+00:00",
+  "release": {
+    "version": "1.5.0",
+    "tag": "v1.5.0",
+    "citation_metadata": "Code/CITATION.cff",
+    "citation_metadata_sha256": "ff402db9b2250087b88292d157ebcc4b533a61126d71ef6bc504dacaeaaae456",
+    "publication_status": "verification metadata built locally; publication is outside this build step"
+  },
+  "frozen_source": {
+    "file_count": 41,
+    "aggregate_sha256": "27740f239031896d2e8acae097e7af516bf01b4f1322df0c6d5f819e4dd35607",
+    "source_unchanged_during_formal_run": true,
+    "source_unchanged_during_all_diagnostics": true,
+    "rationalization_threshold_formula": "t_ref = max(0.1*t0, quantile_q({t_e}))",
+    "rationalization_quantile": "q = 1/n_rib"
+  },
+  "tests": {
+    "disposition": "reused once for the identical frozen source; not rerun by diagnostics or metadata build",
+    "passed": 151,
+    "failed": 0,
+    "elapsed_seconds": 86.003,
+    "exit_code": 0,
+    "log": "agent_work/runs/20260813-121901/full_unittest.log",
+    "log_sha256": "18fe6bed2f8befbba55c866b57f7f80e1cc2f3fa8e836a7f3a0273739887eb2f",
+    "exit_code_record": "agent_work/runs/20260813-121901/full_unittest.exitcode",
+    "exit_code_record_sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+  },
+  "formal_results": {
+    "status": "complete",
+    "command": "cmd.exe /d /c \"call example_all.bat <nul\"",
+    "start_boundary_utc": "2026-08-13T04:32:27.9271689Z",
+    "end_utc": "2026-08-13T05:22:31.370729Z",
+    "exit_code": 0,
+    "all_results_complete": true,
+    "all_results_fresh": true,
+    "inventory": {
+      "file_count": 58,
+      "json_count": 16,
+      "csv_count": 16,
+      "aggregate_sha256": "45a15b312abbbe4766a45a0fc7f211e1681f2fcecc56130df76f9bb4ebc2611c",
+      "algorithm": "SHA-256 over sorted PROJECT_RELATIVE_PATH + NUL + raw SHA-256 digest + NUL",
+      "files": [
+        {
+          "path": "Code/results/example_1/active_set_iterations.png",
+          "bytes": 402720,
+          "sha256": "ba6440d3d5b0e5dad972c4ec6b8fc9c43d98bb018b826a9b84723b7136e691e0"
+        },
+        {
+          "path": "Code/results/example_1/adaptive.png",
+          "bytes": 152720,
+          "sha256": "c692a76f1bb91800b67e10ee2814611fa65e9e2c667b77b24f6ec068878d59a6"
+        },
+        {
+          "path": "Code/results/example_1/all_stages.png",
+          "bytes": 316244,
+          "sha256": "5dd95a92acdbb2b730e34e24c379824a821847231cbe6f59c4acfdb809883ad0"
+        },
+        {
+          "path": "Code/results/example_1/case_summary.csv",
+          "bytes": 436,
+          "sha256": "e4918ec41e6a4591be36382af59f5a5c406612ca86c775c47736e67e13bee3ec"
+        },
+        {
+          "path": "Code/results/example_1/checkpoint_results.json",
+          "bytes": 16015,
+          "sha256": "722633dca90e53ba5aa120839c02c69c250290b4b7c8ce3af3900cf4910cfccf"
+        },
+        {
+          "path": "Code/results/example_1/geometry.png",
+          "bytes": 152122,
+          "sha256": "19cb8c377444f59255fa81a6e11864634c1dad62f66aaaea7ef7d8256d8d2d69"
+        },
+        {
+          "path": "Code/results/example_1/initial_sizing.png",
+          "bytes": 145780,
+          "sha256": "0272e761a5e51b2ad0c5e9d0b44d9346b96cd7b8db1bcde6ac9c703b77613b20"
+        },
+        {
+          "path": "Code/results/example_1/rationalized.png",
+          "bytes": 151999,
+          "sha256": "ceb73ba3241ace016e1f038d130748dd6f1bf37d91cd68ccd789c6037bea8eeb"
+        },
+        {
+          "path": "Code/results/example_1/results.json",
+          "bytes": 16955,
+          "sha256": "ed0e601b0d2d8ee902afef2b7e02867739dda4622902ac3133d8b4a83a6bcfb8"
+        },
+        {
+          "path": "Code/results/example_1/summary.csv",
+          "bytes": 232,
+          "sha256": "b2e939dadaa3b8ed86c8f7de4b7d1880539d901570c5853ea7bef266768aa81e"
+        },
+        {
+          "path": "Code/results/example_2/active_set_iterations.png",
+          "bytes": 1065500,
+          "sha256": "f8e3f2f5fef0f3eda64900f40ce8550aa4371cf7358b2f009851c8503287ad5f"
+        },
+        {
+          "path": "Code/results/example_2/adaptive.png",
+          "bytes": 149586,
+          "sha256": "2b865efd108d654906652095284331d135250da38e44bc23f7165ef9e3db461a"
+        },
+        {
+          "path": "Code/results/example_2/all_stages.png",
+          "bytes": 269155,
+          "sha256": "a0d9415c95a17db5bae8843ae8a50dde20ef04d8b11fe371b459dc044fd8d418"
+        },
+        {
+          "path": "Code/results/example_2/case_summary.csv",
+          "bytes": 483,
+          "sha256": "e8648c7f9bcd41812a31b3c4ed09be9f4c00d0d7753ab759e3ea224a68e41d72"
+        },
+        {
+          "path": "Code/results/example_2/checkpoint_results.json",
+          "bytes": 176707,
+          "sha256": "aff97fb0c74ad94406977e77db2326b33f864b562d2155ea30ddefeb3328294b"
+        },
+        {
+          "path": "Code/results/example_2/geometry.png",
+          "bytes": 149381,
+          "sha256": "92a019bc7fdf5746e82ca452910bb63c8ab09d5979ec815b2c0ab72958f47020"
+        },
+        {
+          "path": "Code/results/example_2/initial_sizing.png",
+          "bytes": 156093,
+          "sha256": "920b9b22a5b0738a56090f5120f92bf81b4c0635098ed7c7d1d93d957384d5f2"
+        },
+        {
+          "path": "Code/results/example_2/rationalization_eq18_thicknesses.csv",
+          "bytes": 1326,
+          "sha256": "66cc454f1e119bac280a9239b61471f1f69aa88f257ba595373e8075e5ff3f54"
+        },
+        {
+          "path": "Code/results/example_2/rationalization_eq18_thicknesses_rationalized.csv",
+          "bytes": 1326,
+          "sha256": "66cc454f1e119bac280a9239b61471f1f69aa88f257ba595373e8075e5ff3f54"
+        },
+        {
+          "path": "Code/results/example_2/rationalization_history.json",
+          "bytes": 56717,
+          "sha256": "b8e2680b65e559e20c3edc2ffc028f2e395e4e2217466d9217d21b3eb1ee3cc0"
+        },
+        {
+          "path": "Code/results/example_2/rationalization_history_rationalized.json",
+          "bytes": 55867,
+          "sha256": "1f5ec248c962d5e827bcf45ff1cfaf27520205834fcfada84944cb3e89eb69c3"
+        },
+        {
+          "path": "Code/results/example_2/rationalized.png",
+          "bytes": 150144,
+          "sha256": "f5c70da3784a368eedaa38fb623fa68b642367d39166b3965a6f274a7320255b"
+        },
+        {
+          "path": "Code/results/example_2/results.json",
+          "bytes": 177650,
+          "sha256": "3ecbbb111f1fd1f4d152b07790fb3a3d86bca63a10d6338114c38f7cf3d9df88"
+        },
+        {
+          "path": "Code/results/example_2/summary.csv",
+          "bytes": 247,
+          "sha256": "5ca359615a4b7060f9a70685009b2f92d76c22f79bc00e83dcc3fb3c79967c5f"
+        },
+        {
+          "path": "Code/results/example_3/active_set_iterations.png",
+          "bytes": 854467,
+          "sha256": "47bc3b672efc779de9655e0de38d226105e15a0e256fc323a045d462033724e5"
+        },
+        {
+          "path": "Code/results/example_3/adaptive.png",
+          "bytes": 155688,
+          "sha256": "b54840503cca9764285da8bbc282f99012d2f3ce33e418f60cf8cd43710dc47d"
+        },
+        {
+          "path": "Code/results/example_3/all_stages.png",
+          "bytes": 311917,
+          "sha256": "8ad6e71f8bb5accb3f35364b161635e7b8420ac8bd3e9f17a1defc5a4339c388"
+        },
+        {
+          "path": "Code/results/example_3/case_summary.csv",
+          "bytes": 577,
+          "sha256": "a13d8c24de9226183cac72c96ade6b00e24d633a866e73ade5ba573b5c99dd2a"
+        },
+        {
+          "path": "Code/results/example_3/checkpoint_results.json",
+          "bytes": 945716,
+          "sha256": "8374313ce78c62be6961db5a80adbc800fce500952a251f72a0250537b9a0631"
+        },
+        {
+          "path": "Code/results/example_3/further_rationalized.png",
+          "bytes": 150643,
+          "sha256": "15f50655d6560e34a2eba762a937690a62c52c24cb64149eedbc9ba1af5574d0"
+        },
+        {
+          "path": "Code/results/example_3/geometry.png",
+          "bytes": 152542,
+          "sha256": "a4f66655185783b7a6641131ede9c0a165fe221a271f437f77703395976d2c51"
+        },
+        {
+          "path": "Code/results/example_3/initial_sizing.png",
+          "bytes": 142878,
+          "sha256": "b2fd1050d9b42b47f5766975d7ff989e8e45675e8fb5db714c8d03abaa53f19f"
+        },
+        {
+          "path": "Code/results/example_3/rationalization_eq18_thicknesses.csv",
+          "bytes": 4125,
+          "sha256": "dcd66e979dc16780e523970fb496b9be14573d6453c52baaceddd548e597e291"
+        },
+        {
+          "path": "Code/results/example_3/rationalization_eq18_thicknesses_further_rationalized.csv",
+          "bytes": 2888,
+          "sha256": "9d3e725a7115c4b0e11da68c7fe1924a4f616cf76c0560c5acab2f18dd27d9c5"
+        },
+        {
+          "path": "Code/results/example_3/rationalization_eq18_thicknesses_rationalized.csv",
+          "bytes": 4125,
+          "sha256": "dcd66e979dc16780e523970fb496b9be14573d6453c52baaceddd548e597e291"
+        },
+        {
+          "path": "Code/results/example_3/rationalization_history.json",
+          "bytes": 357257,
+          "sha256": "24c41b13bd63cdbfbdce012b9e807b6939e38eb6fc5a7c6dfffcc6749fc62e70"
+        },
+        {
+          "path": "Code/results/example_3/rationalization_history_further_rationalized.json",
+          "bytes": 172766,
+          "sha256": "23fb44f28afead6dcab2ffb6342698a67b8be3ebe6863245202de3b97408178d"
+        },
+        {
+          "path": "Code/results/example_3/rationalization_history_rationalized.json",
+          "bytes": 180536,
+          "sha256": "fbe3ceb5564f369b9df633aef51ff86586a42f6f898a6239403d48621e3f08d1"
+        },
+        {
+          "path": "Code/results/example_3/rationalized.png",
+          "bytes": 153899,
+          "sha256": "48603e90994a6e8c4aacc255b8d7610220cec9f9f4589956ccdbc3b292b1a450"
+        },
+        {
+          "path": "Code/results/example_3/results.json",
+          "bytes": 946676,
+          "sha256": "c726753094ddeede836a5534e15fae7d2f9425106a95d8e272fdabffc91d778e"
+        },
+        {
+          "path": "Code/results/example_3/summary.csv",
+          "bytes": 312,
+          "sha256": "2f9f1e75a75c36cdd972d2ccb8106526124a86e1adafa20a4875f54ffc0ffd1e"
+        },
+        {
+          "path": "Code/results/example_4/active_set_iterations.png",
+          "bytes": 698678,
+          "sha256": "741967858d5a4cea18e931315826d47c69102eac45b2839ce1092ce6eeb2eb7a"
+        },
+        {
+          "path": "Code/results/example_4/adaptive.png",
+          "bytes": 166739,
+          "sha256": "9bf7fc5fbc938044258bcac85352bc2c8a76fd59837d094b796b8db1d67dac2c"
+        },
+        {
+          "path": "Code/results/example_4/all_stages.png",
+          "bytes": 326734,
+          "sha256": "f9e3c1aa2b7904f12727618524b6cc9d302a0034cdb684ac75ab3a832003ac1e"
+        },
+        {
+          "path": "Code/results/example_4/case_summary.csv",
+          "bytes": 738,
+          "sha256": "bffdff6e1111121150496c00860c98ebd7ad7b0f2338e75c275a604c94dbbf79"
+        },
+        {
+          "path": "Code/results/example_4/checkpoint_results.json",
+          "bytes": 504615,
+          "sha256": "ebe55d69a295a8776c400bd6a49ae681e59a36a48a57f4a40d7c52449010031c"
+        },
+        {
+          "path": "Code/results/example_4/further_rationalized.png",
+          "bytes": 168367,
+          "sha256": "6dfa9ee72afba4b74dbc4e59a1c41544bccaf222f064f0ea41989ebe2c2ee696"
+        },
+        {
+          "path": "Code/results/example_4/geometry.png",
+          "bytes": 166074,
+          "sha256": "ae62bf2eb9f76e470013d19fb6b74d068ae68844e1a528ddce0bd11ba9f9b986"
+        },
+        {
+          "path": "Code/results/example_4/initial_sizing.png",
+          "bytes": 160280,
+          "sha256": "f79a968b9f4cad5b0e65f3a95a0610cc5f3bf4d633ab2402d7112b9408dcedad"
+        },
+        {
+          "path": "Code/results/example_4/rationalization_eq18_thicknesses.csv",
+          "bytes": 4103,
+          "sha256": "c77afe856c525b775009b4af2bf3c81bb428704c993c50db69ec31e495f01a20"
+        },
+        {
+          "path": "Code/results/example_4/rationalization_eq18_thicknesses_further_rationalized.csv",
+          "bytes": 3103,
+          "sha256": "7d6667fdafd36158f4f5ced9950faa6eadfd9453b313350d3e1289bee80ef448"
+        },
+        {
+          "path": "Code/results/example_4/rationalization_eq18_thicknesses_rationalized.csv",
+          "bytes": 4103,
+          "sha256": "c77afe856c525b775009b4af2bf3c81bb428704c993c50db69ec31e495f01a20"
+        },
+        {
+          "path": "Code/results/example_4/rationalization_history.json",
+          "bytes": 159718,
+          "sha256": "c6cd826ffdbb3c720b256aea7078f1b3770cc7deee191bd17a7cd7534d32195e"
+        },
+        {
+          "path": "Code/results/example_4/rationalization_history_further_rationalized.json",
+          "bytes": 77265,
+          "sha256": "2587e4b15fde79e341cfab36c61a8570586d4a5d37e12a3ff3f614748f864b93"
+        },
+        {
+          "path": "Code/results/example_4/rationalization_history_rationalized.json",
+          "bytes": 80726,
+          "sha256": "8d78eaf6330497d52b7c0e9dae6b24462319fddff4a0ccffcc5c65aa7a9db62f"
+        },
+        {
+          "path": "Code/results/example_4/rationalized.png",
+          "bytes": 161702,
+          "sha256": "7f5b4c26b9268a6e7ade8f9642cbcc401958f26c64f65aa55c9a9c12b251e38b"
+        },
+        {
+          "path": "Code/results/example_4/results.json",
+          "bytes": 505592,
+          "sha256": "b7a4c66d926640cc7b2f260cdbf524594ed77c3355fc87004cee091d79064d6e"
+        },
+        {
+          "path": "Code/results/example_4/summary.csv",
+          "bytes": 333,
+          "sha256": "412675e0ebcc0f7cc744cbd7b2fadfce4b0a89639bbfaa84b6456abc72ee8dff"
+        }
+      ]
+    },
+    "reported_58_file_aggregate_sha256": "65ee00085c92e0c2de9e1def93653514f01c1222108f059d1c210d8b1ea52f57",
+    "manuscript_total_definition": "cumulative analyses through the first rationalization pass; excludes further_rationalized",
+    "cases": [
+      {
+        "case": 1,
+        "results_json": "Code/results/example_1/results.json",
+        "results_json_sha256": "ed0e601b0d2d8ee902afef2b7e02867739dda4622902ac3133d8b4a83a6bcfb8",
+        "mesh": [
+          20,
+          20
+        ],
+        "quick": false,
+        "elapsed_seconds": 4.584745800002565,
+        "stored_total_including_optional_passes": 39,
+        "manuscript_total_through_first_rationalization": 39,
+        "stages": [
+          {
+            "name": "initial_sizing",
+            "rib_count": 8,
+            "compliance": 89.72510276602938,
+            "volume": 45.0,
+            "analyses": 8
+          },
+          {
+            "name": "adaptive",
+            "rib_count": 3,
+            "compliance": 32.570558269218125,
+            "volume": 45.0,
+            "analyses": 22
+          },
+          {
+            "name": "geometry",
+            "rib_count": 3,
+            "compliance": 30.154567594647325,
+            "volume": 45.00000000000001,
+            "analyses": 9
+          },
+          {
+            "name": "rationalized",
+            "rib_count": 3,
+            "compliance": 30.154567594647325,
+            "volume": 45.00000000000001,
+            "analyses": 0
+          }
+        ]
+      },
+      {
+        "case": 2,
+        "results_json": "Code/results/example_2/results.json",
+        "results_json_sha256": "3ecbbb111f1fd1f4d152b07790fb3a3d86bca63a10d6338114c38f7cf3d9df88",
+        "mesh": [
+          40,
+          20
+        ],
+        "quick": false,
+        "elapsed_seconds": 58.79509479999979,
+        "stored_total_including_optional_passes": 94,
+        "manuscript_total_through_first_rationalization": 94,
+        "stages": [
+          {
+            "name": "initial_sizing",
+            "rib_count": 16,
+            "compliance": 21.305551331701817,
+            "volume": 90.0,
+            "analyses": 6
+          },
+          {
+            "name": "adaptive",
+            "rib_count": 8,
+            "compliance": 13.995699026421185,
+            "volume": 89.99999999999999,
+            "analyses": 49
+          },
+          {
+            "name": "geometry",
+            "rib_count": 8,
+            "compliance": 12.953493617395223,
+            "volume": 90.00000000000001,
+            "analyses": 17
+          },
+          {
+            "name": "rationalized",
+            "rib_count": 5,
+            "compliance": 13.08702040396116,
+            "volume": 89.9998702798662,
+            "analyses": 22
+          }
+        ]
+      },
+      {
+        "case": 3,
+        "results_json": "Code/results/example_3/results.json",
+        "results_json_sha256": "c726753094ddeede836a5534e15fae7d2f9425106a95d8e272fdabffc91d778e",
+        "mesh": [
+          80,
+          40
+        ],
+        "quick": false,
+        "elapsed_seconds": 1499.647352400003,
+        "stored_total_including_optional_passes": 185,
+        "manuscript_total_through_first_rationalization": 133,
+        "stages": [
+          {
+            "name": "initial_sizing",
+            "rib_count": 64,
+            "compliance": 66.02369392120714,
+            "volume": 11310.0,
+            "analyses": 27
+          },
+          {
+            "name": "adaptive",
+            "rib_count": 26,
+            "compliance": 19.273504640283985,
+            "volume": 11309.999999999996,
+            "analyses": 48
+          },
+          {
+            "name": "geometry",
+            "rib_count": 26,
+            "compliance": 17.62096906010024,
+            "volume": 11309.999999999998,
+            "analyses": 17
+          },
+          {
+            "name": "rationalized",
+            "rib_count": 18,
+            "compliance": 18.131930254337114,
+            "volume": 11310.0,
+            "analyses": 41
+          },
+          {
+            "name": "further_rationalized",
+            "rib_count": 12,
+            "compliance": 18.868775122993917,
+            "volume": 11309.846739272887,
+            "analyses": 52
+          }
+        ]
+      },
+      {
+        "case": 4,
+        "results_json": "Code/results/example_4/results.json",
+        "results_json_sha256": "b7a4c66d926640cc7b2f260cdbf524594ed77c3355fc87004cee091d79064d6e",
+        "mesh": [
+          80,
+          40
+        ],
+        "quick": false,
+        "elapsed_seconds": 1147.6706167999982,
+        "stored_total_including_optional_passes": 146,
+        "manuscript_total_through_first_rationalization": 124,
+        "stages": [
+          {
+            "name": "initial_sizing",
+            "rib_count": 64,
+            "compliance": 250.34723041104695,
+            "volume": 11309.999999999996,
+            "analyses": 5
+          },
+          {
+            "name": "adaptive",
+            "rib_count": 30,
+            "compliance": 170.7035968192009,
+            "volume": 11309.999999999998,
+            "analyses": 45
+          },
+          {
+            "name": "geometry",
+            "rib_count": 30,
+            "compliance": 133.26918659935342,
+            "volume": 11309.999999999998,
+            "analyses": 57
+          },
+          {
+            "name": "rationalized",
+            "rib_count": 20,
+            "compliance": 134.08701794085678,
+            "volume": 11309.999999999998,
+            "analyses": 17
+          },
+          {
+            "name": "further_rationalized",
+            "rib_count": 10,
+            "compliance": 139.2187972858183,
+            "volume": 11310.000000000002,
+            "analyses": 22
+          }
+        ]
+      }
+    ]
+  },
+  "diagnostics": {
+    "status": "complete",
+    "root": "Code/diagnostics_v1_5_0",
+    "inventory": {
+      "file_count": 233,
+      "json_count": 78,
+      "csv_count": 75,
+      "aggregate_sha256": "eb09e2fb97c9d6a8c968db52e0b583ad3e8bd5f1ba6befa4885bc186527ea179",
+      "algorithm": "SHA-256 over sorted PROJECT_RELATIVE_PATH + NUL + raw SHA-256 digest + NUL",
+      "files": [
+        {
+          "path": "Code/diagnostics_v1_5_0/fixed_layout_mesh/fixed_layout_mesh.exitcode",
+          "bytes": 3,
+          "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/fixed_layout_mesh/fixed_layout_mesh.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/fixed_layout_mesh/fixed_layout_mesh.stderr.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/fixed_layout_mesh/fixed_layout_mesh_results.json",
+          "bytes": 5334,
+          "sha256": "8893e049c75317e5334825a450a96621809737d2517660141c414233aad65c1e"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/fixed_layout_mesh/fixed_layout_mesh_summary.csv",
+          "bytes": 416,
+          "sha256": "70beaf651a97f519fa369ef29f76024f71f1c2cea02c1fe7162f412445ea5c2f"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/full_pool_cases1_2/full_pool_case_1.json",
+          "bytes": 146696,
+          "sha256": "a36a5d4ce5da645a830144a2d8de2559247c8e84efb2437a916dc5fad8323c10"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/full_pool_cases1_2/full_pool_case_2.json",
+          "bytes": 315961,
+          "sha256": "cb2e33b09600aa331e0ef716e85aeddf8d8b3cd624f433f393e9f61397606e94"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/full_pool_cases1_2/full_pool_results.json",
+          "bytes": 533958,
+          "sha256": "9fa5270e606c93309ea9050926a98c31ec3e161e3a80ea43a27d4dd22ad8a005"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/full_pool_cases1_2/full_pool_run.exitcode",
+          "bytes": 3,
+          "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/full_pool_cases1_2/full_pool_run.log",
+          "bytes": 1686,
+          "sha256": "db30bf6144ce54cba6721156774b578c15e2fa483fcdf290784458db087e8962"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/full_pool_cases1_2/full_pool_run.stderr.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/full_pool_cases1_2/full_pool_summary.csv",
+          "bytes": 734,
+          "sha256": "aca0f585d1515b3106590351d8cff792db5fa1256db15abe3f0de66115197250"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/local_one_factor/case3_relax0025/diagnostic_log.txt",
+          "bytes": 20333,
+          "sha256": "49fb200fe33a643b7a3cd0c13accdbd2409c3e799ccbcede07486dff989cd234"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/local_one_factor/case3_relax0025/diagnostic_results.json",
+          "bytes": 349829,
+          "sha256": "fe959d7a5f94d1284199e5009f564f9ba411eb4b85fd02e28d927d1029595141"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/local_one_factor/case3_relax0025/ended_utc.txt",
+          "bytes": 30,
+          "sha256": "566b2ae547756b5edb27ce4ba7cfda497b9aaa9f5594cab0c2cfeb9c862ef0b5"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/local_one_factor/case3_relax0025/eq18_iteration_history.csv",
+          "bytes": 7915,
+          "sha256": "436765e401dab4457a5d70aefe790f16df329fdbd645d372834f89d5684821e3"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/local_one_factor/case3_relax0025/eq7_iteration_history.csv",
+          "bytes": 24242,
+          "sha256": "3c8686abac803709d48b1888c8fcef96ae5306cc216d4d3e381528631e6fac8b"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/local_one_factor/case3_relax0025/exitcode.txt",
+          "bytes": 3,
+          "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/local_one_factor/case3_relax0025/started_utc.txt",
+          "bytes": 30,
+          "sha256": "31c3f6ebef3964c60d2fa8e0020aae4ebb049efe0b3e8c34c9083a03fec3c375"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/local_one_factor/case3_relax0025/stderr.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/local_one_factor/case3_relax0025/stdout.log",
+          "bytes": 462,
+          "sha256": "a84ab6a8b8696e71d74b40187a14e622213b30e02e0c0971556feb11334fb860"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/local_one_factor/case3_relax0050/diagnostic_log.txt",
+          "bytes": 14853,
+          "sha256": "4f57eea3ec3d31d30f5974a585f2705405bca8ad242533aba1697aec79fb3bb1"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/local_one_factor/case3_relax0050/diagnostic_results.json",
+          "bytes": 216037,
+          "sha256": "460e63d93fcfdac5016f807e490be7a73f603fabba6a68e18da03efe80275e5d"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/local_one_factor/case3_relax0050/ended_utc.txt",
+          "bytes": 30,
+          "sha256": "c59c82457fba4e9a1b2e08bcb7beb135ba0f425520e9b95ab992f25eff996dca"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/local_one_factor/case3_relax0050/eq18_iteration_history.csv",
+          "bytes": 9267,
+          "sha256": "8418cd6a9086e71829c760132a37dc30db7cf7741113e0425f1b036da86ff211"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/local_one_factor/case3_relax0050/eq7_iteration_history.csv",
+          "bytes": 12383,
+          "sha256": "b2153819bf79fd11c40507e2d90d4c6f338ba31c3f53fd524122a2b9e0b7caed"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/local_one_factor/case3_relax0050/exitcode.txt",
+          "bytes": 3,
+          "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/local_one_factor/case3_relax0050/started_utc.txt",
+          "bytes": 30,
+          "sha256": "c929c6d8967c661400064de0d3ba561d0b2d14991e6be303e5fbe4228d0fa7a6"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/local_one_factor/case3_relax0050/stderr.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/local_one_factor/case3_relax0050/stdout.log",
+          "bytes": 378,
+          "sha256": "578158106f1f18e98a77db6d83d6855d5abcb9c2870251e427a3b37c56bbd041"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/local_one_factor/case3_relax0100/diagnostic_log.txt",
+          "bytes": 14313,
+          "sha256": "16f4b364f9bf75b833356e699b5634aa5451cf93214f8917942d88f52e9f2127"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/local_one_factor/case3_relax0100/diagnostic_results.json",
+          "bytes": 194293,
+          "sha256": "0879c5aecdea120a56789ee1fcec48c879c26315ccf7b83125debd3d841420a4"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/local_one_factor/case3_relax0100/ended_utc.txt",
+          "bytes": 30,
+          "sha256": "53e2eacf56bdc0645e03a1fbbfcde8977f4173c60b753188a62ee9d97db84fc0"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/local_one_factor/case3_relax0100/eq18_iteration_history.csv",
+          "bytes": 10529,
+          "sha256": "c423a306112f2ea84514d6dd088bfe60adbf030bf5acae3a36cfdc83c9b92a7a"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/local_one_factor/case3_relax0100/eq7_iteration_history.csv",
+          "bytes": 9790,
+          "sha256": "64b0b352881e4ade7e6b07848d00f07e1c4de2585460da6318ba5bed847334c2"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/local_one_factor/case3_relax0100/exitcode.txt",
+          "bytes": 3,
+          "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/local_one_factor/case3_relax0100/started_utc.txt",
+          "bytes": 30,
+          "sha256": "c59c82457fba4e9a1b2e08bcb7beb135ba0f425520e9b95ab992f25eff996dca"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/local_one_factor/case3_relax0100/stderr.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/local_one_factor/case3_relax0100/stdout.log",
+          "bytes": 379,
+          "sha256": "b081fc117ea72da403adf2b38c349569a533c6a2928c57f51e00af3bad480280"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/local_one_factor/case4_relax0025/diagnostic_log.txt",
+          "bytes": 10337,
+          "sha256": "13801f638ca5bd068765087accec615d7081ea3ec2771da5c7526ab5134b2b66"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/local_one_factor/case4_relax0025/diagnostic_results.json",
+          "bytes": 108879,
+          "sha256": "079af19c97112fc963cfded338147720fa489af9a897dac9d6171f49fea21418"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/local_one_factor/case4_relax0025/ended_utc.txt",
+          "bytes": 30,
+          "sha256": "61530a03f0037d41bcf018d2d89bd957b1b37593cafed96c5b6b8f3e98ccea5c"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/local_one_factor/case4_relax0025/eq18_iteration_history.csv",
+          "bytes": 8238,
+          "sha256": "59a1931a750daf96469b0a0b21d548624bc6adccd695b7f43c965a234e7da76a"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/local_one_factor/case4_relax0025/eq7_iteration_history.csv",
+          "bytes": 3795,
+          "sha256": "983a6dd7f8d3a1540332f31f64cc5b3625a01ce2301f57a2f535d5d068dc433c"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/local_one_factor/case4_relax0025/exitcode.txt",
+          "bytes": 3,
+          "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/local_one_factor/case4_relax0025/started_utc.txt",
+          "bytes": 30,
+          "sha256": "e06626a60142ab49d2dba6c5706bf13a83099fb4f7456a370e4481024256bbd1"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/local_one_factor/case4_relax0025/stderr.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/local_one_factor/case4_relax0025/stdout.log",
+          "bytes": 290,
+          "sha256": "3b7767f6ac2a11d9b5cf5fd76a69ed1c249dd3094c215d7023356269500cbf1a"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/local_one_factor/case4_relax0050/diagnostic_log.txt",
+          "bytes": 10296,
+          "sha256": "707f6bd969ee416cdb413fefaef7c6903cb30649dce78aee9f5eb6f6af24d966"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/local_one_factor/case4_relax0050/diagnostic_results.json",
+          "bytes": 103693,
+          "sha256": "e249d990ffb6876eeb5c3600c9c2eb985f5ca468dd3f1b865fa1d3c0556008a9"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/local_one_factor/case4_relax0050/ended_utc.txt",
+          "bytes": 30,
+          "sha256": "309466db37e9332204e8601b166c4b27ec072c6b04e45aca425d67c12589c51b"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/local_one_factor/case4_relax0050/eq18_iteration_history.csv",
+          "bytes": 8317,
+          "sha256": "fcad4d49982b5497960dbd151e2e6d7076332af831e71354aaf5797207e04bd9"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/local_one_factor/case4_relax0050/eq7_iteration_history.csv",
+          "bytes": 3231,
+          "sha256": "17a2b9b75c5f806d2c6978c5caef6c3599b4fa1a36cb746367e3d5caab52e436"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/local_one_factor/case4_relax0050/exitcode.txt",
+          "bytes": 3,
+          "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/local_one_factor/case4_relax0050/started_utc.txt",
+          "bytes": 30,
+          "sha256": "b5c12b898d1bad9181ee23a34493fef999581c57068b329491ef08ca7d26e5be"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/local_one_factor/case4_relax0050/stderr.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/local_one_factor/case4_relax0050/stdout.log",
+          "bytes": 291,
+          "sha256": "f5e3eea30075231c9ada76b14c59f555dfdabff69d7009582e994f2124dee565"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/local_one_factor/case4_relax0100/diagnostic_log.txt",
+          "bytes": 10015,
+          "sha256": "77c54c061d672a2f39250a9a48b433552621da1e6ff97d275407981c16a089fe"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/local_one_factor/case4_relax0100/diagnostic_results.json",
+          "bytes": 96573,
+          "sha256": "27a58ffa261ddf417d2723861cb089f2eee9e4324af4438ac8ce1e1566d9c827"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/local_one_factor/case4_relax0100/ended_utc.txt",
+          "bytes": 30,
+          "sha256": "fc0b8222c5c3f87c19f51336d97ae768dfb66584e41cec302fad041ff7022558"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/local_one_factor/case4_relax0100/eq18_iteration_history.csv",
+          "bytes": 7128,
+          "sha256": "c10d4df93cdae302153c925c0df060f1ca56ee3ea811cbfdceb5781419524b2f"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/local_one_factor/case4_relax0100/eq7_iteration_history.csv",
+          "bytes": 2649,
+          "sha256": "de3ebf8f5b0805674bcceadf14730c67144fe9857974206384cb151a0a06d472"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/local_one_factor/case4_relax0100/exitcode.txt",
+          "bytes": 3,
+          "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/local_one_factor/case4_relax0100/started_utc.txt",
+          "bytes": 30,
+          "sha256": "309466db37e9332204e8601b166c4b27ec072c6b04e45aca425d67c12589c51b"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/local_one_factor/case4_relax0100/stderr.log",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/local_one_factor/case4_relax0100/stdout.log",
+          "bytes": 291,
+          "sha256": "2d6281bc1525446f0cd969691b75927605e0c8a310f0a2d3a69fba5e5d7394cb"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case1_geometry_move050/geometry_multistart_02.json",
+          "bytes": 29969,
+          "sha256": "0935d6d7b2adb28f8d7f52c2562962a94db985afb8a93145549d53d6a38304f3"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case1_geometry_move050/geometry_multistart_02_history.csv",
+          "bytes": 5648,
+          "sha256": "70a4e0768f8ddd26e4fe4fd28329eb1ecce90072c1e7e9dedd436813ceae4c14"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case1_geometry_move050/geometry_multistart_03.json",
+          "bytes": 32089,
+          "sha256": "30e753ca0d6d7080ac0e3b2347998cc50397e73a3c9a6d6ed5b35755fcdf305b"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case1_geometry_move050/geometry_multistart_03_history.csv",
+          "bytes": 6118,
+          "sha256": "b694334dcc250f5608742b2ca63a8a523c326196a73475369a7077f86fc6197b"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case1_geometry_move050/geometry_restart_01.json",
+          "bytes": 29677,
+          "sha256": "74593a80c5c86e1a011d18614e0a23e53197be062b155bab7aedb760fc89169b"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case1_geometry_move050/geometry_restart_01_history.csv",
+          "bytes": 5572,
+          "sha256": "fd18bef911e7b4feff944353ae472e5ca785232706584c731c4116ab552d4012"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case1_geometry_move050/geometry_restart_results.json",
+          "bytes": 111760,
+          "sha256": "f4463e2cb210b94ef231dfac03acb92f623a3ca12521100ecefb65ee8dbc0b59"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case1_geometry_move050/geometry_restart_summary.csv",
+          "bytes": 973,
+          "sha256": "52655defdf51ed050f2d8fc42caef818f055847418d6af31cca9c007a206d555"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case1_geometry_move050/run.exitcode",
+          "bytes": 1,
+          "sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case1_geometry_move050/run.log",
+          "bytes": 592,
+          "sha256": "0caa979b2ed0557075105ad5ba9e72177b74a31e5947d2a672a0fb6a37bcdb2d"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case1_geometry_move050/run.timing.json",
+          "bytes": 1360,
+          "sha256": "5d96791b9056d5c9c1f40f02009bf9a0a11935b2d4518a8a5e16e09fa09318ac"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case2_geometry_move005/geometry_multistart_02.json",
+          "bytes": 22551,
+          "sha256": "e60ecdc16eec0fd150c2853a21b99cdf796bd9f2f9a6bf347efb5f2914a91631"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case2_geometry_move005/geometry_multistart_02_history.csv",
+          "bytes": 2565,
+          "sha256": "bdb6c81e91380ab17cd2ee67517c5aee06011384df5f3517b79ecf76d5ebd637"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case2_geometry_move005/geometry_multistart_03.json",
+          "bytes": 26071,
+          "sha256": "00da217148a73b909dbb3fa7c71e5f736fd4783ccbf340782d76de56428e5174"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case2_geometry_move005/geometry_multistart_03_history.csv",
+          "bytes": 3167,
+          "sha256": "b00a4d3e1e0215e33293d4244c494f989a63f0078de61810219f08f4b7970a24"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case2_geometry_move005/geometry_multistart_04.json",
+          "bytes": 19167,
+          "sha256": "4f7b05aa5ac29e24ca5b3decd5233b45edd514b9a3149c1d1d201b5b4fde01d5"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case2_geometry_move005/geometry_multistart_04_history.csv",
+          "bytes": 1920,
+          "sha256": "c9fe2e17b049ff2445b53dcf50d14c985ca559014f929e4b4fc8e124aaf3eb99"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case2_geometry_move005/geometry_restart_01.json",
+          "bytes": 36825,
+          "sha256": "4c4775a6a0878516ba4302f8601abed8813a76b9348371cb270e1568267f127c"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case2_geometry_move005/geometry_restart_01_history.csv",
+          "bytes": 5298,
+          "sha256": "0536ab7b58b6561afcc7c1656fde8f3e3eb25725b1b471cb9ddc455f4b8dbf26"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case2_geometry_move005/geometry_restart_results.json",
+          "bytes": 127495,
+          "sha256": "5ae5059a106e3e2c69ef7c625dad03dfb2e32a22ac8afcf083b01011fcc69422"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case2_geometry_move005/geometry_restart_summary.csv",
+          "bytes": 1223,
+          "sha256": "d8378e335af83daf266fd76af541c6affd548394983802a84706c16a23ce5053"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case2_geometry_move005/run.exitcode",
+          "bytes": 1,
+          "sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case2_geometry_move005/run.log",
+          "bytes": 760,
+          "sha256": "592ec8dc96fc5a35842c1c482f5211aa61a90c2465c6ad7edb4bdb46ae1653c2"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case2_geometry_move005/run.timing.json",
+          "bytes": 1368,
+          "sha256": "b23132e4573e8cc1c4057385937765ceb525f75a99a9a5f65f9b12455d9ae841"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case2_geometry_move025/geometry_multistart_02.json",
+          "bytes": 47555,
+          "sha256": "03109b5c818b90acf9ca7da37176427ce5d12a8d7984ab525229d1d7b25e5db2"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case2_geometry_move025/geometry_multistart_02_history.csv",
+          "bytes": 7104,
+          "sha256": "780306483bb45b46e451c792bf6eda13496c0529935d4795c63f53711b5345f8"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case2_geometry_move025/geometry_multistart_03.json",
+          "bytes": 32959,
+          "sha256": "8571347a781b85446d44c8ee23ffa9c6895e8897f90c6ea1d9612b1c8e8e63fd"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case2_geometry_move025/geometry_multistart_03_history.csv",
+          "bytes": 4285,
+          "sha256": "c6e2436bbc7656ce4a753ed20456660ee27db1b8512208b4415d12347e564bac"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case2_geometry_move025/geometry_multistart_04.json",
+          "bytes": 36571,
+          "sha256": "70a1c3380d622902201ed79a14a266867fda8f337d83dec06c348b2f766d6381"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case2_geometry_move025/geometry_multistart_04_history.csv",
+          "bytes": 4990,
+          "sha256": "cc8473d778d43aaf07567f1d153e7fd7f265d920b3f8c20b259fd2d6b0094900"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case2_geometry_move025/geometry_restart_01.json",
+          "bytes": 36169,
+          "sha256": "6c690e95b44145a2a9b5b4fc612471f387d750a87d3ab910cd963eadfe6e9fc5"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case2_geometry_move025/geometry_restart_01_history.csv",
+          "bytes": 4982,
+          "sha256": "67f35cc000785e1ebda887766dcbc4cf21a395a7cd86b047a9a4f8e66c266acb"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case2_geometry_move025/geometry_restart_results.json",
+          "bytes": 182852,
+          "sha256": "5fac98c04a093f1c677784c3480d496349c622716a5de64875c687e45a654493"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case2_geometry_move025/geometry_restart_summary.csv",
+          "bytes": 1201,
+          "sha256": "8e3ba980e4f656bd90e0c2cf121943abf08565b2261836d26e69454525d8958f"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case2_geometry_move025/run.exitcode",
+          "bytes": 1,
+          "sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case2_geometry_move025/run.log",
+          "bytes": 758,
+          "sha256": "412a752380224b966c8ec2f4d2a85a8379938d3c350a020142645e029cd9835d"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case2_geometry_move025/run.timing.json",
+          "bytes": 1360,
+          "sha256": "766520cc7a84c8f0261cbb5e498dfc517a2f08e6276a7141f755302b0e76b61a"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case2_geometry_move050/geometry_multistart_02.json",
+          "bytes": 46976,
+          "sha256": "94ec4ff9cb55cb7c9450ae1a4e89ee126db58e35409e20f1f6ec82b7edc1a4e9"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case2_geometry_move050/geometry_multistart_02_history.csv",
+          "bytes": 6813,
+          "sha256": "6496f25ad6e607bcadff253a798e4e0f7462bf27bae22b7b519c7ffbf803c28e"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case2_geometry_move050/geometry_multistart_03.json",
+          "bytes": 50808,
+          "sha256": "cc914c1206d62bd3049a56c622cea6f5d0485fa0316373b118c237b6884f29fe"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case2_geometry_move050/geometry_multistart_03_history.csv",
+          "bytes": 7585,
+          "sha256": "ef7469b8801cd1c63ec7ccbe61b739812d42dade20ad095c4ece29e96f71c00f"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case2_geometry_move050/geometry_multistart_04.json",
+          "bytes": 54055,
+          "sha256": "5c2c655aff6521ac100f03b7f12b58bd05d54389c14b465273209836eb63c408"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case2_geometry_move050/geometry_multistart_04_history.csv",
+          "bytes": 8239,
+          "sha256": "88fe7aeb0717e23ffa0d294071daea6887c3c8d7d647a1df27944c1e5d93b316"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case2_geometry_move050/geometry_restart_01.json",
+          "bytes": 47259,
+          "sha256": "af569f3eb2ca52cfb0c185dfb26f53a18f437e4aaa2f06a6884a601e1036bd51"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case2_geometry_move050/geometry_restart_01_history.csv",
+          "bytes": 6914,
+          "sha256": "d0e8bec95d638246ecca1154727de500e6dd71ca181de085019b077a2a4708b8"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case2_geometry_move050/geometry_restart_results.json",
+          "bytes": 234951,
+          "sha256": "ed32ed65c871d66e801e70b589e368d3ead8fb732334e9da40288125eb612186"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case2_geometry_move050/geometry_restart_summary.csv",
+          "bytes": 1206,
+          "sha256": "ac73cc8e043c103f66128e78d1b2a7a3b627383cce92764deeabef9052074c3e"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case2_geometry_move050/run.exitcode",
+          "bytes": 1,
+          "sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case2_geometry_move050/run.log",
+          "bytes": 758,
+          "sha256": "d9d50d4c2a2d45ee7b2acbf42a8da7614af4129aa50b7dd6826ac968909776ed"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case2_geometry_move050/run.timing.json",
+          "bytes": 1368,
+          "sha256": "4cc638458f24a0efe26c33fa7c6ed0c6d915329eb4bb4fbd140b70342661c296"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case2_rationalized_move005/geometry_multistart_02.json",
+          "bytes": 19209,
+          "sha256": "99f28bbc3af0718c8cde23526e561a6bdc6bac1799beeaf61e7fbc6aea8eb546"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case2_rationalized_move005/geometry_multistart_02_history.csv",
+          "bytes": 2504,
+          "sha256": "ee4abaaa763a208b5c92a6e5657ab783d33ef027fe49a88896f20e58f1ecc49e"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case2_rationalized_move005/geometry_multistart_03.json",
+          "bytes": 22348,
+          "sha256": "367d593ac1f96fc51ebda2b1070895e6459e71c119df2a9e5a1c7f0e20008fae"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case2_rationalized_move005/geometry_multistart_03_history.csv",
+          "bytes": 3135,
+          "sha256": "d4ac79a57f3cbcc59f25586a171eaffcee68debc96cad3e570a082a7284401ce"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case2_rationalized_move005/geometry_multistart_04.json",
+          "bytes": 22214,
+          "sha256": "64bdf618f8ccac2e40474e6fa2c388075c2132840acb267649d950df7679b1eb"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case2_rationalized_move005/geometry_multistart_04_history.csv",
+          "bytes": 3146,
+          "sha256": "afae2253a9bb94f746b22853b746cbb7d3a1ddfb639edc0b5e3c75e9c45bcb05"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case2_rationalized_move005/geometry_restart_01.json",
+          "bytes": 16001,
+          "sha256": "bcf35e42e34fa8a727b41a63f8ba680f26bb61eda7f3e9e7d796d5b37645d10d"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case2_rationalized_move005/geometry_restart_01_history.csv",
+          "bytes": 1851,
+          "sha256": "dc64794a6652cf85d982a33af8ee80436516f77ffff6f1c023544d2e87d188c2"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case2_rationalized_move005/geometry_restart_results.json",
+          "bytes": 98729,
+          "sha256": "a65abda74f2938ea016dc4eac09de771e4d89d477910d575c975135820a23056"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case2_rationalized_move005/geometry_restart_summary.csv",
+          "bytes": 1156,
+          "sha256": "fea4ccaeec0a0892ab58cc7836909dfd59cf4f322ef74151efc9d860da6dfb4d"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case2_rationalized_move005/run.exitcode",
+          "bytes": 3,
+          "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case2_rationalized_move005/run.log",
+          "bytes": 760,
+          "sha256": "46fab949681d37b9fb430ec7f9664407a201ce6cbee5aa65b3fe07cadd6185a4"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case2_rationalized_move005/run.timestamps",
+          "bytes": 76,
+          "sha256": "9b6222b500c8c4f469040ad9b11727a006944a983cf1f90280f8d945f7780bac"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case2_rationalized_move025/geometry_multistart_02.json",
+          "bytes": 28073,
+          "sha256": "e08a7b7480ecc2642a8b2dd1cae4c15f52ec71d0f5134e2eebb8125317011524"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case2_rationalized_move025/geometry_multistart_02_history.csv",
+          "bytes": 4323,
+          "sha256": "79dfcbdf2e7d7d8ad7b7aa79829c49d9049f66d5bf07ccd8bbdfda34e197d55f"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case2_rationalized_move025/geometry_multistart_03.json",
+          "bytes": 28308,
+          "sha256": "fa0a331e193cb4e3b4c789bac2a91b0fcb39ec11ee21d6b205dc31e2278778fc"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case2_rationalized_move025/geometry_multistart_03_history.csv",
+          "bytes": 4386,
+          "sha256": "7eeb428a72f70b887e68d57aad65266c8c5d7df4a24865be89cbfede37a2b04a"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case2_rationalized_move025/geometry_multistart_04.json",
+          "bytes": 34293,
+          "sha256": "324a6cfdf4d553cf651859289605ad842c8131b4f41f064edd7ec6ca7f5a5c5f"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case2_rationalized_move025/geometry_multistart_04_history.csv",
+          "bytes": 5680,
+          "sha256": "7f386990feca8182a8f79d711e17fc11c2c2253ea66fecf94890dca2783423cc"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case2_rationalized_move025/geometry_restart_01.json",
+          "bytes": 33957,
+          "sha256": "645be8bd5398cb8b7fccc311146b7934ba8cc9059515c3aba745bc390dc65eb0"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case2_rationalized_move025/geometry_restart_01_history.csv",
+          "bytes": 5585,
+          "sha256": "a5ce3c5d82d4444913814230fb9b50e61ddc859cc87d9d53c9916516d3d62696"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case2_rationalized_move025/geometry_restart_results.json",
+          "bytes": 149349,
+          "sha256": "636e710dd2825718b83680335ac1cd3f625b61a3ebdac927e3b74b45f50a42d2"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case2_rationalized_move025/geometry_restart_summary.csv",
+          "bytes": 1187,
+          "sha256": "036f955d6285315ef9cf5e138eb9224d7dbf3cc50daeba951ad7a42e201e503e"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case2_rationalized_move025/run.exitcode",
+          "bytes": 3,
+          "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case2_rationalized_move025/run.log",
+          "bytes": 758,
+          "sha256": "8162a08cccf3a2c86b1f55a720555256c8a70a971e57d823cf91711f038bbfc0"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case2_rationalized_move025/run.timestamps",
+          "bytes": 76,
+          "sha256": "4743165d590bf4c86a733ac5508b22af4df36d8c8052a0fdffb7e144f53c8ec9"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case2_rationalized_move050/geometry_multistart_02.json",
+          "bytes": 42972,
+          "sha256": "3f7a7c01dfa6d05563fe7b05217adf4a8ac92f9605e0b2219bec77681bd141e2"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case2_rationalized_move050/geometry_multistart_02_history.csv",
+          "bytes": 7558,
+          "sha256": "e089a79bb9bac83710aef491e79c01b6664b037cd49e64476597ee58afa9b843"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case2_rationalized_move050/geometry_multistart_03.json",
+          "bytes": 43126,
+          "sha256": "83b2976a9b6c447fc2eb7495d2c3696f4a428226726732c66935054d8e609b36"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case2_rationalized_move050/geometry_multistart_03_history.csv",
+          "bytes": 7544,
+          "sha256": "7510a11621270e2f04e121e416bb3e07cbc532bbdf7ca8e993c6caefbbd443a1"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case2_rationalized_move050/geometry_multistart_04.json",
+          "bytes": 46068,
+          "sha256": "85913d0ffe57aa82b56662b69bc0e5e54b66c85422291a4a651c2970cf22837f"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case2_rationalized_move050/geometry_multistart_04_history.csv",
+          "bytes": 8213,
+          "sha256": "dbdb384638b4103ccba2b820fb23248cde55e52614dcb9938469af53226a309e"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case2_rationalized_move050/geometry_restart_01.json",
+          "bytes": 43173,
+          "sha256": "15b89851f9c79a7486ed45bf724e93bc27d2f9ede770e27c84414f56d8601e5e"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case2_rationalized_move050/geometry_restart_01_history.csv",
+          "bytes": 7585,
+          "sha256": "90096e35d2a514c4b6d8d4080fa4ff7623cb9940ccd12d838b9f5ded42080279"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case2_rationalized_move050/geometry_restart_results.json",
+          "bytes": 206592,
+          "sha256": "a267227b90b273bab1aa7f2e34b259ab51db44517c93090fe4bacb4b0eb4eab8"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case2_rationalized_move050/geometry_restart_summary.csv",
+          "bytes": 1211,
+          "sha256": "9352314959e35299395d7cefe1f761700f34c718e3d49998c72cdad766f2d92c"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case2_rationalized_move050/run.exitcode",
+          "bytes": 3,
+          "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case2_rationalized_move050/run.log",
+          "bytes": 760,
+          "sha256": "beec4c416916744f0559bad6c1edef29db1221e2f686851a585a2beff8c195ea"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case2_rationalized_move050/run.timestamps",
+          "bytes": 76,
+          "sha256": "4aa4010a1a411af048f507eb41a1f94f711ad78aae8c9ae1b61d849b14d4d8b9"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case3_geometry_move050/geometry_multistart_02.json",
+          "bytes": 96500,
+          "sha256": "8906bb2e98de5c09c587f5771996da91f0cee8b9f58f3095f35f755a9c8810d8"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case3_geometry_move050/geometry_multistart_02_history.csv",
+          "bytes": 7669,
+          "sha256": "e7ee215c1766a6eef939131a41c48720b5f8903e84c7babe90e15fd9d0128319"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case3_geometry_move050/geometry_multistart_03.json",
+          "bytes": 96364,
+          "sha256": "8fe4b64b8f7176320e6768912f08aaaf2be9662cbe6407e8b98752c5f5832df9"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case3_geometry_move050/geometry_multistart_03_history.csv",
+          "bytes": 7575,
+          "sha256": "97bd7106a97b51f22421974305d61cf6193cc9a80218edc89c48d703dfb4613c"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case3_geometry_move050/geometry_restart_01.json",
+          "bytes": 116811,
+          "sha256": "5a87abc39d0b751465dbcdcd03ee4c092f54ce4a2ead4fbbe1b085f1ebeec4ad"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case3_geometry_move050/geometry_restart_01_history.csv",
+          "bytes": 9601,
+          "sha256": "47e258426c72d1fa1d03d06d74779f755ea8baa2707394df0630803369c48dfe"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case3_geometry_move050/geometry_restart_results.json",
+          "bytes": 366926,
+          "sha256": "91175c99493621baee9905123db1e1790dad816e72d7934c2769f3e83577e648"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case3_geometry_move050/geometry_restart_summary.csv",
+          "bytes": 987,
+          "sha256": "794b45f7616238611fc8a20b1a664cd41d372bf63e2eaf1f4be8f395ce4a545c"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case3_geometry_move050/run.exitcode",
+          "bytes": 1,
+          "sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case3_geometry_move050/run.log",
+          "bytes": 596,
+          "sha256": "f84848707453a83feae9a6b9142ddb1ffb021397133e2f6ea633e5a8b077c78b"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case3_geometry_move050/run.timing.json",
+          "bytes": 1361,
+          "sha256": "161595af222b3c301b94b941c763c4681c9a7c0018a3788066060a31354406e4"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case3_rationalized_move050/geometry_multistart_02.json",
+          "bytes": 81266,
+          "sha256": "07aac6cc31f7377472a0772456cf4f7d95bbe4f965573f64238429b2975f38f3"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case3_rationalized_move050/geometry_multistart_02_history.csv",
+          "bytes": 8263,
+          "sha256": "ba9e1a1770486ff4640fc6292c783a50aa95ee0b1f199da17779c7dc7e066537"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case3_rationalized_move050/geometry_multistart_03.json",
+          "bytes": 91968,
+          "sha256": "bc0b5f42d1b48b8c91cd4eb8d3aaf843f6078794455a47773ebae3d283fd6f7a"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case3_rationalized_move050/geometry_multistart_03_history.csv",
+          "bytes": 9590,
+          "sha256": "7588cd1317d6fac2ffcc106ca703d47fffc956b08c1ef0bf743da3709aae8e87"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case3_rationalized_move050/geometry_restart_01.json",
+          "bytes": 91610,
+          "sha256": "0de4b2e9fb1249888892f4e392f848cfaf986d1635eee4793ced20454f6a2abe"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case3_rationalized_move050/geometry_restart_01_history.csv",
+          "bytes": 9515,
+          "sha256": "431a4ef69ba170671e5adcccc403bc6dcf6cd8f0d211dcc6c957c4d43a97f18e"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case3_rationalized_move050/geometry_restart_results.json",
+          "bytes": 313593,
+          "sha256": "01b292178d79d9e5b2a27126718e287b0023f3eb387dfeafd16a622a9880ad44"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case3_rationalized_move050/geometry_restart_summary.csv",
+          "bytes": 965,
+          "sha256": "4972445d94aa7f7aba92c278ce734dbbfac03100f575c0fdedbe9ee227d523e8"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case3_rationalized_move050/run.exitcode",
+          "bytes": 3,
+          "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case3_rationalized_move050/run.log",
+          "bytes": 598,
+          "sha256": "eb27dda276ef3f4b8d7366f0ed8673d509d8842c89a7e86f6f6f10cd11e34d81"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case3_rationalized_move050/run.timestamps",
+          "bytes": 76,
+          "sha256": "13aa1e041aa931e6998d14931dce5d5ba9d18494e0198461f1c251524d599520"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case4_geometry_move005/geometry_multistart_02.json",
+          "bytes": 60408,
+          "sha256": "53ea8ce6e25ef54fc130c228320e6ab7ab4dda8c6d90dd6c56699a03ceffae4a"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case4_geometry_move005/geometry_multistart_02_history.csv",
+          "bytes": 3720,
+          "sha256": "cd5860dada4530d21449a0c4667d03c7d291863bc3e84925d9cf7db2b3a1f7eb"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case4_geometry_move005/geometry_multistart_03.json",
+          "bytes": 38301,
+          "sha256": "cef88ad01ff12fe1cca848875236ebdd85fcabd967ad3615b4eaddd9af528f52"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case4_geometry_move005/geometry_multistart_03_history.csv",
+          "bytes": 1838,
+          "sha256": "92f380b8be71332659af8dd92bfcbb7b8e0dd0d604384210effdfd937ed14146"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case4_geometry_move005/geometry_restart_01.json",
+          "bytes": 37820,
+          "sha256": "c4267ca4d641bcd375f758f9ae7d8ccc7e4cd42b0d5c19ae46d4ee066326d902"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case4_geometry_move005/geometry_restart_01_history.csv",
+          "bytes": 1852,
+          "sha256": "a1281058863670243e241a56c39ffeaccf46de6157993385ab24210d3f8a2a76"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case4_geometry_move005/geometry_restart_results.json",
+          "bytes": 168843,
+          "sha256": "b6ea4a6d33a9b48871ce0c4ff0c0435bff4bc0574b12c2dcd439e29b67d706d5"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case4_geometry_move005/geometry_restart_summary.csv",
+          "bytes": 977,
+          "sha256": "ba3eb31436f2ec25e0e0ee346cb7ab1ca8e6bb96f01a754ac98131fc4744b0b2"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case4_geometry_move005/run.exitcode",
+          "bytes": 1,
+          "sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case4_geometry_move005/run.log",
+          "bytes": 598,
+          "sha256": "605040215e0879da096fc368ed209503a2904980dbbaaa7786b2fa5da1e3973a"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case4_geometry_move005/run.timing.json",
+          "bytes": 1361,
+          "sha256": "0e458d8ced22935934188426a9de7b2d98e558c835669f03dfe3424a9ef082cf"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case4_geometry_move050/geometry_multistart_02.json",
+          "bytes": 67229,
+          "sha256": "a55a903df6c6e9c3825f6ff90639d9286289a3c74f356c7907db5b5658ff5c5f"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case4_geometry_move050/geometry_multistart_02_history.csv",
+          "bytes": 4281,
+          "sha256": "4f2431b6a7762ebfb0801f225081c59004836b44c0329a8ccd55fd0c50589054"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case4_geometry_move050/geometry_multistart_03.json",
+          "bytes": 67768,
+          "sha256": "6ad6ea67296efd1a2fc2d06d22fe2388a0382b4844b40d6fba805c0c887dc31f"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case4_geometry_move050/geometry_multistart_03_history.csv",
+          "bytes": 4305,
+          "sha256": "f19a86d93d3ba21ff63eb176d9725e1fbf8637b363f8ed2c627fca2a4b9228e4"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case4_geometry_move050/geometry_restart_01.json",
+          "bytes": 37917,
+          "sha256": "1699c9c07cdfd7d19977f023213a633882c088536e45efac3e695b84a1b0a03d"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case4_geometry_move050/geometry_restart_01_history.csv",
+          "bytes": 1866,
+          "sha256": "f990cf7f997d1e54b35d1a3a11c99780940dd04f1b773e87575080b3b76912de"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case4_geometry_move050/geometry_restart_results.json",
+          "bytes": 211155,
+          "sha256": "2fbc6e774f83d2ada5b440ff90fab611b2db8cca5805476b7b1b7356d19a086f"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case4_geometry_move050/geometry_restart_summary.csv",
+          "bytes": 960,
+          "sha256": "66445ca345c8cd62ba88e1515f54bc598cdb148b6cddd97b4bf5a09f4d2c98ca"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case4_geometry_move050/run.exitcode",
+          "bytes": 1,
+          "sha256": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case4_geometry_move050/run.log",
+          "bytes": 596,
+          "sha256": "bfbac16bf553c8fc4a64d4161a85458d008bc036e75fe66fcb89e306f99c17f5"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case4_geometry_move050/run.timing.json",
+          "bytes": 1360,
+          "sha256": "18b5fef14735bc139b6eb6559237281acce4cd277b6f0788925b174a525a08c9"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case4_rationalized_move005/geometry_multistart_02.json",
+          "bytes": 35477,
+          "sha256": "77b123cb741ffc7a75c7f837aa962a49a9961dbe1b7be6056188c9f05f2b07de"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case4_rationalized_move005/geometry_multistart_02_history.csv",
+          "bytes": 2512,
+          "sha256": "970ff95eb0f346aa3e82668ceedbddf5cb3bf838e2fa04a6113362f5d2bbbed0"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case4_rationalized_move005/geometry_multistart_03.json",
+          "bytes": 35413,
+          "sha256": "8a008b380af0eef9bcb20be5dc0891ffef6f03c3ef38a613eca76e5f35b7bcb4"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case4_rationalized_move005/geometry_multistart_03_history.csv",
+          "bytes": 2465,
+          "sha256": "357831fdf33c68b22ade834bf529f01029324cddd098ddf8bb85e1d424493cc1"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case4_rationalized_move005/geometry_restart_01.json",
+          "bytes": 29479,
+          "sha256": "0d1cd64d301c3a5217abfc42f40f49384b49279696bc2793612bd81b0eccf0ad"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case4_rationalized_move005/geometry_restart_01_history.csv",
+          "bytes": 1840,
+          "sha256": "bdef62e69615312079867d8d3a575ec057989a6f2b1588e3d2869df606d37a54"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case4_rationalized_move005/geometry_restart_results.json",
+          "bytes": 125826,
+          "sha256": "80b9b90cb62c9242dfa77eb9781b8ce848332bd2544809da4720a4b639c16e1a"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case4_rationalized_move005/geometry_restart_summary.csv",
+          "bytes": 1013,
+          "sha256": "f692c37edd1902d084dfa1594cc9c85f41cbdf2c322e565aebbbcb04af63646b"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case4_rationalized_move005/run.exitcode",
+          "bytes": 3,
+          "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case4_rationalized_move005/run.log",
+          "bytes": 596,
+          "sha256": "f243f3ca8c832b5be62f8b0a0d4b379d65a71900cd30b2894244d7a2a75e4390"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case4_rationalized_move005/run.timestamps",
+          "bytes": 76,
+          "sha256": "a175db216ee7c1de50dc434ec1d7a56275066bf1837d770585ce4c83e8b7c9be"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case4_rationalized_move050/geometry_multistart_02.json",
+          "bytes": 40710,
+          "sha256": "2326d39960595a1c23abfe37204b32fdf4fdfea7de325ab191abd75513fbc560"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case4_rationalized_move050/geometry_multistart_02_history.csv",
+          "bytes": 3076,
+          "sha256": "79d8e8a29ebb7bf8e4e7c214d859b9bac2e3cda35366b434c72e38d719f8fd07"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case4_rationalized_move050/geometry_multistart_03.json",
+          "bytes": 40693,
+          "sha256": "2a50d6feee50dfee9f2d1274e599634165cbded8607b69a87cf3c2d1ac515aac"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case4_rationalized_move050/geometry_multistart_03_history.csv",
+          "bytes": 3043,
+          "sha256": "b107df7f190d7de143378e6941b55d2a82db83ae4eb11bcf2af1fc914f7f30ec"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case4_rationalized_move050/geometry_restart_01.json",
+          "bytes": 40570,
+          "sha256": "2ae12ea9de93258eb8e6d7137b8ddbca574d233a006d5c441bed2ad5f193fea3"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case4_rationalized_move050/geometry_restart_01_history.csv",
+          "bytes": 3087,
+          "sha256": "2b2ebfc515a682acc46984ebcd6e4f7866a204af0b673d40d3329cd83dffaad6"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case4_rationalized_move050/geometry_restart_results.json",
+          "bytes": 150890,
+          "sha256": "5fc51c467f5bdf04b818eed864458ee662bda75704c63f8a0ffbd149894bd5d6"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case4_rationalized_move050/geometry_restart_summary.csv",
+          "bytes": 955,
+          "sha256": "fe9101f73d7851184bfbc9437471722e889d33eedbb0cc0d4fc3a930cf06c38f"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case4_rationalized_move050/run.exitcode",
+          "bytes": 3,
+          "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case4_rationalized_move050/run.log",
+          "bytes": 594,
+          "sha256": "f2b6cc28dbea6d433dcc7a0a70eb90a1d2dce73b606aebd939de94633f8058f0"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/restarts/case4_rationalized_move050/run.timestamps",
+          "bytes": 76,
+          "sha256": "50c5b381111aefe6f9f3112b76a180b569cdd4bd952b2662a7dcdeaae3f752f5"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/sensitivity_case2_geometry/run.exitcode",
+          "bytes": 3,
+          "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/sensitivity_case2_geometry/run.log",
+          "bytes": 108,
+          "sha256": "00906beaaf98f5b5dc1785d1ea96d643289d25305ab0be292e5a5a86c7a66cdd"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/sensitivity_case2_geometry/sensitivity_components.csv",
+          "bytes": 551968,
+          "sha256": "ed9e19cc5a5df4ad16b048685ebbbc22fb0aff0666f380eb537153aa104ad137"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/sensitivity_case2_geometry/sensitivity_verification.json",
+          "bytes": 5468073,
+          "sha256": "831f568b7e12c57428dfe2e92dd8f1e2ca5d5e0e329a90fb81f6161479094603"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/sensitivity_case3_geometry/run.exitcode",
+          "bytes": 3,
+          "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/sensitivity_case3_geometry/run.log",
+          "bytes": 104,
+          "sha256": "e07de63c4b25bcf3b8cd578ae6c460c6188d715a6799e27551ea842dc9374d75"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/sensitivity_case3_geometry/sensitivity_components.csv",
+          "bytes": 77112,
+          "sha256": "c17a15b3d07701022bd0ed29b47c9e2138c1dff7db62338181e0391dbe3f235b"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/sensitivity_case3_geometry/sensitivity_verification.json",
+          "bytes": 764989,
+          "sha256": "9ffe83119d5427dc5f8302bb67b5a60e309e23b4a4a69ff95afe84373a37f74b"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/sensitivity_case4_geometry/run.exitcode",
+          "bytes": 3,
+          "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/sensitivity_case4_geometry/run.log",
+          "bytes": 104,
+          "sha256": "e1bd1352b021763e9906f9d1236156036f3674ac28b07c3e225983a2ef4a0007"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/sensitivity_case4_geometry/sensitivity_components.csv",
+          "bytes": 152136,
+          "sha256": "55e86e38470fe30a8960536f11e400b1638c311ba20e2549e60bb1ba4f18b704"
+        },
+        {
+          "path": "Code/diagnostics_v1_5_0/sensitivity_case4_geometry/sensitivity_verification.json",
+          "bytes": 1563712,
+          "sha256": "04d44290b2ae4b66754ebe87b3503f7a6669d26b35618cd9366b7db2aff7221b"
+        }
+      ]
+    },
+    "categories": {
+      "fixed_layout_mesh": {
+        "file_count": 5,
+        "json_count": 1,
+        "csv_count": 1,
+        "aggregate_sha256": "938d446248abbdb264e24e692decfb4f52db9c99ee5bcd490169e668dc8ffba9",
+        "algorithm": "SHA-256 over sorted PROJECT_RELATIVE_PATH + NUL + raw SHA-256 digest + NUL"
+      },
+      "full_pool_cases1_2": {
+        "file_count": 7,
+        "json_count": 3,
+        "csv_count": 1,
+        "aggregate_sha256": "a33442d33e537c47847285147b5db5693aedd55c53275f1cd5d15c38ecb353ae",
+        "algorithm": "SHA-256 over sorted PROJECT_RELATIVE_PATH + NUL + raw SHA-256 digest + NUL"
+      },
+      "local_one_factor": {
+        "file_count": 54,
+        "json_count": 6,
+        "csv_count": 12,
+        "aggregate_sha256": "c6252b85b7fe38024e3e430751de08f2d2ad276c6a3d19078b378ed2137c5524",
+        "algorithm": "SHA-256 over sorted PROJECT_RELATIVE_PATH + NUL + raw SHA-256 digest + NUL"
+      },
+      "restarts": {
+        "file_count": 155,
+        "json_count": 65,
+        "csv_count": 58,
+        "aggregate_sha256": "94c11a5804a5d9eebef2df88d773c5d305de669ec54c0b830b5203790e4fb4b0",
+        "algorithm": "SHA-256 over sorted PROJECT_RELATIVE_PATH + NUL + raw SHA-256 digest + NUL"
+      },
+      "sensitivity_case2_geometry": {
+        "file_count": 4,
+        "json_count": 1,
+        "csv_count": 1,
+        "aggregate_sha256": "6cd40c6d64fadde53d516ae8ebd59cbc465e16ffecf57915afb43672824ee738",
+        "algorithm": "SHA-256 over sorted PROJECT_RELATIVE_PATH + NUL + raw SHA-256 digest + NUL"
+      },
+      "sensitivity_case3_geometry": {
+        "file_count": 4,
+        "json_count": 1,
+        "csv_count": 1,
+        "aggregate_sha256": "76c34a21eaf77d378701cd37df5f69636415efeda7e1e9b0876078b272781651",
+        "algorithm": "SHA-256 over sorted PROJECT_RELATIVE_PATH + NUL + raw SHA-256 digest + NUL"
+      },
+      "sensitivity_case4_geometry": {
+        "file_count": 4,
+        "json_count": 1,
+        "csv_count": 1,
+        "aggregate_sha256": "8e64113e750f389f356928a025b919b3d58c70d6afdd2c7682d0c00458f7bd5a",
+        "algorithm": "SHA-256 over sorted PROJECT_RELATIVE_PATH + NUL + raw SHA-256 digest + NUL"
+      }
+    },
+    "local_one_factor": {
+      "case_count": 2,
+      "job_count": 6,
+      "all_complete": true,
+      "ordered_result_hash_aggregate_sha256": "66a9475e779fcea9ea978fded798a68509ed7dfe96bc4c38a066f52a63acc6bf",
+      "scope": "Cases III and IV at relaxation 0.025, 0.05, and 0.10, each restarted from the formal geometry stage"
+    },
+    "restart_multistart": {
+      "group_count": 13,
+      "run_count": 45,
+      "complete_count": 45,
+      "converged_count": 45,
+      "feasible_count": 45,
+      "failed_count": 0,
+      "improved_from_saved_count": 37,
+      "improved_from_run_initial_count": 43,
+      "analysis_count": 364
+    },
+    "sensitivity": {
+      "case_count": 3,
+      "component_record_count": 219,
+      "valid_count": 219,
+      "invalid_count": 0,
+      "smooth_count": 211,
+      "trace_changing_count": 8
+    },
+    "fixed_layout_mesh": {
+      "case": 2,
+      "mesh_count": 4,
+      "analysis_count": 4,
+      "optimization_held_fixed": true
+    },
+    "full_pool": {
+      "case_count": 2,
+      "stage_count": 6,
+      "candidate_counts": {
+        "1": 36,
+        "2": 105
+      }
+    }
+  },
+  "upstream_manifests": [
+    {
+      "path": "agent_work/runs/20260813-121901/experiment_manifest.md",
+      "sha256": "884605d64ce751e273b45519239d6e53f5cda590d78e70177f9b8095ee7c186f"
+    },
+    {
+      "path": "agent_work/runs/20260813-121901/result_summary.md",
+      "sha256": "cf8e4ada01346f3e0a3977390a3ed16d0dab42000cc6c28990f655b37bd94abb"
+    },
+    {
+      "path": "agent_work/runs/20260813-121901/local_one_factor_manifest.md",
+      "sha256": "b99e3eb895b4e84b58a2263182ecc1032cedd163a7a2426e681ec9fb54362727"
+    },
+    {
+      "path": "agent_work/runs/20260813-121901/restart_refresh_manifest.md",
+      "sha256": "6969c4189cc21e1b144b9730c8fd0b100c2dc635799a7205cbeb5f627436adeb"
+    },
+    {
+      "path": "agent_work/runs/20260813-121901/geometry_restart_v150_manifest.md",
+      "sha256": "8657b08aa2c1c49c1f4fc2e1b8ed798aba8b8a492c9d847c5a4a37fa7c79023d"
+    },
+    {
+      "path": "agent_work/runs/20260813-121901/sensitivity_v150_manifest.md",
+      "sha256": "0de029e2eb9bf7dcb497e86d4c1d596df91d3c6dc4d2863b2971c87136436f71"
+    },
+    {
+      "path": "agent_work/runs/20260813-121901/fullpool_mesh_manifest.md",
+      "sha256": "5330ea8e49fdd321140ca2471a1b811cdf4ab5821dd6fce6326df9c75556b83e"
+    }
+  ],
+  "compact_evidence": [
+    {
+      "path": "Code/verification_v1_5_0/README.md",
+      "sha256": "2a7910493f5b309c38cc209cae8c3431b8b0407da921bea8ddd75238ac950edf"
+    },
+    {
+      "path": "Code/verification_v1_5_0/fixed_layout_mesh_response.csv",
+      "sha256": "66efecadec76ea42608d1225aa2d8505e4580cd3a75bfb014e7b21a9afa0c2dc"
+    },
+    {
+      "path": "Code/verification_v1_5_0/formal_stage_summary.csv",
+      "sha256": "3fb195afce0d728c8cf39314fc2d0d6810d8ef798dea1aab489f0ca37c65d224"
+    },
+    {
+      "path": "Code/verification_v1_5_0/full_pool_stage_summary.csv",
+      "sha256": "c6467cdc9bd809d595e1f4927aad2190c3b3725b60e6b76bf4be6df75ea288c6"
+    },
+    {
+      "path": "Code/verification_v1_5_0/local_one_factor_summary.csv",
+      "sha256": "fca5179861c4c1ef2922b52261f3cd48b7666f7789f3d80a9407be08fed59496"
+    },
+    {
+      "path": "Code/verification_v1_5_0/restart_group_summary.json",
+      "sha256": "1a492ce2c03d79077893d530d7cb8ee1503596d489618dce6946cdf403ac8574"
+    },
+    {
+      "path": "Code/verification_v1_5_0/sensitivity_by_step.json",
+      "sha256": "6cca31c965ff3ffd9d96276b2f41ddc161205cc7b75bfb3317e9347002c55a3e"
+    }
+  ],
+  "scope": {
+    "included": [
+      "formal four-case stages",
+      "cross-case local one-factor assessment for Cases III and IV",
+      "13 restart/multistart groups and 45 runs",
+      "sensitivity Cases II--IV",
+      "four-level fixed-layout mesh response",
+      "complete-pool Cases I--II"
+    ],
+    "excluded": [
+      "tests were not rerun",
+      "manuscript/source/formal-result edits",
+      "publication actions"
+    ]
+  }
+}

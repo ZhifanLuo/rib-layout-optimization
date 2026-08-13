@@ -1831,6 +1831,21 @@ class CoreTests(unittest.TestCase):
                 with self.assertRaisesRegex(ValueError, message):
                     make_case_config(override, quick=True)
 
+    def test_rationalization_relaxations_must_be_finite_and_nonnegative(self):
+        from rib_layout_core import make_case_config
+        from example3 import CASE_CONFIG
+
+        for name in (
+            "rationalization_relaxation",
+            "further_rationalization_relaxation",
+        ):
+            for value in (-0.01, np.nan, np.inf):
+                override = {**CASE_CONFIG, name: value}
+                with self.subTest(name=name, value=value), self.assertRaisesRegex(
+                    ValueError, f"{name} must be finite and nonnegative"
+                ):
+                    make_case_config(override, quick=True)
+
     def test_geometry_and_rationalization_initial_moves_must_be_finite_positive(self):
         for name in (
             "geometry_move_limit_initial",
@@ -1865,24 +1880,77 @@ class CoreTests(unittest.TestCase):
             False, 0.0, 0.0, 0.005, 0.001, 0.010
         ))
 
-    def test_rationalization_tref_quantile_uses_rib_count_and_relaxation(self):
+    def test_rationalization_tref_uses_quantile_with_initial_thickness_floor(self):
         optimizer = RibLayoutOptimizer(SimpleNamespace(), load_case(3, quick=True))
         self.assertAlmostEqual(
-            optimizer.rationalization_reference_quantile(0.02, 20), 0.07
+            optimizer.rationalization_reference_threshold([0.001, 0.002, 0.1, 0.2]),
+            0.05,
         )
+
+        cfg = load_case(2, quick=True)
+        optimizer = RibLayoutOptimizer(SimpleNamespace(), cfg)
         self.assertAlmostEqual(
-            optimizer.rationalization_reference_quantile(0.05, 20), 0.10
+            optimizer.rationalization_reference_threshold([0.01, 0.05, 0.3, 0.4]),
+            0.04,
         )
-        self.assertAlmostEqual(
-            optimizer.rationalization_reference_quantile(0.10, 20), 0.15
+
+        for invalid in (0.0, -0.01, np.nan, np.inf):
+            cfg["rib"]["initial"] = invalid
+            optimizer = RibLayoutOptimizer(SimpleNamespace(), cfg)
+            with self.subTest(initial=invalid), self.assertRaisesRegex(
+                ValueError, "finite and positive"
+            ):
+                optimizer.rationalization_reference_threshold([0.01, 0.02])
+        cfg["rib"]["initial"] = 0.2
+        optimizer = RibLayoutOptimizer(SimpleNamespace(), cfg)
+        for invalid in ([], [0.01], [0.01, np.nan], [[0.01, 0.02]]):
+            with self.subTest(thicknesses=invalid), self.assertRaisesRegex(
+                ValueError, "finite one-dimensional sequence"
+            ):
+                optimizer.rationalization_reference_threshold(invalid)
+
+    def test_rationalization_rejects_invalid_relaxation_before_early_return(self):
+        optimizer = RibLayoutOptimizer(SimpleNamespace(), load_case(3, quick=True))
+        for invalid in (-0.01, np.nan, np.inf):
+            with self.subTest(relaxation=invalid), self.assertRaisesRegex(
+                ValueError, "finite and nonnegative"
+            ):
+                optimizer.rationalize(
+                    [], np.array([]), SimpleNamespace(compliance=1.0), invalid
+                )
+
+    def test_zero_relaxation_still_runs_and_only_sets_cref(self):
+        cfg = load_case(2, quick=True)
+
+        class ThresholdModel:
+            width, height = cfg["domain"]
+            dx = width/cfg["mesh"][0]
+            dy = height/cfg["mesh"][1]
+
+        optimizer = RibLayoutOptimizer(ThresholdModel(), cfg)
+        ribs = [
+            Rib((0.0, float(i)), (10.0, float(i)), 2.0, f"R{i}")
+            for i in range(4)
+        ]
+        calls = []
+
+        def eq18(active_ribs, active_t, result, cref, tref, coordinate_bounds=None):
+            calls.append((cref, tref))
+            bounds = np.array([
+                [[0.0, cfg["domain"][0]], [0.0, cfg["domain"][1]],
+                 [0.0, cfg["domain"][0]], [0.0, cfg["domain"][1]]]
+                for _ in active_ribs
+            ])
+            return list(active_ribs), np.full(4, 0.3), result, bounds
+
+        optimizer._solve_rationalization_eq18 = eq18
+        optimizer.rationalize(
+            ribs, np.full(4, 0.2), SimpleNamespace(compliance=2.0), 0.0
         )
-        self.assertAlmostEqual(
-            optimizer.rationalization_reference_quantile(0.05, 5), 0.25
-        )
-        with self.assertRaises(ValueError):
-            optimizer.rationalization_reference_quantile(0.95, 20)
-        with self.assertRaises(ValueError):
-            optimizer.rationalization_reference_quantile(0.05, 0)
+        self.assertEqual(calls, [(2.0, 0.2)])
+        reference = optimizer.rationalization_history[0]
+        self.assertEqual(reference["cref"], 2.0)
+        self.assertEqual(reference["relaxation"], 0.0)
 
     def test_enhanced_mma_move_limit_direction_and_contraction(self):
         move = EnhancedMMAMoveLimit(np.array([0.0, 0.0]), np.array([2.0, 10.0]))
@@ -3162,6 +3230,26 @@ class CoreTests(unittest.TestCase):
         self.assertEqual(geometry_counts, [3])
         self.assertEqual(len(final_ribs), 3)
         self.assertEqual(final_result.compliance, 1.05)
+        reference = optimizer.rationalization_history[0]
+        self.assertEqual(
+            reference["reference_threshold_formula"],
+            "max(0.1*t0, quantile_q(t_e))",
+        )
+        self.assertAlmostEqual(reference["reference_threshold_factor"], 0.1)
+        self.assertAlmostEqual(reference["reference_threshold_floor"], 0.02)
+        self.assertAlmostEqual(reference["initial_rib_thickness"], 0.2)
+        self.assertEqual(reference["n_rib_before_rationalization"], 4)
+        self.assertAlmostEqual(reference["reference_quantile"], 0.25)
+        self.assertEqual(reference["reference_quantile_formula"], "1/n_rib")
+        self.assertAlmostEqual(reference["reference_quantile_thickness"], 0.2)
+        self.assertEqual(
+            reference["reference_threshold_governing_term"], "thickness_quantile"
+        )
+        self.assertAlmostEqual(reference["relaxation"], 0.05)
+        self.assertTrue(any(
+            "tref=0.2 = max(0.1*t0=0.02, quantile_q(t_e)=0.2)" in line
+            for line in optimizer.log
+        ))
         self.assertTrue(any("rationalization accepted" in line for line in optimizer.log))
 
     def test_rationalization_deletes_a_complete_mirror_group(self):
@@ -3431,7 +3519,7 @@ class CoreTests(unittest.TestCase):
                 for _ in active_ribs
             ])
             return (
-                list(active_ribs), np.array([0.01, 0.3, 0.3, 0.3]),
+                list(active_ribs), np.array([0.001, 0.3, 0.3, 0.3]),
                 result, bounds,
             )
 

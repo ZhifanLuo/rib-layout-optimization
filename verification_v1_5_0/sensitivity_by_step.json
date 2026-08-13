@@ -1,0 +1,329 @@
+{
+  "schema_version": 1,
+  "release": "v1.5.0",
+  "frozen_source_sha256": "27740f239031896d2e8acae097e7af516bf01b4f1322df0c6d5f819e4dd35607",
+  "interpretation": "Smooth records are valid finite-difference checks without a shell-root trace change; trace-changing records are retained and excluded only from smooth derivative-error summaries.",
+  "case_count": 3,
+  "component_record_count": 219,
+  "valid_count": 219,
+  "invalid_count": 0,
+  "smooth_count": 211,
+  "trace_changing_count": 8,
+  "cases": [
+    {
+      "case": 2,
+      "source": "Code/diagnostics_v1_5_0/sensitivity_case2_geometry/sensitivity_verification.json",
+      "source_sha256": "831f568b7e12c57428dfe2e92dd8f1e2ca5d5e0e329a90fb81f6161479094603",
+      "process_status": "complete",
+      "saved_compliance": 12.953493617395223,
+      "reanalyzed_compliance": 12.953493617395223,
+      "source_relative_mismatch": 0.0,
+      "component_record_count": 183,
+      "finite_element_analysis_count": 367,
+      "valid_count": 183,
+      "invalid_count": 0,
+      "smooth_count": 179,
+      "trace_changing_count": 4,
+      "by_step": [
+        {
+          "space": "full",
+          "derivative": "endpoint",
+          "step": 0.001,
+          "records": 32,
+          "smooth": 32,
+          "nonsmooth": 0,
+          "invalid": 0,
+          "maximum_relative_error": 0.003414689723450921,
+          "median_relative_error": 1.3992306085216439e-05
+        },
+        {
+          "space": "full",
+          "derivative": "endpoint",
+          "step": 0.003,
+          "records": 32,
+          "smooth": 32,
+          "nonsmooth": 0,
+          "invalid": 0,
+          "maximum_relative_error": 0.030183971444009843,
+          "median_relative_error": 0.00010883113407792911
+        },
+        {
+          "space": "full",
+          "derivative": "endpoint",
+          "step": 0.01,
+          "records": 32,
+          "smooth": 28,
+          "nonsmooth": 4,
+          "invalid": 0,
+          "maximum_relative_error": 0.28452923725938456,
+          "median_relative_error": 0.0014120888533551658
+        },
+        {
+          "space": "full",
+          "derivative": "thickness",
+          "step": 0.001,
+          "records": 8,
+          "smooth": 8,
+          "nonsmooth": 0,
+          "invalid": 0,
+          "maximum_relative_error": 3.3175666875238265e-06,
+          "median_relative_error": 7.379965940078951e-07
+        },
+        {
+          "space": "full",
+          "derivative": "thickness",
+          "step": 0.003,
+          "records": 8,
+          "smooth": 8,
+          "nonsmooth": 0,
+          "invalid": 0,
+          "maximum_relative_error": 2.9066138531773735e-05,
+          "median_relative_error": 6.1120354420948394e-06
+        },
+        {
+          "space": "full",
+          "derivative": "thickness",
+          "step": 0.01,
+          "records": 8,
+          "smooth": 8,
+          "nonsmooth": 0,
+          "invalid": 0,
+          "maximum_relative_error": 0.0003219984544696449,
+          "median_relative_error": 6.791999715290327e-05
+        },
+        {
+          "space": "reduced",
+          "derivative": "endpoint",
+          "step": 0.001,
+          "records": 16,
+          "smooth": 16,
+          "nonsmooth": 0,
+          "invalid": 0,
+          "maximum_relative_error": 0.0034609236761892754,
+          "median_relative_error": 1.2445661251214568e-05
+        },
+        {
+          "space": "reduced",
+          "derivative": "endpoint",
+          "step": 0.003,
+          "records": 16,
+          "smooth": 16,
+          "nonsmooth": 0,
+          "invalid": 0,
+          "maximum_relative_error": 0.030578783806671422,
+          "median_relative_error": 0.00010785041051543181
+        },
+        {
+          "space": "reduced",
+          "derivative": "endpoint",
+          "step": 0.01,
+          "records": 16,
+          "smooth": 16,
+          "nonsmooth": 0,
+          "invalid": 0,
+          "maximum_relative_error": 0.2863528319801101,
+          "median_relative_error": 0.0012034098585456425
+        },
+        {
+          "space": "reduced",
+          "derivative": "thickness",
+          "step": 0.001,
+          "records": 5,
+          "smooth": 5,
+          "nonsmooth": 0,
+          "invalid": 0,
+          "maximum_relative_error": 3.3175666875238265e-06,
+          "median_relative_error": 7.234006189290013e-07
+        },
+        {
+          "space": "reduced",
+          "derivative": "thickness",
+          "step": 0.003,
+          "records": 5,
+          "smooth": 5,
+          "nonsmooth": 0,
+          "invalid": 0,
+          "maximum_relative_error": 2.9066138531773735e-05,
+          "median_relative_error": 6.1670158170252785e-06
+        },
+        {
+          "space": "reduced",
+          "derivative": "thickness",
+          "step": 0.01,
+          "records": 5,
+          "smooth": 5,
+          "nonsmooth": 0,
+          "invalid": 0,
+          "maximum_relative_error": 0.0003219984544696449,
+          "median_relative_error": 6.843310303237639e-05
+        }
+      ]
+    },
+    {
+      "case": 3,
+      "source": "Code/diagnostics_v1_5_0/sensitivity_case3_geometry/sensitivity_verification.json",
+      "source_sha256": "9ffe83119d5427dc5f8302bb67b5a60e309e23b4a4a69ff95afe84373a37f74b",
+      "process_status": "complete",
+      "saved_compliance": 17.62096906010024,
+      "reanalyzed_compliance": 17.62096906010024,
+      "source_relative_mismatch": 0.0,
+      "component_record_count": 18,
+      "finite_element_analysis_count": 37,
+      "valid_count": 18,
+      "invalid_count": 0,
+      "smooth_count": 18,
+      "trace_changing_count": 0,
+      "by_step": [
+        {
+          "space": "full",
+          "derivative": "endpoint",
+          "step": 0.001,
+          "records": 4,
+          "smooth": 4,
+          "nonsmooth": 0,
+          "invalid": 0,
+          "maximum_relative_error": 0.0001494425227325069,
+          "median_relative_error": 5.541935928407628e-05
+        },
+        {
+          "space": "full",
+          "derivative": "endpoint",
+          "step": 0.01,
+          "records": 4,
+          "smooth": 4,
+          "nonsmooth": 0,
+          "invalid": 0,
+          "maximum_relative_error": 0.012096635492757545,
+          "median_relative_error": 0.004691469021938871
+        },
+        {
+          "space": "full",
+          "derivative": "thickness",
+          "step": 0.001,
+          "records": 1,
+          "smooth": 1,
+          "nonsmooth": 0,
+          "invalid": 0,
+          "maximum_relative_error": 1.7538160460650994e-06,
+          "median_relative_error": 1.7538160460650994e-06
+        },
+        {
+          "space": "reduced",
+          "derivative": "endpoint",
+          "step": 0.001,
+          "records": 4,
+          "smooth": 4,
+          "nonsmooth": 0,
+          "invalid": 0,
+          "maximum_relative_error": 0.0001630430957978565,
+          "median_relative_error": 5.738363765672442e-05
+        },
+        {
+          "space": "reduced",
+          "derivative": "endpoint",
+          "step": 0.01,
+          "records": 4,
+          "smooth": 4,
+          "nonsmooth": 0,
+          "invalid": 0,
+          "maximum_relative_error": 0.01153018354314729,
+          "median_relative_error": 0.004509680119237399
+        },
+        {
+          "space": "reduced",
+          "derivative": "thickness",
+          "step": 0.001,
+          "records": 1,
+          "smooth": 1,
+          "nonsmooth": 0,
+          "invalid": 0,
+          "maximum_relative_error": 6.358423608580328e-07,
+          "median_relative_error": 6.358423608580328e-07
+        }
+      ]
+    },
+    {
+      "case": 4,
+      "source": "Code/diagnostics_v1_5_0/sensitivity_case4_geometry/sensitivity_verification.json",
+      "source_sha256": "04d44290b2ae4b66754ebe87b3503f7a6669d26b35618cd9366b7db2aff7221b",
+      "process_status": "complete",
+      "saved_compliance": 133.26918659935342,
+      "reanalyzed_compliance": 133.26918659935342,
+      "source_relative_mismatch": 0.0,
+      "component_record_count": 18,
+      "finite_element_analysis_count": 37,
+      "valid_count": 18,
+      "invalid_count": 0,
+      "smooth_count": 14,
+      "trace_changing_count": 4,
+      "by_step": [
+        {
+          "space": "full",
+          "derivative": "endpoint",
+          "step": 0.001,
+          "records": 4,
+          "smooth": 4,
+          "nonsmooth": 0,
+          "invalid": 0,
+          "maximum_relative_error": 0.0002089648176883147,
+          "median_relative_error": 7.232840789454621e-05
+        },
+        {
+          "space": "full",
+          "derivative": "endpoint",
+          "step": 0.01,
+          "records": 4,
+          "smooth": 2,
+          "nonsmooth": 2,
+          "invalid": 0,
+          "maximum_relative_error": 2.4202340878989735e-05,
+          "median_relative_error": 1.2489352454865083e-05
+        },
+        {
+          "space": "full",
+          "derivative": "thickness",
+          "step": 0.001,
+          "records": 1,
+          "smooth": 1,
+          "nonsmooth": 0,
+          "invalid": 0,
+          "maximum_relative_error": 1.0052498206713224e-07,
+          "median_relative_error": 1.0052498206713224e-07
+        },
+        {
+          "space": "reduced",
+          "derivative": "endpoint",
+          "step": 0.001,
+          "records": 4,
+          "smooth": 4,
+          "nonsmooth": 0,
+          "invalid": 0,
+          "maximum_relative_error": 0.0001267769375317891,
+          "median_relative_error": 8.538208881130079e-05
+        },
+        {
+          "space": "reduced",
+          "derivative": "endpoint",
+          "step": 0.01,
+          "records": 4,
+          "smooth": 2,
+          "nonsmooth": 2,
+          "invalid": 0,
+          "maximum_relative_error": 2.3793445335530558e-05,
+          "median_relative_error": 1.2602774498304133e-05
+        },
+        {
+          "space": "reduced",
+          "derivative": "thickness",
+          "step": 0.001,
+          "records": 1,
+          "smooth": 1,
+          "nonsmooth": 0,
+          "invalid": 0,
+          "maximum_relative_error": 5.264382624914439e-07,
+          "median_relative_error": 5.264382624914439e-07
+        }
+      ]
+    }
+  ]
+}
