@@ -1,6 +1,6 @@
 """Common finite-element and rib-layout optimization workflow.
 
-The four ``exampleN.py`` files contain only case-specific data.  This module
+The ``exampleN.py`` files contain case-specific data.  This module
 provides their shared configuration, model construction, rib generation,
 optimization sequence, command-line handling, and public numerical API.
 
@@ -198,14 +198,14 @@ def load_case(number: int, quick: bool = False, config_path=None) -> dict:
 
     ``config_path`` is accepted only to give legacy callers a clear migration
     error; case configuration now belongs in ``example1.py`` through
-    ``example4.py`` rather than a combined YAML file.
+    ``example5.py`` rather than a combined YAML file.
     """
     if config_path is not None:
         raise ValueError(
             "external combined config files are no longer supported; edit "
             f"ribopt/example{int(number)}.py instead"
         )
-    if int(number) not in range(1, 5):
+    if int(number) not in range(1, 6):
         raise KeyError(f"unknown example {number}")
     module = importlib.import_module(f"example{int(number)}")
     return make_case_config(module.CASE_CONFIG, quick=quick)

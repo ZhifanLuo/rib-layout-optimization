@@ -1,526 +1,131 @@
-# Rib layout optimization — reference Python implementation
+# Rib layout optimization — v1.6.0
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21638172.svg)](https://doi.org/10.5281/zenodo.21638172)
+Reference Python implementation for *An Active-Set Framework for Explicit
+Stiffening-Rib Layout Optimization*. This release includes the revised five-case
+workflow, uniform pressure loading, controlled simplification comparisons and the
+two-axis first-group four-rib addition rule.
 
-This folder contains the executable reference implementation of the
-multi-phase method described in *An Active-Set Framework for Explicit
-Stiffening-Rib Layout Optimization*. It implements:
+The base plate and explicit ribs use MITC4/Reissner–Mindlin shells. Rib roots are
+tied to the base interpolation; separate rib-top traces remain independent at
+crossings. Rib volume is additive strip volume, not a Boolean union. These are
+stiffness-focused idealizations, not validated models of cast/welded junctions,
+manufacturing, strength or buckling.
 
-1. compliance minimization with a rib-volume and thickness bounds;
-2. performance-validated thickness filtering using only the prescribed
-   thickness threshold and compliance check;
-3. direct candidate ranking by frozen-field stiffness energy per added rib
-   volume;
-4. fixed-connectivity endpoint geometry optimization;
-5. smooth-Heaviside rationalization, threshold deletion, and geometry
-   optimization of the reduced active set.
+## Install and test
 
-## Implementation scope
+Use Python 3.12 and a virtual environment. From the repository root:
 
-This repository is the executable Python reference implementation of the
-paper's abstract shell-based model. The case-specific numerical choices are
-explicit in `example1.py` through `example4.py`, while the finite-element code
-uses its own documented MITC4 shell and tied-interface formulation. Results
-should therefore be reproduced with the supplied Python entry points and a
-versioned environment rather than interpreted as cross-solver equivalence.
-
-The former combined
-`configs/examples.yaml` file is retained only as an archival reference. The
-wall is represented by six-DOF four-node MITC4 Reissner--Mindlin flat-shell
-elements. MITC4 assumed-natural shear removes the hourglass modes of one-point
-integration without introducing thin-shell shear locking. Drilling rotations
-are stabilized consistently against the continuum in-plane rotation; the
-element has exactly six rigid-body modes.
-
-Each rib is a vertical MITC4 shell strip. Its free top-edge degrees of freedom
-are retained in the global sparse FEA system; this is algebraically equivalent
-to static condensation but avoids the dense ground-node Schur complement of a
-long rib. The bottom edge is split at every ground-grid
-intersection and refined four times per interval; all six bottom-edge degrees
-of freedom are bilinearly mapped to the ground shell. The Example-I interface
-interpolation mismatch is checked after every formal rerun; in the current
-result it is `0.0034%` for translations and `0.55%` for rotations. Rib
-intersections are intentionally not tied to each other. The reported values are kept separately in
-`configs/reported_results.json`; they are used only for comparison and are
-never injected into the optimizer.
-
-The active-set loop first repeats sizing/filtering until a complete pass deletes
-no rib. Throughout one repeated-filtering phase, every deletion is checked
-against the compliance fixed at the start of that phase, with at most `1%`
-degradation allowed. A rib also enters the deletion batch when its length is
-below `max(3*min(dx,dy), 0.25*initial_rib_cell_size)` and its thickness is below
-five times the current thickness threshold. Thin and short/light deletions use
-the same resizing/FEA performance validation. It then adds a limited candidate batch and performs sizing
-before any filtering. If this sizing-only design improves compliance by less
-than `1%`, the complete addition is reverted and the active-set loop terminates.
-Otherwise the addition is accepted and sizing/filtering is repeated to deletion
-convergence. After this complete addition/filtering cycle, a net compliance
-improvement below `1%` terminates the active-set loop and starts geometry
-optimization; otherwise the next member-addition round begins. Tried candidates are not
-immediately reinserted if filtering removes them. If a member-addition round
-retains no new rib after filtering, adaptive optimization stops immediately
-and geometry optimization begins; no further candidate is attempted. All
-examples rank every candidate directly by its frozen-displacement-field
-stiffness energy divided by the volume added at the prescribed initial
-thickness. At most two independently ranked candidate seeds are then checked.
-Under mirror symmetry,
-if the first seed needs a new reflected partner, that two-rib orbit fills the
-batch immediately. Only when the first seed needs no new partner is the second
-seed considered; if the second seed needs a reflected partner, it is also
-added, so a symmetry-completed batch contains at most three ribs. A candidate
-wholly covered by an existing rib, or by the continuous union of several
-existing collinear ribs, is
-skipped. If one collinear candidate completely covers another, the covering
-longer rib is always retained to favor manufacturability, regardless of
-ranking-score difference. Partial overlaps retain the higher-ranked
-candidate; equal-length duplicates retain their ranking order. This length
-preference does not apply to non-collinear candidates or to collinear
-candidates that only meet at an endpoint. Every selected candidate must have
-a stiffness-per-added-volume factor at least `70%` of the maximum factor among
-eligible candidates. Candidates fully covered by one existing
-rib or a gap-free union of existing collinear ribs are excluded before this
-reference is calculated; exactly `70%` is eligible. Covered or overlapping candidates are skipped while the
-ranked pool is scanned for a replacement. Member addition terminates when the
-pool contains no valid uncovered candidate, a sizing-only batch is rejected,
-filtering retains no new rib, the full-cycle improvement is below `1%`, or the
-configured round cap is reached. If a selected longer
-candidate wholly covers an existing shorter rib, the trial active set replaces
-the shorter rib with the longer candidate before sizing. A candidate wholly
-covered by one existing rib or by a gap-free union of existing collinear ribs
-is still skipped. Partial collinear overlap is left unchanged for now.
-These geometric coverage rules are applied to the single direct
-stiffness-per-volume ranking path.
-Geometry optimization treats every active thickness and endpoint coordinate
-simultaneously. Endpoint coordinates are bounded only by the ground-shell
-domain; their local bounds are recomputed around the current coordinates after
-every FEA by the enhanced-MMA move-limit rule. Rationalization uses the same
-dynamic move limits. It solves Eq. (18) once with the projection threshold
-`tref = max(0.1*t0, quantile_q({t_e}))`, where `t0` is the configured initial
-rib thickness, `{t_e}` are the geometry-stage rib thicknesses, and
-`q = 1/n_rib` for the number of ribs immediately before rationalization. The
-prescribed relaxation `rho` determines only the compliance reference
-`Cref = (1 + rho) Cgeo`. The threshold is calculated once and kept fixed
-throughout rationalization. Its projection continuation starts at
-`beta=1`, increases beta by one
-per outer iteration, and caps it at `beta=10`; convergence checks start only at
-the cap, so the two-consecutive-step rule requires at least eleven iterations.
-True Eq. (18) compliance up to `1.001*Cref` is treated as feasible and enters
-the convergence test. If no thickness falls below `tref`, rationalization
-restores the preceding geometry result and stops. Otherwise it deletes the
-complete thin/short-light filtering batch and solves Eq. (7). The final
-acceptance limit is exactly `Cref`. If the result violates `Cref`, let `n_rrib`
-be the number of ribs deleted in the initial discrete deletion attempt. Each
-recovery round restores up to the fixed number
-`max(1, ceil(n_rrib/3))` of ribs that remain deleted, ranked by their saved
-Eq. (18) thickness in descending order with original rib index breaking ties.
-The restored seeds are completed to their available mirror groups only when
-mirror symmetry is configured; otherwise the rib decisions are independent.
-The seed target remains fixed across repeated recovery rounds. This continues
-until the limit is met or no deletion can be accepted. Eq. (18)
-and these post-deletion Eq. (7) solves use `Gstep=0.5`. If none is accepted, the preceding geometry
-result is restored. No standalone deletion-verification FEA is performed; the
-reduced topology enters Eq. (7) directly, and its necessary initialization FEA
-is counted as part of Eq. (7). The former threshold homotopy is not used.
-
-For endpoint coordinates, the move-limit half-width is
-`Gstep * Lstep_i * 0.75*dx` in x and `Gstep * Lstep_i * 0.75*dy` in y. With the
-default initial `Gstep=0.5` and `Lstep_i=1`, this gives initial half-widths
-`0.375*dx` and `0.375*dy`. Thickness variables retain the enhanced-MMA current-value/range
-scale. A successful same-direction history multiplies the variable factor by
-`1.2`; oscillation multiplies it by `0.7`. Direction detection uses moves
-normalized by each variable's global range; if either consecutive normalized
-move is within `1e-6` of zero, no `1.2/0.7` factor is applied. For geometry
-optimization, each convex trial is checked by a true FEA before it becomes the
-next outer design. The generic severe-objective guard rejects a trial only when
-its relative compliance worsening is strictly greater than `0.50` (50%) or its
-objective is nonfinite. The global move limit is then multiplied by the
-unsuccessful-step factor `0.75`, and the same approximation is solved again from
-the unchanged outer starting design. At most four contracted retries are
-permitted after the first trial. Exhausting this budget, or reaching the minimum
-move, terminates the geometry stage with an `objective_rollback_failed_*` reason;
-this safeguard is not a convergence criterion. Sizing and geometry optimization
-retain and return the lowest-compliance feasible true-FEA incumbent encountered,
-including rollback from an inferior last iterate.
-
-The main geometry stage and rationalization have distinct initial-move
-settings: `geometry_move_limit_initial` and
-`rationalization_move_limit_initial`. Both default to `0.50`, and all four
-executable examples use `0.50` for both stages.
-There is no fixed cumulative endpoint-displacement interval; only the ground-
-shell domain clips the adaptive local bounds.
-If an inner convex solution makes a rib newly too short or creates a new
-collinear overlap, only the responsible rib endpoint coordinates are fixed at
-their current-outer-iterate positions and the same approximation is resolved.
-The other rib coordinates and all thicknesses remain active. This local
-geometry freeze does not contract the global `Gstep` and does not call FEA.
-
-Sizing, geometry optimization, and rationalization use sequential convex
-approximation (SCA). Every outer iteration follows the same sequence:
-
-1. run one FEA at the current design and compute sensitivities;
-2. construct reciprocal/affine convex approximations with proximal terms and
-   a linearized volume constraint;
-3. solve that approximate subproblem without any FEA inside the optimizer;
-4. evaluate the inner optimum using true FEA;
-5. for geometry optimization, reject a materially worse feasible response,
-   contract the move limit, and resolve the same approximation within the
-   bounded retry safeguard; otherwise accept it as the next outer design;
-6. declare convergence only when the true constraints are satisfied within
-   `0.1%`, the normalized design-variable change is below `1.0%`, and either
-   the objective change is below `0.5%` or normalized design-variable change
-   is below `0.1%`, for two consecutive outer steps.
-
-A geometry stage terminates by one of three explicitly reported conditions:
-the convergence declaration above, the configured outer-iteration limit, or
-failure to obtain an acceptable true response within the bounded backtracking
-retries. Only the first condition is convergence.
-
-The Eq. (9) sizing problem is implemented as the thickness-only specialization
-of the Eq. (7) separable convex subproblem. Both use the same closed-form box-
-constrained update and one-dimensional bisection on the volume multiplier; no
-SLSQP or FEA is used inside either convex subproblem. The multiplier is searched
-in both directions: a volume-slack unconstrained solution is not returned
-immediately. The solver targets the active volume bound when it is reachable
-inside the move box and otherwise returns the box solution with the smallest
-absolute linearized-volume residual.
-
-The global FEA uses Intel MKL Pardiso when `pypardiso` is installed and checks
-the linear residual after every solve. Formal runs pin Pardiso/OpenMP to one
-thread and disable dynamic MKL threading so repeated optimization paths use a
-deterministic floating-point reduction order. The runtime rejects any shell
-model requesting `linear_solver_threads != 1` or `sensitivity_workers != 1`,
-so formal and diagnostic entry points cannot silently re-enable parallelism.
-SciPy SuperLU symmetric mode is
-the automatic fallback. Because every optimization FEA changes the stiffness
-matrix, the retained Pardiso factorization is explicitly released after each
-residual-checked solve; this prevents MKL memory growth over long runs without
-changing the response. Rib sensitivity uses an equivalent condensed-energy
-formulation and the envelope theorem, so each rib top field is equilibrated
-once per outer iteration instead of once for every coordinate perturbation.
-Each convex Eq. (18) rationalization approximation is solved through its
-two-variable compliance/volume dual. For fixed multipliers, rib coordinates
-have an explicit minimizer and each thickness is the unique positive root of
-its monotone cubic KKT equation. This removes the former high-dimensional
-SLSQP iteration; its normalized constraint tolerance is configured as
-`rationalization_dual_tolerance: 1.0e-9`.
-
-No contribution-based filtering is used. Active-set filtering removes only
-ribs below `10^-r t_0`, followed by the manuscript compliance validation.
-All four examples start at `0.1 t_0` and continue through the configured
-lower thresholds; this gives `0.02 mm` in Examples I and II and `0.05 mm` in
-Examples III and IV.
-
-Mirror symmetry is declared per case with `mirror_symmetry`. Axis `x` reflects
-coordinates about `x=width/2`; axis `y` reflects them about `y=height/2`.
-Initial and candidate ground structures must be closed under every configured
-reflection. Member addition completes a strong candidate with its mirror
-orbit. Filtering and rationalization delete an orbit only when every member
-qualifies, while a failed rationalization trial completes each selected
-recovery seed to its mirror orbit. This conservative group rule
-preserves manufacturable symmetry under small load or numerical asymmetries.
-Sizing, geometry optimization, and the rationalization Eq. (18) also assemble
-their design vectors in reduced mirror variables: all ribs in one mirror orbit
-share one thickness variable, and mirrored endpoint coordinates are represented
-by exact affine relations. A self-symmetric rib keeps only its independent
-endpoint coordinates. Full rib thicknesses and coordinates are expanded only
-for FEA and output, so symmetry is exact while the continuous subproblems use
-fewer design variables.
-
-The initial structure follows Table 1: both diagonals of every square lattice
-cell are active. Examples I and II use `10 mm x 10 mm` cells, `2 mm` rib
-height, and initial rib length `10*sqrt(2) mm`. Examples III and IV use a
-`200 mm x 100 mm` ground plane divided into `25 mm x 25 mm` cells, `10 mm`
-rib height, and initial rib length `25*sqrt(2) mm`. All initial ribs are at
-`+45 deg` or `-45 deg`; the four cases contain 8, 16, 64, and 64 ribs.
-The rib-thickness upper bounds are `3 mm` for Examples III and IV. All four
-examples perform rationalization with `5%` compliance relaxation. Examples III
-and IV additionally execute the configured repeated pass, again with a `5%`
-pass-specific relaxation; no `2%` or `10%` paths are configured.
-
-## Requirements and installation
-
-Python 3.12 is recommended; the publication checks were run with Python
-3.12.10. The direct dependencies are declared in `requirements.txt`. The
-tested local environment used NumPy 2.5.1, SciPy 1.18.0, Matplotlib 3.11.1,
-PyYAML 6.0.3, and pypardiso 0.4.7. The requirement ranges permit later
-compatible releases, so record `python --version` and `python -m pip freeze`
-when creating a new archival result set.
-
-Run the following commands from this `Code/` directory.
-
-Windows PowerShell:
-
-```powershell
-py -3.12 -m venv .venv
-.\.venv\Scripts\python.exe -m pip install --upgrade pip
-.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+```console
+python -m venv .venv
+.venv\Scripts\python -m pip install -r requirements.txt
+.venv\Scripts\python -B -m unittest discover -s tests -v
 ```
 
-Linux or macOS shell:
+On Linux/macOS activate the environment and use `python` or `.venv/bin/python`.
+Windows users can run `setup_env.bat`. MKL/Pardiso availability depends on the
+platform; SciPy SuperLU is the fallback. Library/solver differences can affect
+execution times and the trajectory of this nonconvex optimization.
 
-```bash
-python3.12 -m venv .venv
-.venv/bin/python -m pip install --upgrade pip
-.venv/bin/python -m pip install -r requirements.txt
+## Run the five examples
+
+`example1.py` through `example5.py` share one command-line interface and output
+schema. Use the environment's Python from the repository root:
+
+```console
+python -B example1.py --output ../rerun-I
+python -B example2.py --output ../rerun-II
+python -B example3.py --output ../rerun-III
+python -B example4.py --output ../rerun-IV
+python -B example5.py --output ../rerun-V
 ```
 
-On Windows, `setup_env.bat` performs the same basic environment creation and
-dependency installation. The numerical implementation automatically uses
-single-threaded MKL Pardiso when available and otherwise falls back to SciPy
-SuperLU; `results.json` records the configured solver and thread settings.
+Each output root receives `example_N/` with results.json, CSV summaries, stage
+histories and figures. Choose new roots to retain saved evidence. Omit `--quick`
+and `--geometry-sweeps` for paper calculations. On Windows, `example_all.bat`
+preserves the original sequential I–IV runner; V is run separately. Older
+combined tools retain their original I–IV scope.
 
-## Reproduce the four examples
+Example V now defaults to the manuscript's **100 × 50 mm base, 0.5 mm thickness,
+80 × 40 mesh**, 5 mm rib height and −0.0001 N/mm² uniform pressure (−0.5 N total).
+Only the base's right edge is clamped; rib-top nodes stay free. The 25 mm initial
+lattice supplies 16 ribs, and the rib-volume bound is 1500 mm³. The earlier
+1 mm / 40 × 20 model is historical, not the v1.6.0 default.
 
-The publication entry point is the cross-platform `run_all.py`. With no
-options it launches `example1.py` through `example4.py` in order using the
-same Python interpreter, uses the configured full meshes, and stops at the
-first failure. This is the Python equivalent of the retained Windows-only
-`example_all.bat`.
+The complete normalized archived input is `configs/paper/example5.json`, equal
+to `load_case(5)`. For a guarded plan and full reproduction:
 
-Windows PowerShell:
-
-```powershell
-.\.venv\Scripts\python.exe run_all.py
+```console
+python -B tools/reproduce_paper.py --output ../paper-V
+python -B tools/reproduce_paper.py --output ../paper-V --execute
 ```
 
-The exact Windows command used for the provenance-checked publication run was:
+The first command writes nothing. The second runs the exact configuration with
+no quick-mode/iteration-cap overrides, reserves a fresh directory outside the
+source tree, and records configuration/source/result hashes. Interrupted/failed
+output is retained, not overwritten. Separate stage-response replays are excluded
+from optimization FEA counts.
 
-```powershell
-cmd.exe /d /c "call example_all.bat <nul"
-```
+## Algorithm and controls
 
-Run it from `Code/`. It executes all four full cases sequentially and stops at
-the first nonzero exit code.
+The sparse route alternates sizing, validated filtering and candidate insertion,
+then jointly optimizes endpoints and thicknesses. Candidate scores measure locally
+equilibrated stiffness contribution per volume in the frozen base field; they
+are not actual global compliance changes. Global resizing must confirm at least
+1% compliance improvement before an addition is accepted.
 
-Linux or macOS shell:
+The default shortlist has at most two ranked seeds. Whole uncovered mirror groups
+normally must fit a three-new-rib cap; selection stops once at least two ribs enter.
+Under both mirror axes, the first shortlisted seed may instead add exactly four
+new ribs as a whole group, then selection ends. Later seeds retain the ordinary
+cap even if the first seed added nothing. This exception is used in the engineering
+comparison; Examples I–V have at most one mirror axis.
 
-```bash
-.venv/bin/python run_all.py
-```
+Rationalization minimizes a smooth thickness-threshold count, followed by discrete
+removal, joint reoptimization and recovery under a pass-specific compliance limit.
+It is not direct active-set cardinality minimization, and is skipped for entering
+layouts with at most three ribs. Every available member of a prescribed mirror
+group must qualify for removal. Continuous convergence uses the stated numerical
+feasibility tolerance; final reduced-layout acceptance uses the exact pass limit.
 
-A single formal case can be run directly, for example:
+`tools/run_revision_experiments.py` provides insertion ablations, direct-deletion
+controls, parameter sweeps and regular-layout checks. It defaults to a read-only
+plan; execution needs `--execute`, a fresh `--output` and an explicit trial-count
+guard. See [the revision guide](tools/REVISION_EXPERIMENTS.md). These controls show
+the reported count/compliance/cost trade-offs, not universal optimizer superiority.
 
-```powershell
-.\.venv\Scripts\python.exe example3.py
-```
+## Data and reproducibility
 
-The default configuration is the only mode intended to reproduce the
-reported case settings. Examples I and II use meshes `20 x 20` and `40 x 20`;
-Examples III and IV use `80 x 40`. Examples III and IV also execute their
-configured second rationalization pass. All cases run sequentially because
-they share the `results/` output root.
+The fixed release is [v1.6.0](https://github.com/ZhifanLuo/rib-layout-optimization/releases/tag/v1.6.0).
+Download its `rib-layout-optimization-v1.6.0-revision-data.zip` asset as well as the
+source. The asset provides inputs/results, verification records, the table/figure
+evidence index, current Figure 8 source and external-method material. Follow its
+README for extraction layout, commands and the frozen engineering supplement.
 
-## Quick and diagnostic execution
+Historical results retain their actual execution dates, configurations and source
+fingerprints. Packaging a release does not rerun optimization; later source hashes
+must not replace earlier ones in historical manifests. Rerun current inputs into
+new directories and compare with the saved results; numerical trajectories can
+vary across environments.
 
-`--quick` is a diagnostic mode, not a source of publication values. It leaves
-Examples I and II unchanged because those cases define no quick mesh, while
-Examples III and IV use a `32 x 16` mesh and four shell elements along each
-rib instead of their formal discretizations:
+Repository `verification/` and `verification_v1_5_0/` remain historical records.
+They do not override the current paper's release-data index. `configs/examples.yaml`
+is archival. Executable case definitions and explicit paper JSON are inputs;
+`configs/reported_results.json` supplies comparison targets, never optimizer input.
 
-```powershell
-.\.venv\Scripts\python.exe run_all.py --quick
-```
+The external Amir–Majdouba plate–beam workflow has different objectives, support
+and junction conventions and volume accounting. The data asset retains its input
+transformations, saved state and native verification. Its historical launcher
+requires GNU Octave plus local executable/output paths; Python requirements do
+not install Octave. The comparison concerns engineering outcomes, not a direct
+accuracy or optimality ranking.
 
-`--geometry-sweeps N` overrides the configured maximum number of geometry
-iterations and therefore changes the algorithmic run. For example,
-`--geometry-sweeps 0` is only a fast workflow check. `--output PATH` redirects
-all generated case folders. These options may be combined:
+## License and citation
 
-```powershell
-.\.venv\Scripts\python.exe run_all.py --quick --geometry-sweeps 0 --output diagnostic_results
-```
+This repository's Python implementation is [BSD-3-Clause](LICENSE). Third-party
+code/data in the separate asset retain their own licenses and attribution;
+external author code and separately sourced MMA routines are not relicensed here.
+Consult the asset's license files.
 
-The utilities under `tools/` provide restart audits, rationalization
-diagnostics, aggregate summaries, and post-processing. They are supporting
-diagnostics rather than the formal four-case entry point.
-
-### Numerical-verification commands
-
-The compact reviewed tables from the August 2026 evidence run are under
-`verification/`; see `verification/README.md` for provenance, field mappings,
-and interpretation limits. The following commands reproduce the main
-diagnostics from fresh formal `results/example_N/results.json` files. Paths in
-result and verification metadata are repository-relative (for example,
-`results/example_2/results.json` and `diagnostics/robustness_case2/`); they do
-not include an obsolete `Code/` prefix or a local checkout path.
-
-Release `v1.2.0` and its immutable Zenodo version DOI
-<https://doi.org/10.5281/zenodo.21820166> remain the historical baseline for
-the numerical-verification studies: sensitivity, one-factor,
-restart/multistart, full-candidate-pool, and fixed-layout mesh studies. The
-current `v1.5.0` GitHub release
-<https://github.com/ZhifanLuo/rib-layout-optimization/releases/tag/v1.5.0>
-archives the revised source, the full four-case formal-results asset, and the
-affected numerical-verification evidence; no `v1.5.0` Zenodo version DOI is
-currently available. The stable Zenodo concept
-DOI <https://doi.org/10.5281/zenodo.21638172> resolves the release family.
-
-Case-II thickness and endpoint sensitivity verification at three perturbation
-steps, in both production mirror-reduced and unreduced spaces:
-
-```powershell
-.\.venv\Scripts\python.exe tools\run_sensitivity_verification.py --case 2 --source results\example_2\results.json --output diagnostics\sensitivity_case2_geometry --stage geometry --verification-space both --thickness-steps 0.01 0.003 0.001 --endpoint-steps 0.01 0.003 0.001
-```
-
-Case-II 15-run one-factor study (mesh, 70% retention threshold, 1%
-convergence threshold, 5% rationalization relaxation, and starting layout),
-with a common `80 x 40` response reanalysis:
-
-```powershell
-.\.venv\Scripts\python.exe tools\run_robustness_study.py --case 2 --output diagnostics\robustness_case2 --studies mesh retention convergence relaxation starts --mesh-values 20x10 40x20 80x40 --retention-thresholds 0.5 0.7 0.9 --convergence-thresholds 0.005 0.01 0.02 --relaxations 0.025 0.05 0.075 --starting-layouts all_orbits even_orbits odd_orbits --common-reanalysis-mesh 80 40 --seed 20260804
-```
-
-A deterministic restart/multistart group is run as follows; the reviewed
-13-group matrix, including the exact case/stage/move-step/seed combinations,
-is listed in `verification/README.md`.
-
-```powershell
-.\.venv\Scripts\python.exe tools\run_geometry_restart_diagnostic.py --case 2 --source results\example_2\results.json --output diagnostics\restarts\case2_geometry_move005 --stage geometry --restarts 1 --multistarts 3 --thickness-perturbation 0.10 --endpoint-perturbation 0.05 --seed 202608042 --initial-move-step 0.05
-```
-
-The full enumerated candidate pools for Cases I and II can be carried through
-sizing, geometry optimization, and one 5% rationalization pass:
-
-```powershell
-.\.venv\Scripts\python.exe tools\run_full_pool_baseline.py --case 1 2 --output diagnostics\full_pool_cases1_2 --post-sizing-policy rationalization --rationalization-relaxation 0.05
-```
-
-The topology-lifting consistency checks are:
-
-```powershell
-.\.venv\Scripts\python.exe tools\run_topology_lifting_diagnostic.py --case 3 --source results\example_3\results.json --output diagnostics\lifting\case3_geometry_to_rationalized --full-stage geometry --reduced-stage rationalized
-.\.venv\Scripts\python.exe tools\run_topology_lifting_diagnostic.py --case 4 --source results\example_4\results.json --output diagnostics\lifting\case4_geometry_to_rationalized --full-stage geometry --reduced-stage rationalized
-```
-
-`process_status=complete` means that a diagnostic command finished and wrote
-its payload. It does **not** mean that every optimization phase converged.
-Only `termination_reason=converged` (or the corresponding phase field) is a
-convergence declaration; an `objective_rollback_failed_*` reason means that the
-best feasible incumbent was returned after the bounded safeguard stopped the
-phase. Preserve unsuccessful and adverse numerical outcomes when reporting a
-matrix.
-
-The convergence and comparison diagnostics accept both module and direct
-script invocation. For example, these two forms are equivalent:
-
-```powershell
-.\.venv\Scripts\python.exe -m tools.run_geometry_restart_diagnostic --case 3 --source results\example_3\results.json --output diagnostics\restart3 --restarts 2 --multistarts 4
-.\.venv\Scripts\python.exe tools\run_geometry_restart_diagnostic.py --case 3 --source results\example_3\results.json --output diagnostics\restart3 --restarts 2 --multistarts 4
-```
-
-Multistarts can apply seeded, symmetry-preserving thickness and endpoint
-perturbations; they do not constitute a global-optimality proof. A
-topology-lifting consistency check
-can reinsert ribs deleted between two saved stages:
-
-```powershell
-.\.venv\Scripts\python.exe -m tools.run_topology_lifting_diagnostic --case 4 --source results\example_4\results.json --output diagnostics\lifting4 --full-stage geometry --reduced-stage rationalized
-```
-
-Lifting requires compatible source data. The tool checks case, quick-mode and
-mesh metadata, then reanalyzes both saved stages with the current executable;
-it stops if either compliance differs from the saved value by more than the
-configurable `--source-compliance-tolerance` (default `1e-6` relative).
-
-The candidate pool is the complete undirected graph over the lattice nodes:
-each unordered pair of distinct nodes defines exactly one potential rib. The
-complete generated pool can be optimized without active-set screening as an
-internal baseline:
-
-```powershell
-.\.venv\Scripts\python.exe tools\run_full_pool_baseline.py --case 1 2 --output diagnostics\full_pool --post-sizing-policy rationalization --rationalization-relaxation 0.05
-```
-
-This full-pool calculation uses the same solver and candidate restrictions as
-the proposed method. It is an internal algorithmic baseline, not an independent
-literature-method comparison, and large formal pools can require substantial
-memory and runtime. None of these tools writes publication `results/` unless
-that location is explicitly passed through `--output`.
-
-## Outputs
-
-Each case writes to `results/example_N/` by default. The common artifacts are:
-
-- `checkpoint_results.json`: numerical state saved before optional plotting;
-- `results.json`: mesh/mode metadata, stage rib endpoints and thicknesses,
-  compliance, volume, analysis counts, histories, and elapsed time;
-- `summary.csv` and `case_summary.csv`: compact stage-level statistics;
-- `all_stages.png`, `active_set_iterations.png`, and one PNG for each stored
-  optimization stage;
-- rationalization history JSON and thickness CSV files when the corresponding
-  rationalization iterations occur.
-
-Output directories are regenerated data and are ignored by default. Compact
-reviewed evidence tables are retained under `verification/`; the `v1.2.0`
-numerical-verification studies remain historical baseline evidence. The
-current `v1.3.0` GitHub release archives the revised source and full
-four-case formal-results asset as described above. Newly generated JSON is strict RFC-compatible JSON:
-undefined diagnostic ratios use `null` with explicit status/reason metadata,
-and project-internal source/provenance paths are serialized as portable POSIX
-paths rather than workstation-specific absolute paths.
-
-## Tests
-
-Run the complete regression suite from `Code/`:
-
-```powershell
-.\.venv\Scripts\python.exe -B -m unittest discover -s tests -v
-```
-
-On Linux or macOS, replace the interpreter path with `.venv/bin/python`.
-Unit tests exercise components and orchestration but do not replace a complete
-four-case run when validating publication results.
-
-## Citation and license
-
-Software citation metadata for release `v1.5.0` are provided in
-`CITATION.cff`, and the development repository is available at
-<https://github.com/ZhifanLuo/rib-layout-optimization>. GitHub exposes these
-metadata through its **Cite this repository** interface. The stable Zenodo
-concept DOI, <https://doi.org/10.5281/zenodo.21638172>, resolves the complete
-release family. The `v1.2.0` version DOI
-<https://doi.org/10.5281/zenodo.21820166> identifies the historical baseline
-and numerical-verification evidence, not the current software release. No
-`v1.5.0` Zenodo version DOI is currently available; use the current GitHub
-release link above. ORCID and article publication metadata remain to be
-inserted when available.
-
-The implementation is distributed under the BSD 3-Clause License; see
-`LICENSE`.
-
-## File map
-
-Example IV contains the refreshed two-load-case test: the original force-couple
-case plus an equally weighted negative-Y load case at the same two points.
-
-The principal user-facing Python files are in `Code/`:
-
-- `example1.py` through `example4.py` — FE dimensions, mesh, material, loads,
-  supports, rib limits, case-level algorithm overrides, and custom outputs;
-- `rib_layout_env.py` — deterministic runtime, solver-thread, and path setup;
-- `rib_layout_core.py` — shared configuration, model construction, and the
-  common sizing/filtering/adaptive/geometry/rationalization workflow;
-- `rib_layout_output.py` — common JSON, CSV, history, and plot output manager.
-
-The tested numerical implementation remains separated under
-`rib_layout_algorithms/`; ordinary users do not need to edit these files:
-
-- `rib_layout_algorithms/shell.py` - six-DOF MITC4 Reissner--Mindlin flat-shell element;
-- `rib_layout_algorithms/model_shell.py` - sparse tied ground/rib assembly, FE solve,
-  condensed-energy thickness/coordinate sensitivities, and solver fallback;
-- `rib_layout_algorithms/move_limit.py` - enhanced-MMA move-limit state;
-- `rib_layout_algorithms/optimization.py` - sizing, filtering, member addition, geometry, and
-  rationalization algorithms;
-- `rib_layout_algorithms/plotting.py` - shared stage visualizations;
-- `rib_layout_algorithms/frame.py` and `rib_layout_algorithms/model.py` - retained validated reference model;
-- `run_all.py` - cross-platform sequential runner for all four cases;
-- `tools/` - combined compatibility runner, diagnostics, and
-  stage-figure generation;
-- `tests/` - complete regression tests;
-- `configs/` - archival case configuration and manuscript comparison data;
-- `requirements.txt` and `setup_env.bat` - reproducible setup.
-
-## Units
-
-The implementation uses N and mm. The aluminium-alloy modulus `E = 70 GPa` is
-therefore entered as `70,000 N/mm²`; compliance has units N·mm.
+Use `CITATION.cff` for software citation and cite the associated paper. v1.5.0 and
+earlier tags remain available for historical results. No v1.6.0 DOI is claimed here
+unless a separate archive subsequently assigns one.

@@ -15,6 +15,7 @@ from scipy.sparse import csc_matrix, coo_matrix
 from scipy.sparse.linalg import splu
 
 from .model import AnalysisResult, Rib
+from .pressure import uniform_q4_pressure
 from rib_layout_env import (
     DETERMINISTIC_LINEAR_SOLVER_THREADS,
     DETERMINISTIC_SENSITIVITY_WORKERS,
@@ -220,9 +221,11 @@ class ShellStiffenedPlateModel:
         vectors: list[np.ndarray] = []; weights: list[float] = []
         for case in cases:
             f = np.zeros(self.ndof)
-            for item in case["forces"]:
+            for item in case.get("forces", []):
                 n = self.nearest_node(item["point"])
                 f[6*n:6*n+3] += np.asarray(item["value"], float)
+            if "pressure" in case:
+                f += uniform_q4_pressure(self, case["pressure"])
             vectors.append(f); weights.append(float(case.get("weight", 1.0)))
         w = np.asarray(weights, float); w /= w.sum()
         return vectors, w

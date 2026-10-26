@@ -37,3 +37,7 @@ results2/
 
 # Legacy internal evidence that is not part of the public release
 REPRODUCTION_REPORT.md
+
+# Local audit work and regenerated diagnostic results (release data is separate)
+/agent_work/
+/diagnostics*/

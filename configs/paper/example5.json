@@ -1,0 +1,102 @@
+{
+  "analysis_model": "shell",
+  "interface_subdivisions_per_cell": 4,
+  "rib_cache_max_entries": 128,
+  "candidate_operator_cache_max_entries": 512,
+  "rib_basis_cache_max_entries": 128,
+  "linear_solver": "auto",
+  "linear_solver_threads": 1,
+  "rib": {
+    "segments": 10,
+    "lower": 1e-06,
+    "height": 5.0,
+    "initial": 0.5,
+    "upper": 3.0
+  },
+  "algorithm": {
+    "sensitivity_workers": 1,
+    "filter_tolerance": 0.01,
+    "filter_max_decade": 5,
+    "filter_threshold_ratios": [
+      0.1,
+      0.01,
+      0.001,
+      0.0001,
+      1e-05
+    ],
+    "short_rib_shell_cells": 3.0,
+    "short_rib_cell_fraction": 0.25,
+    "short_rib_thickness_factor": 5.0,
+    "sizing_max_iterations": 100,
+    "sca_objective_tolerance": 0.005,
+    "sca_constraint_tolerance": 0.001,
+    "sca_design_tolerance": 0.001,
+    "sca_design_guard_tolerance": 0.01,
+    "sca_consecutive_convergence_steps": 2,
+    "sca_min_iterations": 2,
+    "move_limit_initial": 0.5,
+    "move_limit_direction_increase": 1.2,
+    "move_limit_direction_decrease": 0.7,
+    "move_limit_direction_zero_tolerance": 1e-06,
+    "move_limit_unsuccessful_decrease": 0.75,
+    "move_limit_maximum_global": 10.0,
+    "outer_objective_rollback_threshold": 0.5,
+    "outer_objective_rollback_max_retries": 4,
+    "outer_objective_rollback_minimum_move": 0.001,
+    "geometry_move_limit_initial": 0.5,
+    "geometry_sca_proximal": 0.2,
+    "rationalization_sca_proximal": 0.2,
+    "rationalization_dual_tolerance": 1e-09,
+    "active_set_max_iterations": 10,
+    "additions_per_iteration": 2,
+    "addition_factor_min_ratio": 0.7,
+    "addition_sizing_improvement_min": 0.01,
+    "active_cycle_improvement_min": 0.01,
+    "geometry_max_iterations": 100,
+    "geometry_fd_fraction": 0.0002,
+    "rationalization_beta": 10.0,
+    "rationalization_beta_initial": 1.0,
+    "rationalization_beta_increment": 1.0,
+    "rationalization_compliance_tolerance": 0.001,
+    "rationalization_move_limit_initial": 0.5,
+    "rationalization_min_iterations": 11,
+    "rationalization_max_iterations": 100,
+    "rationalization_geometry_iterations": 100
+  },
+  "number": 5,
+  "name": "uniform_transverse_pressure",
+  "domain": [
+    100.0,
+    50.0
+  ],
+  "mesh": [
+    80,
+    40
+  ],
+  "mirror_symmetry": [
+    "y"
+  ],
+  "wall_thickness": 0.5,
+  "initial_rib_cell_size": 25.0,
+  "material": {
+    "name": "AlSi10MnMg structural casting aluminium alloy",
+    "E": 70000.0,
+    "nu": 0.33
+  },
+  "load_cases": [
+    {
+      "weight": 1.0,
+      "forces": [],
+      "pressure": {
+        "type": "uniform",
+        "value": -0.0001
+      }
+    }
+  ],
+  "supports": {
+    "type": "edge",
+    "edge": "right"
+  },
+  "volume_bound": 1500.0,
+  "rationalization_relaxation": 0.05
+}

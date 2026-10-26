@@ -64,7 +64,7 @@ from tools.run_topology_lifting_diagnostic import (
     validate_source_metadata,
     lifted_design,
 )
-from verification.run_response_only_160x80 import script_identity
+from tools.run_response_only_160x80 import script_identity
 
 
 class DiagnosticToolTests(unittest.TestCase):
@@ -82,12 +82,12 @@ class DiagnosticToolTests(unittest.TestCase):
         identity = script_identity(
             code_root, fake_provenance, portable_artifact_path
         )
-        expected = code_root / "verification" / "run_response_only_160x80.py"
+        expected = code_root / "tools" / "run_response_only_160x80.py"
         self.assertEqual(captured["root"], code_root)
         self.assertEqual(captured["entry_tool"], expected)
         self.assertEqual(
             identity["executable_provenance"]["entry_tool"],
-            "verification/run_response_only_160x80.py",
+            "tools/run_response_only_160x80.py",
         )
         self.assertEqual(
             identity["script_sha256"],
@@ -405,7 +405,10 @@ class DiagnosticToolTests(unittest.TestCase):
         self.assertEqual(provenance["tool_files"], expected)
         self.assertEqual(provenance["tool_file_count"], len(expected))
         self.assertEqual(len(provenance["tools_aggregate_sha256"]), 64)
-        self.assertIsInstance(provenance["git_dirty"], bool)
+        if provenance["git_commit"] is None:
+            self.assertIsNone(provenance["git_dirty"])
+        else:
+            self.assertIsInstance(provenance["git_dirty"], bool)
 
     def test_fixed_layout_mesh_study_holds_the_design_fixed(self):
         stage = {"ribs": [{"name": "A"}]}

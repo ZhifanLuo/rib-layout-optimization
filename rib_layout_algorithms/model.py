@@ -10,6 +10,7 @@ from scipy.sparse import coo_matrix, csc_matrix, eye
 from scipy.sparse.linalg import splu
 
 from .frame import frame_global_stiffness, rigid_offset_transform
+from .pressure import uniform_q4_pressure
 
 
 @dataclass(frozen=True)
@@ -163,9 +164,11 @@ class StiffenedPlateModel:
         weights: list[float] = []
         for case in load_cases:
             f = np.zeros(self.ndof, float)
-            for item in case["forces"]:
+            for item in case.get("forces", []):
                 node = self.nearest_node(item["point"])
                 f[6 * node : 6 * node + 3] += np.asarray(item["value"], float)
+            if "pressure" in case:
+                f += uniform_q4_pressure(self, case["pressure"])
             vectors.append(f)
             weights.append(float(case.get("weight", 1.0)))
         weights_arr = np.asarray(weights, float)

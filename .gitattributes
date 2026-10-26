@@ -1,0 +1,8 @@
+*.py text eol=lf
+*.json text eol=lf
+*.md text eol=lf
+*.cff text eol=lf
+*.bat text eol=lf
+requirements.txt text eol=lf
+configs/*.yaml text eol=lf
+configs/*.yml text eol=lf

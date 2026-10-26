@@ -109,6 +109,18 @@ def _draw_domain_3d(ax, cfg: dict, *, show_load_labels: bool = True) -> None:
 
     arrow_length = 0.22 * min(width, height)
     for load_case in cfg["load_cases"]:
+        if "pressure" in load_case:
+            pressure = float(load_case["pressure"]["value"])
+            direction = np.array([0.0, 0.0, np.sign(pressure)*arrow_length])
+            if pressure:
+                for x in np.linspace(0.1*width, 0.9*width, 5):
+                    for y in np.linspace(0.1*height, 0.9*height, 3):
+                        start = np.array([x, y, 0.0])-direction
+                        ax.quiver(*start, *direction, color="#185adb", linewidth=1.0,
+                                  arrow_length_ratio=0.22, zorder=4)
+                if show_load_labels:
+                    ax.text(width/2, height/2, -1.2*direction[2],
+                            f"q={abs(pressure):g} N/mm²", color="#0b3d91")
         for force in load_case["forces"]:
             point = np.asarray(force["point"], float)
             vector = np.asarray(force["value"], float)

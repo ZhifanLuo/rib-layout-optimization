@@ -46,7 +46,7 @@ class FiniteDifferenceResult:
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--case", type=int, default=2, choices=(1, 2, 3, 4))
+    parser.add_argument("--case", type=int, default=2, choices=(1, 2, 3, 4, 5))
     parser.add_argument("--source", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument(

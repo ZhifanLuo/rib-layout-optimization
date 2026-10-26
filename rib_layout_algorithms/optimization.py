@@ -615,6 +615,16 @@ def geometry_move_freeze_reasons(
 class RibLayoutOptimizer:
     def __init__(self, model: StiffenedPlateModel, cfg: dict) -> None:
         self.model, self.cfg = model, cfg
+        settings = cfg["algorithm"]
+        if not isinstance(settings.get("enable_addition", True), bool):
+            raise ValueError("enable_addition must be a boolean")
+        if settings.get("rationalization_policy", "smooth") not in (
+            "smooth", "direct_deletion_geometry", "direct_deletion_sizing"
+        ):
+            raise ValueError("unknown rationalization_policy")
+        multiplier = float(settings.get("rationalization_quantile_multiplier", 1.0))
+        if not np.isfinite(multiplier) or multiplier < 0.0:
+            raise ValueError("rationalization_quantile_multiplier must be finite and nonnegative")
         self.volume_bound = float(cfg["volume_bound"])
         self.t0 = float(cfg["rib"]["initial"])
         self.t_lower = float(cfg["rib"]["lower"])
@@ -674,12 +684,14 @@ class RibLayoutOptimizer:
         active: Sequence[Rib],
         limit: int,
     ) -> list[Rib]:
-        """Complete at most ``limit`` ranked seeds without exceeding one extra rib.
+        """Complete ranked seeds with a first-group two-axis symmetry exception.
 
         With the standard two-seed limit, a first seed that needs a mirror
         partner consumes the batch immediately (two ribs). Only when the first
         seed needs no new partner is the second seed considered; its partner
-        may then enlarge the completed batch to three ribs.
+        may then enlarge the completed batch to three ribs. Under two-axis
+        symmetry, a first seed requiring four new ribs is accepted as a whole
+        batch, exceptionally exceeding the standard three-rib cap.
         """
         if not self.mirror_axes or not chosen:
             return list(chosen)
@@ -688,7 +700,7 @@ class RibLayoutOptimizer:
         completed_keys: set[tuple] = set()
         seed_limit = max(int(limit), 0)
         completed_limit = seed_limit+1 if seed_limit > 0 else 0
-        for seed in chosen:
+        for seed_index, seed in enumerate(chosen):
             orbit = [seed]
             frontier = [seed]
             for axis in self.mirror_axes:
@@ -708,7 +720,19 @@ class RibLayoutOptimizer:
                 if not collinear_union_covering_ribs(rib, active)
             ]
             new_members = [rib for rib in orbit if rib.key not in completed_keys]
-            if len(completed)+len(new_members) > completed_limit:
+            first_four_rib_group = (
+                seed_limit == 2
+                and seed_index == 0
+                and set(self.mirror_axes) == {"x", "y"}
+                and not completed
+                and len(new_members) == 4
+            )
+            if first_four_rib_group:
+                self.log.append(
+                    "mirror-symmetric first-group four-rib exception: "
+                    f"seed={seed.name}, required_new_ribs=4, maximum={completed_limit}"
+                )
+            if not first_four_rib_group and len(completed)+len(new_members) > completed_limit:
                 self.log.append(
                     "mirror-symmetric candidate group skipped: "
                     f"seed={seed.name}, required_new_ribs={len(new_members)}, "
@@ -900,7 +924,7 @@ class RibLayoutOptimizer:
     def rationalization_reference_threshold(
         self, thicknesses: Sequence[float]
     ) -> float:
-        """Return ``max(0.1*t0, quantile_(1/n_rib)(thicknesses))``."""
+        """Return the entry threshold with q=min(1, multiplier/n), default 1/n."""
         if not np.isfinite(self.t0) or self.t0 <= 0.0:
             raise ValueError("initial rib thickness t0 must be finite and positive")
         values = np.asarray(thicknesses, float)
@@ -909,8 +933,16 @@ class RibLayoutOptimizer:
                 "rationalization reference thicknesses must be a finite "
                 "one-dimensional sequence with at least two entries"
             )
-        quantile = 1.0/len(values)
+        quantile = self.rationalization_quantile(len(values))
         return max(0.1*self.t0, float(np.quantile(values, quantile)))
+
+    def rationalization_quantile(self, count: int) -> float:
+        multiplier = float(self.cfg["algorithm"].get(
+            "rationalization_quantile_multiplier", 1.0
+        ))
+        if not np.isfinite(multiplier) or multiplier < 0.0:
+            raise ValueError("rationalization_quantile_multiplier must be finite and nonnegative")
+        return min(1.0, multiplier/count)
 
     def _feasible_start(self, ribs: Sequence[Rib], initial: Sequence[float] | None) -> np.ndarray:
         x = np.full(len(ribs), self.t0) if initial is None else np.clip(np.asarray(initial, float), self.t_lower, self.t_upper)
@@ -1456,6 +1488,10 @@ class RibLayoutOptimizer:
                   "initial sizing/filtering convergence")
         )
         attempted_keys: set[tuple] = set()
+        if not settings.get("enable_addition", True):
+            self.log.append("active set ablation: enable_addition=False; filtering completed")
+            self._report_progress("adaptive optimization", ribs, current)
+            return ribs, thicknesses, current
         for iteration in range(max_iterations):
             before_keys = {r.key for r in ribs}
             compliance_before = current.compliance
@@ -2719,9 +2755,36 @@ class RibLayoutOptimizer:
         geometry_result: AnalysisResult,
         relaxation: float,
     ) -> tuple[list[Rib], np.ndarray, AnalysisResult]:
+        log_start = len(self.log)
         final = self._rationalize(
             ribs, thicknesses, geometry_result, relaxation
         )
+        policy = self.cfg["algorithm"].get("rationalization_policy", "smooth")
+        if policy != "smooth":
+            for index in range(log_start, len(self.log)):
+                line = self.log[index]
+                if ", Eq.18 compliance limit=" in line:
+                    line = line.split(", Eq.18 compliance limit=")[0]
+                line = line.replace("Eq. (18)", "direct input").replace("Eq.18", "direct input")
+                line = line.replace("Eq18", "direct-input").replace("saved_eq18", "saved_input")
+                if policy == "direct_deletion_sizing":
+                    line = line.replace("Eq.7", "sizing")
+                self.log[index] = line
+            self.log.append(f"rationalization policy={policy}; smooth Eq.18 skipped")
+            # The discrete tail is shared verbatim. Make its diagnostic labels
+            # explicit when its input bypassed the continuous Eq. (18) solve.
+            for event in self.rationalization_history:
+                event["policy"] = policy
+                if event["event"] == "reference":
+                    event.pop("eq18_compliance_limit", None)
+                    event["continuous_solve_skipped"] = True
+                    event["recovery_seed_ranking"] = "saved_input_thickness_descending_then_original_index"
+                if event["event"] == "eq18_solution":
+                    event["event"] = "direct_deletion_input"
+                if event.get("ranking") == "saved_eq18_thickness_descending_then_original_index":
+                    event["ranking"] = "saved_input_thickness_descending_then_original_index"
+                if policy == "direct_deletion_sizing":
+                    event["event"] = event["event"].replace("post_filter_geometry", "post_filter_sizing")
         self._report_progress("rationalization", final[0], final[2])
         return final
 
@@ -2745,7 +2808,7 @@ class RibLayoutOptimizer:
             "rationalization_move_limit_initial", 0.50
         )
         recovery_iterations = int(settings["rationalization_geometry_iterations"])
-        reference_quantile = 1.0/n_rib_before_rationalization
+        reference_quantile = self.rationalization_quantile(n_rib_before_rationalization)
         reference_quantile_thickness = float(
             np.quantile(base_t, reference_quantile)
         )
@@ -2789,20 +2852,34 @@ class RibLayoutOptimizer:
             "geometry_compliance": float(geometry_result.compliance),
         }
         self.rationalization_history.append(reference_record)
+        multiplier = float(settings.get("rationalization_quantile_multiplier", 1.0))
+        if multiplier != 1.0:
+            reference_record["reference_quantile_formula"] = "min(1, multiplier/n_rib)"
+            reference_record["reference_quantile_multiplier"] = multiplier
         self.log.append(
             f"rationalization threshold solve: tref={tref:.7g} = max(" 
             f"0.1*t0={reference_threshold_floor:.7g}, "
             f"quantile_q(t_e)={reference_quantile_thickness:.7g}), "
-            f"q=1/{n_rib_before_rationalization}={reference_quantile:.7g}, "
+            f"q={multiplier:g}/{n_rib_before_rationalization}={reference_quantile:.7g}, "
             f"governing={reference_threshold_governing_term}; "
             f"rho={relaxation_value:.7g} gives "
             f"Cref={cref:.7g}, Eq.18 compliance limit={1.001*cref:.7g}"
         )
-        continuous_ribs, continuous_t, continuous_result, bounds = (
-            self._solve_rationalization_eq18(
-                list(base_ribs), base_t.copy(), geometry_result, cref, tref
+        policy = settings.get("rationalization_policy", "smooth")
+        if policy == "smooth":
+            continuous_ribs, continuous_t, continuous_result, bounds = (
+                self._solve_rationalization_eq18(
+                    list(base_ribs), base_t.copy(), geometry_result, cref, tref
+                )
             )
-        )
+        else:
+            continuous_ribs, continuous_t, continuous_result = (
+                list(base_ribs), base_t.copy(), geometry_result
+            )
+            bounds = np.tile(np.array([
+                [0.0, self.model.width], [0.0, self.model.height],
+                [0.0, self.model.width], [0.0, self.model.height],
+            ]), (len(base_ribs), 1, 1))
         eq18_fea = self.analysis_count-phase_start
         # Preserve the one Eq. (18) solution. Any discrete deletion attempt
         # below starts independently from this saved continuous design.
@@ -2865,6 +2942,38 @@ class RibLayoutOptimizer:
         initial_remove = self._mirror_group_removal_mask(
             saved_ribs, initial_thin | initial_short_and_light
         )
+        fallback_used = bool(policy != "smooth" and not np.any(initial_remove))
+        if fallback_used:
+            # Match the mean thickness used for a mirror group's continuous
+            # variable; the original index deterministically breaks ties.
+            ranked_groups = sorted(
+                self._mirror_groups(saved_ribs),
+                key=lambda group: (float(np.mean(saved_t[group])), min(group)),
+            )
+            selected_group = ranked_groups[0]
+            initial_remove[selected_group] = True
+            self.rationalization_history.append({
+                "event": "direct_deletion_fallback",
+                "reason": "no_eligible_threshold_deletion_batch",
+                "ranking": "saved_input_group_mean_thickness_ascending_then_original_index",
+                "ranked_groups": [
+                    {
+                        "indices": [index+1 for index in group],
+                        "names": [saved_ribs[index].name for index in group],
+                        "mean_thickness": float(np.mean(saved_t[group])),
+                    }
+                    for group in ranked_groups
+                ],
+                "selected_indices": [index+1 for index in selected_group],
+                "selected_names": [saved_ribs[index].name for index in selected_group],
+                "maximum_deletion_attempts": 1,
+            })
+            self.log.append(
+                "rationalization direct-deletion fallback: no eligible threshold "
+                "batch; trying exactly one thinnest mirror group, "
+                f"names={[saved_ribs[index].name for index in selected_group]}, "
+                "ranking=mean_thickness_ascending_then_original_index"
+            )
         initial_removed_indices = list(map(int, np.flatnonzero(initial_remove)))
         if not initial_removed_indices:
             self.log.append(
@@ -2898,7 +3007,7 @@ class RibLayoutOptimizer:
         # symmetry was explicitly configured. Re-solve while at least one rib
         # remains deleted.
         removal_indices = set(initial_removed_indices)
-        maximum_attempts = len(initial_removed_indices)
+        maximum_attempts = 1 if fallback_used else len(initial_removed_indices)
         recovery_round = 0
         for attempt in range(1, maximum_attempts + 1):
             remove_mask = np.array(
@@ -2940,7 +3049,11 @@ class RibLayoutOptimizer:
                 "short_length_threshold": float(short_length_threshold),
                 "short_thickness_factor": float(short_thickness_factor),
             }
+            if policy != "smooth":
+                attempt_record["fallback_used"] = fallback_used
+                attempt_record["recovery_solve_attempted"] = False
             self.rationalization_history.append(attempt_record)
+            geometry_fea = 0
             if not keep.any():
                 self.log.append(
                     f"rationalization deletion attempt {attempt}/{maximum_attempts} rejected: "
@@ -2968,15 +3081,22 @@ class RibLayoutOptimizer:
                     geometry_iteration_history: list[dict] = []
                     # Enter Eq. (7) directly. Its initialization FEA supplies the
                     # first valid reduced-topology displacement/sensitivity field.
-                    reduced_ribs, reduced_t, reduced_result = self.optimize_geometry(
-                        reduced_ribs,
-                        reduced_t,
-                        None,
-                        reduced_bounds,
-                        recovery_iterations,
-                        initial_move_step=recovery_move_step,
-                        iteration_history=geometry_iteration_history,
-                    )
+                    if policy != "smooth":
+                        attempt_record["recovery_solve_attempted"] = True
+                    if policy == "direct_deletion_sizing":
+                        reduced_t, reduced_result = self.size(
+                            reduced_ribs, reduced_t, maxiter=recovery_iterations
+                        )
+                    else:
+                        reduced_ribs, reduced_t, reduced_result = self.optimize_geometry(
+                            reduced_ribs,
+                            reduced_t,
+                            None,
+                            reduced_bounds,
+                            recovery_iterations,
+                            initial_move_step=recovery_move_step,
+                            iteration_history=geometry_iteration_history,
+                        )
                     geometry_fea = self.analysis_count-geometry_start
                     deletion_fea = 0
                 except np.linalg.LinAlgError:
@@ -3024,7 +3144,9 @@ class RibLayoutOptimizer:
                 ),
                 "acceptance_limit": float(acceptance_limit),
                 "accepted": accepted,
-                "fea": 0 if reduced_result is None else geometry_fea,
+                "fea": (
+                    geometry_fea if policy != "smooth" or reduced_result is not None else 0
+                ),
                 "ribs": final_rib_data,
             })
             if accepted:
