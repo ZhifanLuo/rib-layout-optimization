@@ -76,7 +76,7 @@
   "mirror_symmetry": [
     "y"
   ],
-  "wall_thickness": 0.5,
+  "wall_thickness": 1.0,
   "initial_rib_cell_size": 25.0,
   "material": {
     "name": "AlSi10MnMg structural casting aluminium alloy",

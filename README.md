@@ -1,19 +1,14 @@
-# Rib layout optimization — v1.6.0
+# Rib layout optimization - v1.7.0
 
-Reference Python implementation for *An Active-Set Framework for Explicit
-Stiffening-Rib Layout Optimization*. This release includes the revised five-case
-workflow, uniform pressure loading, controlled simplification comparisons and the
-two-axis first-group four-rib addition rule.
-
-The base plate and explicit ribs use MITC4/Reissner–Mindlin shells. Rib roots are
-tied to the base interpolation; separate rib-top traces remain independent at
-crossings. Rib volume is additive strip volume, not a Boolean union. These are
-stiffness-focused idealizations, not validated models of cast/welded junctions,
-manufacturing, strength or buckling.
+Python implementation for *An Active-Set Framework for Explicit Stiffening-Rib
+Layout Optimization*, with five examples and the comparisons used in the revised
+manuscript. This release includes the 1.0 mm-base Example V, density-based
+topology optimization and evaluation of the rib layouts in the same shell-solid
+model. Earlier tags remain unchanged.
 
 ## Install and test
 
-Use Python 3.12 and a virtual environment. From the repository root:
+Use Python 3.12. From the repository root:
 
 ```console
 python -m venv .venv
@@ -21,15 +16,15 @@ python -m venv .venv
 .venv\Scripts\python -B -m unittest discover -s tests -v
 ```
 
-On Linux/macOS activate the environment and use `python` or `.venv/bin/python`.
-Windows users can run `setup_env.bat`. MKL/Pardiso availability depends on the
-platform; SciPy SuperLU is the fallback. Library/solver differences can affect
-execution times and the trajectory of this nonconvex optimization.
+On Linux/macOS, activate the environment and use `python` or `.venv/bin/python`.
+Windows users can also run `setup_env.bat`. Pardiso/MKL is used when available;
+SciPy SuperLU is the fallback. Large solid models need substantial memory and
+compute time. Solver and library differences can change execution time and the
+trajectory of a nonconvex optimization.
 
-## Run the five examples
+## Run Examples I-V
 
-`example1.py` through `example5.py` share one command-line interface and output
-schema. Use the environment's Python from the repository root:
+All five example scripts use the same CLI and output schema:
 
 ```console
 python -B example1.py --output ../rerun-I
@@ -39,93 +34,90 @@ python -B example4.py --output ../rerun-IV
 python -B example5.py --output ../rerun-V
 ```
 
-Each output root receives `example_N/` with results.json, CSV summaries, stage
-histories and figures. Choose new roots to retain saved evidence. Omit `--quick`
-and `--geometry-sweeps` for paper calculations. On Windows, `example_all.bat`
-preserves the original sequential I–IV runner; V is run separately. Older
-combined tools retain their original I–IV scope.
+Each output root receives an `example_N/` directory. Use fresh output roots.
+Omit `--quick` and iteration-budget overrides for paper calculations.
+`example_all.bat` retains its original sequential I-IV scope; run V separately.
 
-Example V now defaults to the manuscript's **100 × 50 mm base, 0.5 mm thickness,
-80 × 40 mesh**, 5 mm rib height and −0.0001 N/mm² uniform pressure (−0.5 N total).
-Only the base's right edge is clamped; rib-top nodes stay free. The 25 mm initial
-lattice supplies 16 ribs, and the rib-volume bound is 1500 mm³. The earlier
-1 mm / 40 × 20 model is historical, not the v1.6.0 default.
-
-The complete normalized archived input is `configs/paper/example5.json`, equal
-to `load_case(5)`. For a guarded plan and full reproduction:
+Example V uses a 100 x 50 mm plate, 1.0 mm base, 80 x 40 base mesh, 5 mm rib-top
+height measured from the base midsurface, and -0.0001 N/mm2 uniform pressure.
+Only the right base edge is clamped. Its complete normalized input is
+`configs/paper/example5.json`. The saved run ends with six ribs and two
+centre-line crossings, after 158 response evaluations. To plan or reproduce it:
 
 ```console
-python -B tools/reproduce_paper.py --output ../paper-V
-python -B tools/reproduce_paper.py --output ../paper-V --execute
+python -B tools/reproduce_paper.py --case 5 --output ../paper-V
+python -B tools/reproduce_paper.py --case 5 --output ../paper-V --execute
 ```
 
-The first command writes nothing. The second runs the exact configuration with
-no quick-mode/iteration-cap overrides, reserves a fresh directory outside the
-source tree, and records configuration/source/result hashes. Interrupted/failed
-output is retained, not overwritten. Separate stage-response replays are excluded
-from optimization FEA counts.
+The helper requires a new output directory outside the source tree, uses the
+standard iteration budgets, and records source, input and result hashes.
 
-## Algorithm and controls
+## Method and comparison models
 
-The sparse route alternates sizing, validated filtering and candidate insertion,
-then jointly optimizes endpoints and thicknesses. Candidate scores measure locally
-equilibrated stiffness contribution per volume in the frozen base field; they
-are not actual global compliance changes. Global resizing must confirm at least
-1% compliance improvement before an addition is accepted.
+The rib optimizer uses explicit MITC4/Reissner-Mindlin shell ribs and a fixed
+shell base. Rib roots follow base interpolation; crossing ribs transfer forces
+through the base. Direct rib junctions are checked separately. Native rib volume
+is additive strip volume. See `tools/REVISION_EXPERIMENTS.md` for controlled
+addition, deletion and rationalization studies.
 
-The default shortlist has at most two ranked seeds. Whole uncovered mirror groups
-normally must fit a three-new-rib cap; selection stops once at least two ribs enter.
-Under both mirror axes, the first shortlisted seed may instead add exactly four
-new ribs as a whole group, then selection ends. Later seeds retain the ordinary
-cap even if the first seed added nothing. This exception is used in the engineering
-comparison; Examples I–V have at most one mirror axis.
+The Python density method in `rib_layout_algorithms/density_solid.py` uses a
+fixed shell base and eight-node 3D solid elements above it. One density variable
+per vertical column gives an equal-height extrusion. SIMP, density filtering
+and OC updates minimize compliance under an added-material volume limit. The
+underlying references are supplied in `references/` and
+[the model documentation](docs/EXTRUDED_DENSITY_COMPARISON.md).
 
-Rationalization minimizes a smooth thickness-threshold count, followed by discrete
-removal, joint reoptimization and recovery under a pass-specific compliance limit.
-It is not direct active-set cardinality minimization, and is skipped for entering
-layouts with at most three ribs. Every available member of a prescribed mirror
-group must qualify for removal. Continuous convergence uses the stated numerical
-feasibility tolerance; final reduced-layout acceptance uses the exact pass limit.
+The selected comparison uses Examples III and V. The saved rib layouts are
+converted to actual-width solid geometry and reanalyzed with the same fixed
+base mesh, loads, supports and shell-solid interface as the density layouts.
+Overlaps are counted once, and density volume limits match the added solid rib
+volumes. These responses differ from the native rib-shell responses because
+the element types, base mesh and rib connections differ. Continuous density
+fields are compared; no binary-density comparison is used.
 
-`tools/run_revision_experiments.py` provides insertion ablations, direct-deletion
-controls, parameter sweeps and regular-layout checks. It defaults to a read-only
-plan; execution needs `--execute`, a fresh `--output` and an explicit trial-count
-guard. See [the revision guide](tools/REVISION_EXPERIMENTS.md). These controls show
-the reported count/compliance/cost trade-offs, not universal optimizer superiority.
+For a read-only generic density-run plan covering any of I-V:
 
-## Data and reproducibility
+```console
+python -B tools/run_extruded_density_comparison.py --cases 3 5 --mesh 160 80 --vertical-elements 8 --output ../density-plan
+```
 
-The fixed release is [v1.6.0](https://github.com/ZhifanLuo/rib-layout-optimization/releases/tag/v1.6.0).
-Download its `rib-layout-optimization-v1.6.0-revision-data.zip` asset as well as the
-source. The asset provides inputs/results, verification records, the table/figure
-evidence index, current Figure 8 source and external-method material. Follow its
-README for extraction layout, commands and the frozen engineering supplement.
+Append `--execute` to run a new optimization. The generic driver uses the
+native example volume budget unless supplied with the separately prepared
+paper inputs. Use the release-data commands below to replay the published
+matched-volume comparisons, including their exact numerical adapters.
 
-Historical results retain their actual execution dates, configurations and source
-fingerprints. Packaging a release does not rerun optimization; later source hashes
-must not replace earlier ones in historical manifests. Rerun current inputs into
-new directories and compare with the saved results; numerical trajectories can
-vary across environments.
+`density_shell.py` and `docs/DENSITY_COMPARISON.md` retain the earlier
+parallel-layer model and shared filter/OC implementation. That layer model is
+not the comparison reported in the current paper.
 
-Repository `verification/` and `verification_v1_5_0/` remain historical records.
-They do not override the current paper's release-data index. `configs/examples.yaml`
-is archival. Executable case definitions and explicit paper JSON are inputs;
-`configs/reported_results.json` supplies comparison targets, never optimizer input.
+## Download the saved results
 
-The external Amir–Majdouba plate–beam workflow has different objectives, support
-and junction conventions and volume accounting. The data asset retains its input
-transformations, saved state and native verification. Its historical launcher
-requires GNU Octave plus local executable/output paths; Python requirements do
-not install Octave. The comparison concerns engineering outcomes, not a direct
-accuracy or optimality ranking.
+Release: https://github.com/ZhifanLuo/rib-layout-optimization/releases/tag/v1.7.0
+
+Download `rib-layout-optimization-v1.7.0-revision-data.zip` and check it against
+`SHA256SUMS.txt`. It supplies the versioned `Code/` snapshot, I-IV results and
+controlled studies, the accepted revised V, III/V density fields, common-model
+rib responses, junction checks, regular six/eight-rib references and figure
+sources. Start with its root README and evidence index. The nested
+`Supplementary_Density_Comparison.zip` is an unchanged, checksummed snapshot
+with its exact executed sources and portable reproduction commands. Its
+pre-release notes describe its creation history; the v1.7.0 root index defines
+which results support the current paper.
+
+Saved results retain their actual input configurations, source fingerprints
+and execution dates. Packaging does not rerun optimization or relabel older
+results. The 0.5 mm-base V belongs to v1.6.0; the current V has a 1.0 mm base.
+Historical `verification/`, `verification_v1_5_0/`, and
+`configs/reported_results.json` are records or comparison targets, not solver
+inputs. `configs/examples.yaml` is archival.
+
+See [the reproduction guide](docs/REPRODUCTION.md) for the extraction layout,
+dependencies, current-result summary and exact replay entry points.
 
 ## License and citation
 
-This repository's Python implementation is [BSD-3-Clause](LICENSE). Third-party
-code/data in the separate asset retain their own licenses and attribution;
-external author code and separately sourced MMA routines are not relicensed here.
-Consult the asset's license files.
-
-Use `CITATION.cff` for software citation and cite the associated paper. v1.5.0 and
-earlier tags remain available for historical results. No v1.6.0 DOI is claimed here
-unless a separate archive subsequently assigns one.
+Project Python source is BSD-3-Clause; use `CITATION.cff` to cite this version
+and cite the associated paper. Third-party components retain their licenses
+and attribution. References establish the numerical ingredients; the column
+mapping, shell-solid coupling and rib conversion are implementation choices.
+No new DOI is asserted for this release.

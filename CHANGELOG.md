@@ -1,5 +1,24 @@
 # Changes
 
+## v1.7.0 - 2026-10-29
+
+- Update Example V and its normalized input to a 1.0 mm base, retaining the
+  80 x 40 mesh and 5 mm rib-top height from the base midsurface. Supply the
+  accepted 158-evaluation run ending with six ribs and two centre-line crossings.
+- Add the Python shell-base/extruded-solid density model, shared-column design
+  variables, SIMP/filter/OC implementation, references and validation tests.
+- Correct the Q4 physical-gradient transformation for affine skew elements
+  and include the corresponding patch tests.
+- Add conforming extruded-solid rib evaluation for matched-volume comparisons
+  with density layouts from Examples III and V.
+- Supply saved density fields, histories, displacement fields, exact prepared
+  rib meshes, executed numerical adapters, and portable replay/plot commands.
+- Include direct-junction verification and six/eight-rib equal-volume regular
+  references for the revised V. Preserve original configurations and source
+  fingerprints of all accepted runs.
+- Complete the I-IV result bundle and index alongside the current V and density
+  evidence. Keep earlier source tags and historical verification unchanged.
+
 ## v1.6.0 — 2026-10-26
 
 - Add consistently integrated uniform Q4 pressure loading and the paper's revised

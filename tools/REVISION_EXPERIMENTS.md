@@ -1,4 +1,4 @@
-# Revised-paper experiment guide — v1.6.0
+# Revised-paper experiment guide — local revision
 
 Use the installed Python environment from the repository root. The revision driver
 and paper helper below print plans unless `--execute` is appended. They require a
@@ -8,11 +8,14 @@ launch another output root; do not silently overwrite evidence. Omit diagnostic
 
 ## Current Example V
 
-`example5.py` uses the manuscript's 100 × 50 mm base, 0.5 mm thickness, 80 × 40 Q4
+`example5.py` uses the manuscript's 100 × 50 mm base, 1.0 mm thickness, 80 × 40 Q4
 mesh, 5 mm rib height, initial rib thickness 0.5 mm, upper 3 mm, 25 mm lattice,
 1500 mm³ rib-volume limit and y reflection. E=70000 N/mm², nu=0.33. Uniform
 pressure −0.0001 N/mm² gives −0.5 N total. Only the base right edge is clamped;
-rib-top nodes stay free. The former 1 mm / 40 × 20 case is historical.
+rib-top nodes stay free. Rib height is measured from the base midsurface, so the
+top is 4.5 mm above the base upper face. The former 1 mm / 40 × 20 case and the
+released v1.6.0 0.5 mm / 80 × 40 case are historical; this local input change does
+not update the published release.
 
 The complete normalized `configs/paper/example5.json` equals `load_case(5)`.
 The helper retains its exact configuration and checks source/config fingerprints:

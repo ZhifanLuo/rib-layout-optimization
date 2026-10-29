@@ -137,7 +137,7 @@ def shell_q4_stiffness_components(
             det = np.linalg.det(jac)
             if float(np.real(det)) <= 0:
                 raise ValueError("inverted or zero-area shell element")
-            dn = dn_nat @ np.linalg.inv(jac)
+            dn = dn_nat @ np.linalg.inv(jac).T
             Bm = np.zeros((3, 24), dtype=dtype)
             Bb = np.zeros((3, 24), dtype=dtype)
             Bd = np.zeros((1, 24), dtype=dtype)

@@ -55,7 +55,7 @@ class PressureTests(unittest.TestCase):
     def test_pressure_config_and_base_clamp(self):
         cfg = load_case(5)
         self.assertEqual(cfg["mesh"], [80, 40])
-        self.assertEqual(cfg["wall_thickness"], 0.5)
+        self.assertEqual(cfg["wall_thickness"], 1.0)
         self.assertEqual(cfg["volume_bound"], 1500)
         self.assertEqual(cfg["rib"]["initial"], 0.5)
         self.assertEqual(cfg["algorithm"]["active_set_max_iterations"], 10)

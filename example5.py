@@ -11,7 +11,7 @@ CASE_CONFIG = {
     "domain": [100.0, 50.0],
     "mesh": [80, 40],
     "mirror_symmetry": ["y"],
-    "wall_thickness": 0.5,
+    "wall_thickness": 1.0,
     "initial_rib_cell_size": 25.0,
     "material": {
         "name": "AlSi10MnMg structural casting aluminium alloy",
@@ -23,6 +23,7 @@ CASE_CONFIG = {
                     "pressure": {"type": "uniform", "value": -0.0001}}],
     # Clamp base-plate DOFs only; rib-top nodes retain production free-top BCs.
     "supports": {"type": "edge", "edge": "right"},
+    # Rib top is 5 mm above the base midsurface (4.5 mm above its upper face).
     "rib": {"height": 5.0, "initial": 0.5, "upper": 3.0},
     "volume_bound": 1500.0,
     "rationalization_relaxation": 0.05,

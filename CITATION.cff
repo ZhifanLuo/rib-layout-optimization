@@ -4,8 +4,8 @@ message: >-
   paper.
 type: software
 title: Python implementation of An Active-Set Framework for Explicit Stiffening-Rib Layout Optimization
-version: 1.6.0
-date-released: 2026-10-26
+version: 1.7.0
+date-released: 2026-10-29
 authors:
   - family-names: Luo
     given-names: Zhifan
@@ -14,7 +14,8 @@ authors:
 abstract: >-
   Reference Python implementation and five numerical examples for the
   multi-phase stiffening rib-layout optimization method, including the
-  pressure-loaded plate and controlled comparisons used in the revised paper.
+  pressure-loaded plate, density-based topology optimization, common shell-solid
+  evaluation and controlled comparisons used in the revised paper.
 license: BSD-3-Clause
 repository-code: https://github.com/ZhifanLuo/rib-layout-optimization
 keywords:

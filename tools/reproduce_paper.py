@@ -25,8 +25,8 @@ CONFIG = CODE_ROOT / "configs/paper/example5.json"
 
 def build_spec(config_path: Path = CONFIG) -> dict:
     cfg = json.loads(config_path.read_text(encoding="utf-8"))
-    if cfg["number"] != 5 or cfg["mesh"] != [80, 40] or cfg["wall_thickness"] != 0.5:
-        raise ValueError("The manuscript Example V requires case 5, an 80x40 mesh and a 0.5 mm base")
+    if cfg["number"] != 5 or cfg["mesh"] != [80, 40] or cfg["wall_thickness"] != 1.0:
+        raise ValueError("The manuscript Example V requires case 5, an 80x40 mesh and a 1.0 mm base")
     return dict(id="paper_example5", mode="full", config=deepcopy(cfg),
                 input_stage=None, source=None, source_sha256=None,
                 input_design_sha256=None, reanalysis_mesh=None,

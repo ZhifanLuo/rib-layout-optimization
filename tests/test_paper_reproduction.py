@@ -23,7 +23,7 @@ class PaperReproductionTests(unittest.TestCase):
         spec = reproduce_paper.build_spec()
         cfg = spec["config"]
         self.assertEqual(cfg["mesh"], [80, 40])
-        self.assertEqual(cfg["wall_thickness"], 0.5)
+        self.assertEqual(cfg["wall_thickness"], 1.0)
         self.assertEqual(cfg["domain"], [100.0, 50.0])
         self.assertEqual(cfg["supports"], {"type": "edge", "edge": "right"})
         self.assertEqual(cfg["load_cases"][0]["pressure"]["value"], -0.0001)
@@ -31,7 +31,7 @@ class PaperReproductionTests(unittest.TestCase):
         self.assertEqual(cfg["algorithm"]["rationalization_min_iterations"], 11)
         self.assertIsNone(spec["iteration_cap"])
         self.assertEqual(CASE_CONFIG["mesh"], [80, 40])
-        self.assertEqual(CASE_CONFIG["wall_thickness"], 0.5)
+        self.assertEqual(CASE_CONFIG["wall_thickness"], 1.0)
         self.assertEqual(load_case(5), cfg)
 
     def test_dry_plan_does_not_create_output_or_run_optimization(self):
